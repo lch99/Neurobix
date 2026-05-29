@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+@theme {
+  /* Neurobix Method color palette */
+  --color-nb-white:  #FFFFFF;
+  --color-nb-cream:  #FFF7E9;
+  --color-nb-yellow: #FFEB3C;
+  --color-nb-lime:   #6FC911;
+  --color-nb-green:  #36913F;
+  --color-nb-olive:  #91BA4F;
+  --color-nb-dark:   #396336;
+
+  /* keep old aliases so existing classes still work */
+  --color-brand-white: #FFFFFF;
+  --color-brand-light: #91BA4F;
+  --color-brand-green: #36913F;
+  --color-brand-dark:  #396336;
+  --color-brand-black: #0f0f0f;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  background: #FFF7E9;
+  color: #1a1a1a;
+}
+
+#root { min-height: 100vh; }
