@@ -72,16 +72,16 @@ export default function Login() {
       </div>
 
       {/* ── Right panel — form ── */}
-      <div className="w-full md:w-1/2 flex flex-col justify-center px-8 sm:px-12 bg-white">
+      <div className="w-full md:w-1/2 flex flex-col justify-center px-5 sm:px-10 bg-white overflow-y-auto">
 
         {/* Mobile-only logo */}
-        <div className="flex md:hidden justify-center mb-6">
-          <img src={logoSquare} alt="Neurobix Method" className="w-20 h-20 object-contain" />
+        <div className="flex md:hidden justify-center mb-5">
+          <img src={logoSquare} alt="Neurobix Method" className="w-16 h-16 object-contain" />
         </div>
 
         <div className="w-full max-w-sm mx-auto">
-          <h2 className="text-2xl font-black text-nb-dark">Welcome back! 👋</h2>
-          <p className="text-gray-400 text-sm mt-1 mb-6">Sign in to your account to continue.</p>
+          <h2 className="text-xl font-black text-nb-dark">Welcome back! 👋</h2>
+          <p className="text-gray-400 text-sm mt-1 mb-5">Sign in to your account to continue.</p>
 
           {error && (
             <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">{error}</div>
@@ -121,7 +121,7 @@ export default function Login() {
             <div className="grid grid-cols-2 gap-2">
               {DEMO_ACCOUNTS.map(a => (
                 <button key={a.role} onClick={() => fillDemo(a)}
-                  className={`py-2.5 px-3 rounded-xl text-sm font-bold border-2 transition-all hover:scale-[1.03] active:scale-95 text-left flex items-center gap-2 ${a.style}`}>
+                  className={`py-2 px-2 rounded-xl text-xs font-bold border-2 transition-all hover:scale-[1.03] active:scale-95 text-left flex items-center gap-1.5 ${a.style}`}>
                   {a.label}
                 </button>
               ))}

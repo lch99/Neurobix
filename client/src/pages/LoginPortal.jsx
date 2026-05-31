@@ -14,16 +14,16 @@ export default function LoginPortal() {
       <p className="text-gray-400 text-sm mt-1 mb-10">Who are you logging in as?</p>
 
       {/* Two big portal cards */}
-      <div className="flex flex-col sm:flex-row gap-5 w-full max-w-lg">
+      <div className="flex flex-col sm:flex-row gap-4 w-full max-w-lg px-2">
 
         {/* Student */}
         <button
           onClick={() => navigate('/login/student')}
-          className="flex-1 rounded-3xl p-8 flex flex-col items-center gap-4 shadow-xl border-2 border-transparent hover:border-nb-yellow hover:scale-[1.03] transition-all group"
+          className="flex-1 rounded-3xl p-6 sm:p-8 flex flex-col items-center gap-3 shadow-xl border-2 border-transparent hover:border-nb-yellow hover:scale-[1.03] transition-all group"
           style={{ background: 'linear-gradient(135deg,#FFEB3C,#6FC911)' }}>
-          <span className="text-6xl group-hover:scale-110 transition-transform">🎒</span>
+          <span className="text-5xl sm:text-6xl group-hover:scale-110 transition-transform">🎒</span>
           <div className="text-center">
-            <p className="text-2xl font-black text-nb-dark">I'm a Student</p>
+            <p className="text-xl sm:text-2xl font-black text-nb-dark">I'm a Student</p>
             <p className="text-nb-dark/60 text-sm mt-1">Age 7 – 12</p>
           </div>
         </button>
@@ -31,19 +31,19 @@ export default function LoginPortal() {
         {/* Staff / Parent */}
         <button
           onClick={() => navigate('/login/staff')}
-          className="flex-1 rounded-3xl p-8 flex flex-col items-center gap-4 shadow-xl border-2 border-transparent hover:border-nb-green hover:scale-[1.03] transition-all group"
+          className="flex-1 rounded-3xl p-6 sm:p-8 flex flex-col items-center gap-3 shadow-xl border-2 border-transparent hover:border-nb-green hover:scale-[1.03] transition-all group"
           style={{ background: 'linear-gradient(135deg,#396336,#6FC911)' }}>
-          <span className="text-6xl group-hover:scale-110 transition-transform">👩‍🏫</span>
+          <span className="text-5xl sm:text-6xl group-hover:scale-110 transition-transform">👩‍🏫</span>
           <div className="text-center">
-            <p className="text-2xl font-black text-white">Parent / Staff</p>
+            <p className="text-xl sm:text-2xl font-black text-white">Parent / Staff</p>
             <p className="text-green-200 text-sm mt-1">Teacher · Admin · Parent</p>
           </div>
         </button>
       </div>
 
       {/* Footer */}
-      <p className="absolute bottom-5 text-xs text-gray-400 text-center">
-        © 2025 Neurobix Method Pte Ltd · 6 Raffles Blvd #02-34/35, Singapore 039594
+      <p className="absolute bottom-4 left-4 right-4 text-xs text-gray-400 text-center leading-relaxed">
+        © 2025 Neurobix Method Pte Ltd · Singapore
       </p>
     </div>
   )

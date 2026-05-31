@@ -25,6 +25,16 @@ body {
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
   background: #FFF7E9;
   color: #1a1a1a;
+  -webkit-text-size-adjust: 100%;
 }
 
 #root { min-height: 100vh; }
+
+/* Hide scrollbar for tab bars while keeping functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

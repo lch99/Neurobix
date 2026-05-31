@@ -65,78 +65,77 @@ export default function StudentDashboard() {
 
       {/* ── Top bar ── */}
       <header className="bg-white border-b border-nb-olive/20 sticky top-0 z-50 shadow-sm">
-        <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
-          <img src={logoHorizontal} alt="Neurobix Method" className="h-8 w-auto object-contain" />
-          <div className="flex items-center gap-2.5">
-            <span className="text-xs font-black text-nb-dark bg-nb-yellow px-2.5 py-1 rounded-full">⭐ 1,240</span>
-            <div className="w-8 h-8 rounded-full flex items-center justify-center font-black text-nb-dark text-xs"
+        <div className="max-w-5xl mx-auto px-3 sm:px-6 h-13 flex items-center justify-between gap-2">
+          <img src={logoHorizontal} alt="Neurobix Method" className="h-7 sm:h-8 w-auto object-contain flex-shrink-0" />
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-black text-nb-dark bg-nb-yellow px-2 py-0.5 rounded-full whitespace-nowrap">⭐ 1,240</span>
+            <div className="w-7 h-7 rounded-full flex items-center justify-center font-black text-nb-dark text-xs flex-shrink-0"
                  style={{ background: '#FFEB3C' }}>AH</div>
-            <button onClick={() => navigate('/login')} className="text-xs text-gray-400 hover:text-red-400">Logout</button>
+            <button onClick={() => navigate('/login')} className="text-xs text-gray-400 hover:text-red-400 whitespace-nowrap">Logout</button>
           </div>
         </div>
 
-        {/* Tab bar */}
-        <div className="max-w-5xl mx-auto px-6 flex border-t border-gray-100">
+        {/* Tab bar — scrollable on mobile */}
+        <div className="max-w-5xl mx-auto border-t border-gray-100 flex overflow-x-auto scrollbar-hide">
           {TABS.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
-              className={`flex-1 flex flex-col items-center py-2.5 gap-1 text-xs font-bold transition-colors border-b-2 ${
+              className={`flex-shrink-0 flex flex-col items-center py-2 gap-0.5 text-[10px] sm:text-xs font-bold transition-colors border-b-2 px-3 sm:px-0 sm:flex-1 ${
                 tab === t.id ? 'border-nb-green text-nb-green' : 'border-transparent text-gray-400 hover:text-nb-dark'
               }`}>
-              <span className="text-xl leading-none">{t.icon}</span>
-              <span className="leading-none">{t.label}</span>
+              <span className="text-lg sm:text-xl leading-none">{t.icon}</span>
+              <span className="leading-none whitespace-nowrap">{t.label}</span>
             </button>
           ))}
         </div>
       </header>
 
       {/* ── Page content ── */}
-      <main className="flex-1 max-w-5xl w-full mx-auto px-6 py-6 space-y-6">
+      <main className="flex-1 max-w-5xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
 
         {/* ── HOME ── */}
         {tab === 'home' && (
           <div className="space-y-6">
 
             {/* Welcome banner */}
-            <div className="rounded-3xl p-7 text-white relative overflow-hidden shadow-xl"
+            <div className="rounded-2xl sm:rounded-3xl p-5 sm:p-7 text-white relative overflow-hidden shadow-xl"
                  style={{ background: 'linear-gradient(135deg,#6FC911 0%,#396336 100%)' }}>
               <img src={logoWhite} alt=""
-                   className="absolute -right-4 -top-4 h-40 opacity-10 pointer-events-none select-none" />
-              <div className="relative flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-green-200 font-semibold text-sm">Welcome back 👋</p>
-                  <h1 className="text-3xl font-black mt-1">Hello, Ahmad!</h1>
-                  <p className="text-green-100 text-sm mt-1">🔥 7-day streak — you're on fire!</p>
-                  <div className="flex gap-3 mt-4 flex-wrap">
-                    {[['10','Lessons Done'],['7 🔥','Day Streak'],['3','Badges'],['1,240 ⭐','Points']].map(([v,l]) => (
-                      <div key={l} className="bg-white/20 rounded-2xl px-4 py-2.5 text-center backdrop-blur-sm">
-                        <p className="text-xl font-black leading-none">{v}</p>
-                        <p className="text-[11px] text-green-200 mt-1">{l}</p>
-                      </div>
-                    ))}
-                  </div>
+                   className="absolute -right-4 -top-4 h-32 sm:h-40 opacity-10 pointer-events-none select-none" />
+              <div className="relative">
+                <p className="text-green-200 font-semibold text-sm">Welcome back 👋</p>
+                <h1 className="text-2xl sm:text-3xl font-black mt-1">Hello, Ahmad!</h1>
+                <p className="text-green-100 text-sm mt-1">🔥 7-day streak — you're on fire!</p>
+                <div className="grid grid-cols-4 gap-2 mt-4">
+                  {[['10','Lessons'],['7 🔥','Streak'],['3','Badges'],['1,240⭐','Points']].map(([v,l]) => (
+                    <div key={l} className="bg-white/20 rounded-xl px-2 py-2 text-center backdrop-blur-sm">
+                      <p className="text-base sm:text-xl font-black leading-none">{v}</p>
+                      <p className="text-[10px] sm:text-[11px] text-green-200 mt-0.5">{l}</p>
+                    </div>
+                  ))}
                 </div>
-                <div className="text-7xl hidden sm:block select-none flex-shrink-0">🌟</div>
               </div>
             </div>
 
-            {/* Subjects — full width 3-col, equal cards */}
+            {/* Subjects */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-xl font-black text-nb-dark">📚 My Subjects</h2>
+                <h2 className="text-lg sm:text-xl font-black text-nb-dark">📚 My Subjects</h2>
                 <button onClick={() => navigate('/lessons')} className="text-sm font-bold text-nb-green hover:text-nb-dark transition">View all →</button>
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {SUBJECTS.map(s => (
                   <div key={s.id} onClick={() => navigate('/lessons')}
-                    className="bg-white rounded-2xl border-2 border-nb-olive/20 p-5 hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer">
-                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl mb-3 shadow-sm"
+                    className="bg-white rounded-2xl border-2 border-nb-olive/20 p-4 hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer flex sm:flex-col items-center sm:items-start gap-3 sm:gap-0">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl flex-shrink-0 sm:mb-3 shadow-sm"
                          style={{ background: s.color + '18' }}>{s.icon}</div>
-                    <p className="font-black text-nb-dark">{s.name}</p>
-                    <p className="text-xs text-gray-400 mt-1">{s.completed}/{s.lessons} lessons done</p>
-                    <div className="mt-2.5 h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div className="h-full rounded-full transition-all" style={{ width: `${s.progress}%`, background: s.color }} />
+                    <div className="flex-1 min-w-0 sm:w-full">
+                      <p className="font-black text-nb-dark text-sm sm:text-base">{s.name}</p>
+                      <p className="text-xs text-gray-400 mt-0.5 sm:mt-1">{s.completed}/{s.lessons} lessons done</p>
+                      <div className="mt-2 h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="h-full rounded-full transition-all" style={{ width: `${s.progress}%`, background: s.color }} />
+                      </div>
                     </div>
-                    <p className="text-sm font-black mt-1.5" style={{ color: s.color }}>{s.progress}%</p>
+                    <p className="text-sm font-black flex-shrink-0 sm:mt-1.5" style={{ color: s.color }}>{s.progress}%</p>
                   </div>
                 ))}
               </div>
@@ -146,18 +145,18 @@ export default function StudentDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               {/* Continue learning — takes 2/3 */}
               <div className="lg:col-span-2">
-                <h2 className="text-xl font-black text-nb-dark mb-3">▶️ Continue Learning</h2>
+                <h2 className="text-lg sm:text-xl font-black text-nb-dark mb-3">▶️ Continue Learning</h2>
                 <div className="space-y-2.5">
                   {RECENT_LESSONS.map(l => (
                     <div key={l.id} onClick={() => navigate(`/lessons/${l.id}`)}
-                      className="bg-white rounded-2xl border-2 border-nb-olive/20 p-4 flex items-center gap-4 hover:shadow-md hover:border-nb-green/40 hover:-translate-y-0.5 transition-all cursor-pointer">
-                      <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
+                      className="bg-white rounded-2xl border-2 border-nb-olive/20 p-3 sm:p-4 flex items-center gap-3 hover:shadow-md hover:border-nb-green/40 hover:-translate-y-0.5 transition-all cursor-pointer">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center text-xl sm:text-2xl flex-shrink-0"
                            style={{ background: '#FFF7E9' }}>{l.icon}</div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-black text-nb-dark truncate">{l.title}</p>
+                        <p className="font-black text-nb-dark text-sm truncate">{l.title}</p>
                         <p className="text-xs text-gray-400 mt-0.5">{l.subject}</p>
                       </div>
-                      <span className={`text-xs font-bold px-3 py-1.5 rounded-full flex-shrink-0 ${STATUS_STYLE[l.status]}`}>
+                      <span className={`text-xs font-bold px-2 sm:px-3 py-1 rounded-full flex-shrink-0 ${STATUS_STYLE[l.status]}`}>
                         {STATUS_LABEL[l.status]}
                       </span>
                     </div>
@@ -166,20 +165,20 @@ export default function StudentDashboard() {
               </div>
 
               {/* Right 1/3: tip + streak stacked */}
-              <div className="flex flex-col gap-4">
-                <div className="bg-white rounded-2xl border-2 border-nb-yellow p-5 flex-1"
+              <div className="grid grid-cols-2 lg:grid-cols-1 gap-4">
+                <div className="bg-white rounded-2xl border-2 border-nb-yellow p-4"
                      style={{ background: 'linear-gradient(135deg,#FFEB3C15,#ffffff)' }}>
-                  <p className="text-3xl mb-2">💡</p>
+                  <p className="text-2xl mb-1">💡</p>
                   <p className="font-black text-nb-dark text-sm">Memory Tip</p>
-                  <p className="text-sm text-gray-500 mt-1.5 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-gray-500 mt-1 leading-relaxed">
                     Use the <strong>Story Method</strong> — turn facts into a funny story. Silly stories stick! 🧠
                   </p>
                 </div>
-                <div className="bg-white rounded-2xl border border-nb-olive/20 p-5 text-center flex-1">
-                  <p className="text-4xl mb-1">🔥</p>
+                <div className="bg-white rounded-2xl border border-nb-olive/20 p-4 text-center">
+                  <p className="text-3xl mb-1">🔥</p>
                   <p className="text-2xl font-black text-nb-dark">7 Days</p>
                   <p className="text-xs text-gray-400 mt-1">Learning Streak</p>
-                  <p className="text-xs font-bold mt-2" style={{ color: '#36913F' }}>Don't break it!</p>
+                  <p className="text-xs font-bold mt-1" style={{ color: '#36913F' }}>Don't break it!</p>
                 </div>
               </div>
             </div>
@@ -190,18 +189,18 @@ export default function StudentDashboard() {
         {/* ── LESSONS ── */}
         {tab === 'lessons' && (
           <div className="space-y-5">
-            <h2 className="text-2xl font-black text-nb-dark">📚 My Lessons</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <h2 className="text-xl sm:text-2xl font-black text-nb-dark">📚 My Lessons</h2>
+            <div className="grid grid-cols-1 gap-3">
               {RECENT_LESSONS.map(l => (
                 <div key={l.id} onClick={() => navigate(`/lessons/${l.id}`)}
-                  className="bg-white rounded-2xl border-2 border-nb-olive/20 p-5 flex items-center gap-4 hover:shadow-lg hover:border-nb-green/40 hover:-translate-y-0.5 transition-all cursor-pointer">
-                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0 shadow"
+                  className="bg-white rounded-2xl border-2 border-nb-olive/20 p-4 flex items-center gap-3 hover:shadow-lg hover:border-nb-green/40 hover:-translate-y-0.5 transition-all cursor-pointer">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 shadow"
                        style={{ background: '#FFF7E9' }}>{l.icon}</div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-black text-nb-dark text-base truncate">{l.title}</p>
-                    <p className="text-sm text-gray-400 mt-0.5">{l.subject}</p>
+                    <p className="font-black text-nb-dark text-sm truncate">{l.title}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{l.subject}</p>
                   </div>
-                  <span className={`text-sm font-bold px-3 py-1.5 rounded-full flex-shrink-0 ${STATUS_STYLE[l.status]}`}>
+                  <span className={`text-xs font-bold px-2.5 py-1.5 rounded-full flex-shrink-0 ${STATUS_STYLE[l.status]}`}>
                     {STATUS_LABEL[l.status]}
                   </span>
                 </div>
@@ -214,11 +213,11 @@ export default function StudentDashboard() {
 
             {/* Open / Extra Classes — self-enrol */}
             <div>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-black text-nb-dark">🏫 Open Classes — Browse &amp; Enrol</h3>
-                <span className="text-xs text-gray-400 font-semibold">No lesson sequence — access any lesson freely</span>
+              <div className="mb-3">
+                <h3 className="text-base sm:text-lg font-black text-nb-dark">🏫 Open Classes — Browse &amp; Enrol</h3>
+                <p className="text-xs text-gray-400 font-semibold mt-0.5">No lesson sequence — access any lesson freely</p>
               </div>
-              <div className="grid sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {openClasses.map(c => (
                   <div key={c.id} className={`bg-white rounded-2xl border-2 p-5 ${c.enrolled ? 'border-nb-green' : 'border-nb-olive/20'}`}>
                     <div className="flex items-start justify-between mb-2">
@@ -261,10 +260,10 @@ export default function StudentDashboard() {
             <h2 className="text-2xl font-black text-nb-dark">🏆 My Rewards</h2>
 
             {/* Points banner */}
-            <div className="rounded-3xl p-7 shadow-xl"
+            <div className="rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-xl"
                  style={{ background: 'linear-gradient(135deg,#FFEB3C,#91BA4F)' }}>
-              <p className="text-nb-dark/60 font-semibold">Total Points Earned</p>
-              <p className="text-5xl font-black text-nb-dark mt-1">1,240 ⭐</p>
+              <p className="text-nb-dark/60 font-semibold text-sm">Total Points Earned</p>
+              <p className="text-4xl sm:text-5xl font-black text-nb-dark mt-1">1,240 ⭐</p>
               <div className="mt-4 h-3 bg-white/40 rounded-full overflow-hidden">
                 <div className="h-full bg-white rounded-full" style={{ width: '82%' }} />
               </div>
@@ -272,40 +271,40 @@ export default function StudentDashboard() {
             </div>
 
             {/* Certificates of Completion */}
-            <div className="bg-white rounded-2xl border-2 border-nb-olive/20 p-5">
-              <h3 className="text-lg font-black text-nb-dark mb-4">🎓 Certificates of Completion</h3>
+            <div className="bg-white rounded-2xl border-2 border-nb-olive/20 p-4 sm:p-5">
+              <h3 className="text-base sm:text-lg font-black text-nb-dark mb-4">🎓 Certificates of Completion</h3>
               <div className="space-y-3">
-                <div className="flex items-center justify-between bg-nb-cream rounded-2xl p-4 border-2 border-nb-yellow">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
+                <div className="bg-nb-cream rounded-2xl p-4 border-2 border-nb-yellow">
+                  <div className="flex items-start gap-3 mb-3">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center text-xl sm:text-2xl flex-shrink-0"
                          style={{ background: '#FFEB3C' }}>🏆</div>
-                    <div>
-                      <p className="font-black text-nb-dark">Mathematics — Primary 4</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-black text-nb-dark text-sm">Mathematics — Primary 4</p>
                       <p className="text-xs text-gray-400 mt-0.5">All 14 lessons · All quizzes passed · Issued 2025-05-10</p>
                     </div>
                   </div>
-                  <div className="flex gap-2 flex-shrink-0">
+                  <div className="flex gap-2">
                     <button onClick={() => setCertModal('Mathematics')}
-                      className="px-3 py-2 rounded-xl font-bold text-nb-green border-2 border-nb-green/30 text-xs hover:bg-nb-green hover:text-white transition">
+                      className="flex-1 py-2 rounded-xl font-bold text-nb-green border-2 border-nb-green/30 text-xs hover:bg-nb-green hover:text-white transition">
                       👁 Preview
                     </button>
-                    <button className="px-3 py-2 rounded-xl font-black text-nb-dark text-xs shadow"
+                    <button className="flex-1 py-2 rounded-xl font-black text-nb-dark text-xs shadow"
                             style={{ background: '#FFEB3C' }}>⬇ PDF</button>
                   </div>
                 </div>
                 {[{name:'English', pct:55, done:6, total:12}, {name:'Science', pct:40, done:4, total:10}].map(s => (
-                  <div key={s.name} className="flex items-center justify-between bg-gray-50 rounded-2xl p-4 border-2 border-gray-200 opacity-60">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-gray-200 flex items-center justify-center text-2xl flex-shrink-0">🔒</div>
-                      <div>
-                        <p className="font-black text-gray-500">{s.name} Certificate</p>
+                  <div key={s.name} className="bg-gray-50 rounded-2xl p-4 border-2 border-gray-200 opacity-60">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-xl bg-gray-200 flex items-center justify-center text-xl flex-shrink-0">🔒</div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-black text-gray-500 text-sm">{s.name} Certificate</p>
                         <p className="text-xs text-gray-400 mt-0.5">{s.done}/{s.total} lessons · {s.pct}% complete</p>
-                        <div className="mt-1.5 h-1.5 w-32 bg-gray-200 rounded-full overflow-hidden">
-                          <div className="h-full rounded-full bg-gray-400" style={{ width: `${s.pct}%` }} />
-                        </div>
                       </div>
+                      <span className="text-xs font-bold text-gray-400 flex-shrink-0">In progress…</span>
                     </div>
-                    <span className="text-xs font-bold text-gray-400 flex-shrink-0">In progress…</span>
+                    <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full bg-gray-400" style={{ width: `${s.pct}%` }} />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -314,14 +313,14 @@ export default function StudentDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Badges */}
               <div>
-                <h3 className="text-lg font-black text-nb-dark mb-3">🎖️ Badges</h3>
-                <div className="grid grid-cols-3 gap-3">
+                <h3 className="text-base sm:text-lg font-black text-nb-dark mb-3">🎖️ Badges</h3>
+                <div className="grid grid-cols-3 gap-2 sm:gap-3">
                   {BADGES.map(b => (
                     <div key={b.label}
-                      className={`rounded-2xl p-4 text-center border-2 transition-all ${b.earned ? 'bg-white border-nb-yellow shadow-md hover:scale-105' : 'bg-gray-50 border-gray-200 opacity-50'}`}>
-                      <div className="text-4xl mb-2">{b.icon}</div>
-                      <p className="text-xs font-black text-gray-700 leading-tight">{b.label}</p>
-                      {!b.earned && <p className="text-[10px] text-gray-400 mt-1">🔒 Locked</p>}
+                      className={`rounded-2xl p-3 text-center border-2 transition-all ${b.earned ? 'bg-white border-nb-yellow shadow-md hover:scale-105' : 'bg-gray-50 border-gray-200 opacity-50'}`}>
+                      <div className="text-3xl sm:text-4xl mb-1 sm:mb-2">{b.icon}</div>
+                      <p className="text-[10px] sm:text-xs font-black text-gray-700 leading-tight">{b.label}</p>
+                      {!b.earned && <p className="text-[9px] sm:text-[10px] text-gray-400 mt-0.5">🔒 Locked</p>}
                     </div>
                   ))}
                 </div>
@@ -353,31 +352,31 @@ export default function StudentDashboard() {
 
       {/* ── Certificate Preview Modal ── */}
       {certModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
              style={{ background: 'rgba(0,0,0,0.6)' }}
              onClick={e => e.target === e.currentTarget && setCertModal(null)}>
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden">
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-xl overflow-hidden">
             {/* Certificate */}
-            <div className="relative p-10 text-center"
+            <div className="relative p-6 sm:p-10 text-center"
                  style={{ background: 'linear-gradient(135deg,#396336 0%,#36913F 50%,#6FC911 100%)' }}>
-              <div className="absolute inset-0 opacity-5 flex items-center justify-center text-[200px] font-black select-none pointer-events-none">
+              <div className="absolute inset-0 opacity-5 flex items-center justify-center text-[120px] sm:text-[200px] font-black select-none pointer-events-none">
                 NM
               </div>
               <div className="relative">
-                <p className="text-nb-yellow font-black text-xs uppercase tracking-[0.3em] mb-4">Certificate of Completion</p>
-                <p className="text-white/80 text-sm mb-2">This certifies that</p>
-                <p className="text-4xl font-black text-white mb-3">Ahmad bin Hassan</p>
-                <p className="text-white/80 text-sm mb-2">has successfully completed</p>
-                <p className="text-2xl font-black text-nb-yellow mb-1">{certModal}</p>
-                <p className="text-white/70 text-sm mb-6">Primary 4 · All lessons completed · All quizzes passed</p>
-                <div className="flex items-center justify-center gap-6 text-xs text-white/60">
+                <p className="text-nb-yellow font-black text-[10px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.3em] mb-3">Certificate of Completion</p>
+                <p className="text-white/80 text-xs sm:text-sm mb-1">This certifies that</p>
+                <p className="text-2xl sm:text-4xl font-black text-white mb-2">Ahmad bin Hassan</p>
+                <p className="text-white/80 text-xs sm:text-sm mb-1">has successfully completed</p>
+                <p className="text-lg sm:text-2xl font-black text-nb-yellow mb-1">{certModal}</p>
+                <p className="text-white/70 text-xs sm:text-sm mb-4">Primary 4 · All lessons completed · All quizzes passed</p>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-6 text-xs text-white/60">
                   <span>📅 Issued: 2025-05-10</span>
                   <span>🏫 Neurobix Method</span>
                   <span>🔒 Cert #NM-2025-0041</span>
                 </div>
               </div>
             </div>
-            <div className="p-5 flex gap-3">
+            <div className="p-4 flex gap-3">
               <button onClick={() => setCertModal(null)}
                 className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-500 font-bold text-sm">
                 Close
@@ -437,16 +436,16 @@ function ScheduleView({ navigate }) {
       <h2 className="text-2xl font-black text-nb-dark">📅 My Schedule</h2>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
         {[
           { label: 'In Progress', value: active.length,   bg: 'bg-yellow-50',  text: 'text-yellow-700', icon: '▶' },
           { label: 'Overdue',     value: overdue.length,  bg: 'bg-red-50',     text: 'text-red-600',    icon: '⚠️' },
           { label: 'Upcoming',    value: upcoming.length, bg: 'bg-blue-50',    text: 'text-blue-700',   icon: '📅' },
         ].map(s => (
-          <div key={s.label} className={`${s.bg} rounded-2xl p-4 border border-nb-olive/20 text-center`}>
-            <p className="text-2xl mb-1">{s.icon}</p>
-            <p className={`text-3xl font-black ${s.text}`}>{s.value}</p>
-            <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
+          <div key={s.label} className={`${s.bg} rounded-2xl p-3 border border-nb-olive/20 text-center`}>
+            <p className="text-xl mb-0.5">{s.icon}</p>
+            <p className={`text-2xl sm:text-3xl font-black ${s.text}`}>{s.value}</p>
+            <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5">{s.label}</p>
           </div>
         ))}
       </div>
@@ -638,15 +637,15 @@ function FlashCardsView() {
       </div>
 
       {/* Deck picker — big buttons */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-2">
         {DECKS.map((d, i) => (
           <button key={d.subject} onClick={() => changeDeck(i)}
-            className={`flex items-center justify-center gap-2 py-3.5 rounded-2xl text-base font-black border-2 transition-all hover:scale-[1.02] ${
+            className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-3 rounded-2xl text-xs sm:text-base font-black border-2 transition-all hover:scale-[1.02] ${
               deckIdx === i ? 'text-nb-dark border-nb-yellow shadow-md' : 'bg-white border-gray-200 text-gray-400 hover:border-nb-olive'
             }`}
             style={deckIdx === i ? { background: '#FFEB3C' } : {}}>
-            <span className="text-2xl">{d.icon}</span>
-            <span>{d.subject}</span>
+            <span className="text-xl sm:text-2xl">{d.icon}</span>
+            <span className="text-center leading-tight">{d.subject}</span>
           </button>
         ))}
       </div>

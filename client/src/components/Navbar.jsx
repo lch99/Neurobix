@@ -25,14 +25,14 @@ export default function Navbar({ role, userName }) {
 
   return (
     <nav className="bg-white border-b-2 border-nb-olive/20 sticky top-0 z-50 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-14">
           {/* Logo */}
-          <div className="flex items-center">
-            <img src={logoHorizontal} alt="Neurobix Method" className="h-9 w-auto object-contain" />
+          <div className="flex items-center min-w-0">
+            <img src={logoHorizontal} alt="Neurobix Method" className="h-7 sm:h-9 w-auto object-contain" />
           </div>
 
-          {/* Links */}
+          {/* Links — hidden on mobile */}
           <div className="hidden md:flex items-center gap-1">
             {links.map(link => (
               <a key={link.label} href={link.path}
@@ -47,13 +47,13 @@ export default function Navbar({ role, userName }) {
           </div>
 
           {/* User */}
-          <div className="flex items-center gap-3">
-            <span className={`px-3 py-1 rounded-full text-xs font-bold capitalize ${ROLE_BADGE[role]}`}>
+          <div className="flex items-center gap-2">
+            <span className={`px-2 py-0.5 rounded-full text-xs font-bold capitalize ${ROLE_BADGE[role]}`}>
               {role}
             </span>
-            <span className="text-sm font-semibold text-nb-dark hidden sm:block">{userName}</span>
+            <span className="text-sm font-semibold text-nb-dark hidden sm:block truncate max-w-[120px]">{userName}</span>
             <button onClick={() => navigate('/login')}
-              className="text-xs text-gray-400 hover:text-red-500 transition-colors font-medium">
+              className="text-xs text-gray-400 hover:text-red-500 transition-colors font-medium whitespace-nowrap">
               Logout
             </button>
           </div>

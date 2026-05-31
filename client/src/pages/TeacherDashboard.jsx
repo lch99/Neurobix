@@ -55,9 +55,9 @@ export default function TeacherDashboard() {
       {showLessonModal && <AddLessonModal onClose={() => setShowLessonModal(false)} onAdd={handleAddLesson} />}
       <Navbar role="teacher" userName="Ms Sarah Tan" />
 
-      {/* Sub-tabs */}
-      <div className="bg-white border-b-2 border-nb-olive/20 sticky top-16 z-40">
-        <div className="max-w-7xl mx-auto px-4 flex gap-1 overflow-x-auto py-2">
+      {/* Sub-tabs — horizontally scrollable */}
+      <div className="bg-white border-b-2 border-nb-olive/20 sticky top-14 z-40">
+        <div className="max-w-7xl mx-auto px-2 flex gap-1 overflow-x-auto py-2 scrollbar-hide">
           {[
             { id: 'overview',    label: '📊 Overview'    },
             { id: 'classes',     label: '🏫 Classes'     },
@@ -68,7 +68,7 @@ export default function TeacherDashboard() {
             { id: 'students',    label: '👩‍🎓 Students'   },
           ].map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
-              className={`px-5 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${
+              className={`px-3 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-bold whitespace-nowrap transition-all flex-shrink-0 ${
                 tab === t.id ? 'text-nb-dark' : 'text-gray-500 hover:bg-nb-cream'
               }`}
               style={tab === t.id ? { background: '#FFEB3C' } : {}}>
@@ -78,41 +78,43 @@ export default function TeacherDashboard() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
 
         {/* OVERVIEW */}
         {tab === 'overview' && (
           <>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
                 { label: 'Total Students', value: 83,   icon: '👩‍🎓', bg: 'bg-blue-50',   text: 'text-blue-700' },
                 { label: 'Active Classes', value: 3,    icon: '📚',  bg: 'bg-green-50',  text: 'text-nb-green' },
                 { label: 'Lessons Live',   value: 14,   icon: '✅',  bg: 'bg-nb-cream',  text: 'text-nb-dark' },
                 { label: 'Avg. Progress',  value: '66%',icon: '📊',  bg: 'bg-amber-50',  text: 'text-amber-700' },
               ].map(s => (
-                <div key={s.label} className={`${s.bg} rounded-2xl p-5 border border-nb-olive/20`}>
-                  <div className="text-3xl mb-2">{s.icon}</div>
-                  <div className={`text-3xl font-black ${s.text}`}>{s.value}</div>
-                  <div className="text-sm text-gray-500 mt-0.5">{s.label}</div>
+                <div key={s.label} className={`${s.bg} rounded-2xl p-4 border border-nb-olive/20`}>
+                  <div className="text-2xl mb-1">{s.icon}</div>
+                  <div className={`text-2xl sm:text-3xl font-black ${s.text}`}>{s.value}</div>
+                  <div className="text-xs sm:text-sm text-gray-500 mt-0.5">{s.label}</div>
                 </div>
               ))}
             </div>
 
             {/* At Risk */}
-            <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-5">
-              <h3 className="font-black text-red-700 mb-3">⚠️ Students Needing Attention</h3>
-              {STUDENTS.filter(s => s.status === 'at_risk').map(s => (
-                <div key={s.id} className="flex items-center justify-between bg-white rounded-xl p-3 shadow-sm">
-                  <div>
-                    <p className="font-bold text-sm text-nb-dark">{s.name}</p>
-                    <p className="text-xs text-gray-400">{s.class}</p>
+            <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-4">
+              <h3 className="font-black text-red-700 mb-3 text-sm sm:text-base">⚠️ Students Needing Attention</h3>
+              <div className="space-y-2">
+                {STUDENTS.filter(s => s.status === 'at_risk').map(s => (
+                  <div key={s.id} className="flex items-center justify-between bg-white rounded-xl p-3 shadow-sm gap-2">
+                    <div className="min-w-0">
+                      <p className="font-bold text-sm text-nb-dark truncate">{s.name}</p>
+                      <p className="text-xs text-gray-400">{s.class}</p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-sm font-black text-red-500">{s.progress}%</p>
+                      <button className="text-xs font-semibold hover:underline" style={{ color: '#36913F' }}>Remind →</button>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-black text-red-500">{s.progress}% progress</p>
-                    <button className="text-xs font-semibold hover:underline" style={{ color: '#36913F' }}>Send reminder →</button>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
 
             {/* Class Progress */}
@@ -143,11 +145,11 @@ export default function TeacherDashboard() {
         {tab === 'classes' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-black text-nb-dark">My Classes</h2>
-              <button className="px-4 py-2 text-nb-dark text-sm font-black rounded-xl shadow hover:shadow-md transition"
+              <h2 className="text-lg sm:text-xl font-black text-nb-dark">My Classes</h2>
+              <button className="px-3 sm:px-4 py-2 text-nb-dark text-xs sm:text-sm font-black rounded-xl shadow hover:shadow-md transition"
                       style={{ background: '#FFEB3C' }}>+ New Class</button>
             </div>
-            <div className="grid sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {CLASSES.map(c => (
                 <div key={c.id} className="bg-white rounded-2xl border border-nb-olive/20 p-5 hover:shadow-md transition cursor-pointer">
                   <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-xl mb-3 shadow-sm"
@@ -172,12 +174,28 @@ export default function TeacherDashboard() {
         {tab === 'lessons' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-black text-nb-dark">Lessons</h2>
+              <h2 className="text-lg sm:text-xl font-black text-nb-dark">Lessons</h2>
               <button onClick={() => setShowLessonModal(true)}
-                className="px-4 py-2 text-nb-dark text-sm font-black rounded-xl shadow hover:shadow-md transition"
+                className="px-3 sm:px-4 py-2 text-nb-dark text-xs sm:text-sm font-black rounded-xl shadow hover:shadow-md transition"
                 style={{ background: '#FFEB3C' }}>+ Add Lesson</button>
             </div>
-            <div className="bg-white rounded-2xl border border-nb-olive/20 overflow-hidden">
+            {/* Card list on mobile, table on sm+ */}
+            <div className="space-y-2 sm:hidden">
+              {lessons.map(l => (
+                <div key={l.id} className="bg-white rounded-2xl border border-nb-olive/20 p-4">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <p className="font-bold text-nb-dark text-sm">{TYPE_ICON[l.type]} {l.title}</p>
+                    <button className="text-xs font-bold flex-shrink-0" style={{ color: '#36913F' }}>Edit</button>
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs text-gray-400">{l.class}</span>
+                    <span className="text-xs text-gray-400 capitalize">{l.type}</span>
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${STATUS_STYLE[l.status]}`}>{l.status}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="hidden sm:block bg-white rounded-2xl border border-nb-olive/20 overflow-hidden">
               <table className="w-full text-sm">
                 <thead className="bg-nb-cream border-b border-nb-olive/20">
                   <tr>
@@ -368,24 +386,24 @@ function FlashCardEditor() {
               <button onClick={() => removeCard(card.id)}
                 className="text-xs font-bold text-red-400 hover:text-red-600 transition">✕ Remove</button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
               <div>
                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-wide mb-1">Front (Question)</label>
-                <textarea rows={3} value={card.front}
+                <textarea rows={2} value={card.front}
                   onChange={e => updateCard(card.id, 'front', e.target.value)}
                   placeholder="e.g. What is 7 × 8?"
                   className="w-full px-3 py-2 rounded-xl border-2 border-gray-100 focus:outline-none focus:border-nb-green bg-nb-cream text-sm resize-none" />
               </div>
               <div>
                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-wide mb-1">Back (Answer)</label>
-                <textarea rows={3} value={card.back}
+                <textarea rows={2} value={card.back}
                   onChange={e => updateCard(card.id, 'back', e.target.value)}
                   placeholder="e.g. 56"
                   className="w-full px-3 py-2 rounded-xl border-2 border-gray-100 focus:outline-none focus:border-nb-green bg-nb-cream text-sm resize-none" />
               </div>
               <div>
                 <label className="block text-[10px] font-black text-nb-olive uppercase tracking-wide mb-1">🧠 Memory Hint (记忆法)</label>
-                <textarea rows={3} value={card.hint}
+                <textarea rows={2} value={card.hint}
                   onChange={e => updateCard(card.id, 'hint', e.target.value)}
                   placeholder="e.g. 7 × 7 = 49, then +7"
                   className="w-full px-3 py-2 rounded-xl border-2 border-nb-yellow/40 focus:outline-none focus:border-nb-olive bg-nb-cream text-sm resize-none" />
@@ -436,12 +454,12 @@ function FlashCardEditor() {
 
       {/* Create deck modal */}
       {isCreating && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
              style={{ background:'rgba(0,0,0,0.45)' }}
              onClick={e => e.target === e.currentTarget && setIsCreating(false)}>
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-7">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-black text-nb-dark">New Flash Card Deck</h2>
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-md p-5 sm:p-7">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg sm:text-xl font-black text-nb-dark">New Flash Card Deck</h2>
               <button onClick={() => setIsCreating(false)} className="text-gray-400 text-2xl">×</button>
             </div>
             <div className="space-y-4">
@@ -519,10 +537,10 @@ function AddLessonModal({ onClose, onAdd }) {
   ]
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
          style={{ background: 'rgba(0,0,0,0.45)' }}
          onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl p-7 max-h-[92vh] overflow-y-auto">
+      <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-xl p-5 sm:p-7 max-h-[92vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-xl font-black text-nb-dark">Upload New Lesson</h2>
@@ -937,12 +955,12 @@ function QuizBuilder() {
 
       {/* Create quiz modal */}
       {isCreating && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
              style={{ background: 'rgba(0,0,0,0.45)' }}
              onClick={e => e.target === e.currentTarget && setIsCreating(false)}>
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-7">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-black text-nb-dark">New Quiz</h2>
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-md p-5 sm:p-7">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg sm:text-xl font-black text-nb-dark">New Quiz</h2>
               <button onClick={() => setIsCreating(false)} className="text-gray-400 text-2xl">×</button>
             </div>
             <div className="space-y-4">
@@ -1101,8 +1119,31 @@ function ScheduleView({ lessons, onEdit }) {
         </div>
       )}
 
-      {/* Main table */}
-      <div className="bg-white rounded-2xl border border-nb-olive/20 overflow-hidden">
+      {/* Card list on mobile */}
+      <div className="space-y-2 sm:hidden">
+        {filtered.map(l => (
+          <div key={l.id} className="bg-white rounded-2xl border border-nb-olive/20 p-4">
+            <div className="flex items-start justify-between gap-2 mb-2">
+              <p className="font-bold text-nb-dark text-sm">{l.title}</p>
+              <button className="text-xs font-bold flex-shrink-0" style={{ color: '#36913F' }}>Edit</button>
+            </div>
+            <div className="flex flex-wrap gap-2 items-center">
+              <span className="text-xs text-gray-400">{l.class}</span>
+              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${STATUS_STYLE[l.status]}`}>{STATUS_ICON[l.status]} {l.status}</span>
+              {l.deadline && (
+                <span className={`text-xs font-bold ${isOverdue(l.deadline) ? 'text-red-500' : isDueSoon(l.deadline) ? 'text-amber-600' : 'text-gray-400'}`}>
+                  Due {l.deadline}
+                </span>
+              )}
+              {l.status === 'published' && (
+                <span className="text-xs font-black text-gray-600">{l.completionRate}% done</span>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+      {/* Table on sm+ */}
+      <div className="hidden sm:block bg-white rounded-2xl border border-nb-olive/20 overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-nb-cream border-b border-nb-olive/20">
             <tr>
@@ -1230,66 +1271,92 @@ function StudentsTab({ students, classes }) {
               </div>
             </button>
 
-            {/* Students table — collapsible */}
+            {/* Students — collapsible */}
             {isOpen && (
               <div className="border-t border-nb-olive/20">
                 {classStudents.length === 0 ? (
                   <p className="text-center text-sm text-gray-400 py-6">No students match your search in this class.</p>
                 ) : (
-                  <table className="w-full text-sm">
-                    <thead className="bg-nb-cream/60">
-                      <tr>
-                        {['Student','Progress','Points','Status',''].map(h => (
-                          <th key={h} className="text-left px-5 py-2.5 text-gray-400 font-black text-xs uppercase tracking-wide">{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-nb-olive/10">
+                  <>
+                    {/* Mobile card list */}
+                    <div className="sm:hidden divide-y divide-nb-olive/10">
                       {classStudents.map(s => (
-                        <tr key={s.id} className="hover:bg-nb-cream/40 transition">
-                          <td className="px-5 py-3">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black text-nb-dark flex-shrink-0"
-                                   style={{ background: s.status === 'at_risk' ? '#fee2e2' : '#FFEB3C' }}>
-                                {s.name[0]}
+                        <div key={s.id} className="px-4 py-3 flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black text-nb-dark flex-shrink-0"
+                               style={{ background: s.status === 'at_risk' ? '#fee2e2' : '#FFEB3C' }}>
+                            {s.name[0]}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-bold text-nb-dark text-sm truncate">{s.name}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                <div className="h-full rounded-full" style={{ width: `${s.progress}%`, background: s.progress >= 70 ? '#36913F' : s.progress >= 50 ? '#FFEB3C' : '#ef4444' }} />
                               </div>
-                              <span className="font-bold text-nb-dark">{s.name}</span>
+                              <span className="text-xs text-gray-500">{s.progress}%</span>
+                              <span className="text-xs text-amber-600">⭐ {s.points}</span>
                             </div>
-                          </td>
-                          <td className="px-5 py-3">
-                            <div className="flex items-center gap-2">
-                              <div className="w-24 h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                                <div className="h-full rounded-full" style={{
-                                  width: `${s.progress}%`,
-                                  background: s.progress >= 70 ? '#36913F' : s.progress >= 50 ? '#FFEB3C' : '#ef4444'
-                                }} />
+                          </div>
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${s.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
+                            {s.status === 'at_risk' ? '⚠️' : '✅'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Table on sm+ */}
+                    <table className="hidden sm:table w-full text-sm">
+                      <thead className="bg-nb-cream/60">
+                        <tr>
+                          {['Student','Progress','Points','Status',''].map(h => (
+                            <th key={h} className="text-left px-5 py-2.5 text-gray-400 font-black text-xs uppercase tracking-wide">{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-nb-olive/10">
+                        {classStudents.map(s => (
+                          <tr key={s.id} className="hover:bg-nb-cream/40 transition">
+                            <td className="px-5 py-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black text-nb-dark flex-shrink-0"
+                                     style={{ background: s.status === 'at_risk' ? '#fee2e2' : '#FFEB3C' }}>
+                                  {s.name[0]}
+                                </div>
+                                <span className="font-bold text-nb-dark">{s.name}</span>
                               </div>
-                              <span className="text-xs font-black text-gray-600">{s.progress}%</span>
-                            </div>
-                          </td>
-                          <td className="px-5 py-3 font-black text-amber-600">⭐ {s.points}</td>
-                          <td className="px-5 py-3">
-                            <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${s.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
-                              {s.status === 'at_risk' ? '⚠️ At Risk' : '✅ Active'}
-                            </span>
-                          </td>
-                          <td className="px-5 py-3 text-right">
-                            <button className="text-xs font-bold hover:text-nb-dark transition" style={{ color: '#36913F' }}>
-                              View →
-                            </button>
+                            </td>
+                            <td className="px-5 py-3">
+                              <div className="flex items-center gap-2">
+                                <div className="w-24 h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                                  <div className="h-full rounded-full" style={{ width: `${s.progress}%`, background: s.progress >= 70 ? '#36913F' : s.progress >= 50 ? '#FFEB3C' : '#ef4444' }} />
+                                </div>
+                                <span className="text-xs font-black text-gray-600">{s.progress}%</span>
+                              </div>
+                            </td>
+                            <td className="px-5 py-3 font-black text-amber-600">⭐ {s.points}</td>
+                            <td className="px-5 py-3">
+                              <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${s.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
+                                {s.status === 'at_risk' ? '⚠️ At Risk' : '✅ Active'}
+                              </span>
+                            </td>
+                            <td className="px-5 py-3 text-right">
+                              <button className="text-xs font-bold hover:text-nb-dark transition" style={{ color: '#36913F' }}>View →</button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot className="bg-nb-cream/40 border-t border-nb-olive/10">
+                        <tr>
+                          <td className="px-5 py-2.5 text-xs text-gray-400 font-semibold" colSpan={5}>
+                            Showing {classStudents.length} of {cls.students} enrolled students
+                            {atRisk > 0 && <span className="ml-3 text-red-500 font-bold">· {atRisk} need attention</span>}
                           </td>
                         </tr>
-                      ))}
-                    </tbody>
-                    <tfoot className="bg-nb-cream/40 border-t border-nb-olive/10">
-                      <tr>
-                        <td className="px-5 py-2.5 text-xs text-gray-400 font-semibold" colSpan={5}>
-                          Showing {classStudents.length} of {cls.students} enrolled students
-                          {atRisk > 0 && <span className="ml-3 text-red-500 font-bold">· {atRisk} need attention</span>}
-                        </td>
-                      </tr>
-                    </tfoot>
-                  </table>
+                      </tfoot>
+                    </table>
+                    <p className="sm:hidden px-4 py-2 text-xs text-gray-400 border-t border-nb-olive/10">
+                      Showing {classStudents.length} of {cls.students} enrolled
+                      {atRisk > 0 && <span className="ml-2 text-red-500 font-bold">· {atRisk} need attention</span>}
+                    </p>
+                  </>
                 )}
               </div>
             )}

@@ -101,36 +101,36 @@ export default function ParentDashboard() {
 
       {/* Navbar */}
       <nav className="bg-white border-b-2 border-nb-olive/20 sticky top-0 z-50 shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <img src={logoHorizontal} alt="Neurobix Method" className="h-9 w-auto object-contain" />
-          <div className="flex items-center gap-3">
-            <span className="px-3 py-1 rounded-full text-xs font-bold bg-nb-olive/20 text-nb-dark">Parent Portal</span>
-            <div className="w-9 h-9 rounded-full flex items-center justify-center font-black text-nb-dark text-sm"
+        <div className="max-w-6xl mx-auto px-3 sm:px-4 h-14 flex items-center justify-between gap-2">
+          <img src={logoHorizontal} alt="Neurobix Method" className="h-7 sm:h-9 w-auto object-contain flex-shrink-0" />
+          <div className="flex items-center gap-2">
+            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-nb-olive/20 text-nb-dark hidden sm:inline">Parent Portal</span>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center font-black text-nb-dark text-xs flex-shrink-0"
                  style={{ background: '#FFEB3C' }}>EH</div>
-            <button onClick={() => navigate('/login')} className="text-xs text-gray-400 hover:text-red-400 font-medium">Logout</button>
+            <button onClick={() => navigate('/login')} className="text-xs text-gray-400 hover:text-red-400 font-medium whitespace-nowrap">Logout</button>
           </div>
         </div>
       </nav>
 
-      <div className="max-w-6xl mx-auto px-4 py-6 space-y-5">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-5">
 
         {/* Child Selector */}
-        <div className="bg-white rounded-2xl border border-nb-olive/20 p-4 flex items-center gap-4 flex-wrap">
-          <p className="text-sm font-black text-nb-dark flex-shrink-0">My Children:</p>
-          <div className="flex gap-2 flex-wrap flex-1">
+        <div className="bg-white rounded-2xl border border-nb-olive/20 p-3 sm:p-4">
+          <p className="text-xs sm:text-sm font-black text-nb-dark mb-2">My Children:</p>
+          <div className="flex gap-2 flex-wrap">
             {CHILDREN.map((c, i) => (
               <button key={c.id} onClick={() => { setChildIdx(i); setTab('overview') }}
-                className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border-2 transition-all ${
+                className={`flex items-center gap-2 px-3 py-2 rounded-2xl border-2 transition-all ${
                   childIdx === i ? 'border-nb-green shadow-md' : 'border-nb-olive/20 hover:border-nb-olive bg-nb-cream/50'
                 }`}
                 style={childIdx === i ? { background: '#6FC91115' } : {}}>
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black text-nb-dark flex-shrink-0"
+                <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black text-nb-dark flex-shrink-0"
                      style={{ background: '#FFEB3C' }}>{c.avatar}</div>
                 <div className="text-left">
-                  <p className="text-sm font-black text-nb-dark">{c.name}</p>
+                  <p className="text-xs sm:text-sm font-black text-nb-dark">{c.name}</p>
                   <p className="text-[10px] text-gray-400">{c.class}</p>
                 </div>
-                {childIdx === i && <span className="text-nb-green text-sm">✓</span>}
+                {childIdx === i && <span className="text-nb-green text-xs">✓</span>}
               </button>
             ))}
           </div>
@@ -138,10 +138,10 @@ export default function ParentDashboard() {
 
         {/* Sub-tabs */}
         <div className="bg-white rounded-2xl border border-nb-olive/20 overflow-hidden">
-          <div className="flex overflow-x-auto">
+          <div className="flex overflow-x-auto scrollbar-hide">
             {TABS.map(t => (
               <button key={t.id} onClick={() => setTab(t.id)}
-                className={`px-5 py-3 text-sm font-bold whitespace-nowrap border-b-2 transition-all flex-shrink-0 ${
+                className={`px-3 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-bold whitespace-nowrap border-b-2 transition-all flex-shrink-0 ${
                   tab === t.id ? 'border-nb-green text-nb-dark' : 'border-transparent text-gray-400 hover:text-nb-dark hover:bg-nb-cream/50'
                 }`}
                 style={tab === t.id ? { background: '#6FC91108' } : {}}>
@@ -155,28 +155,28 @@ export default function ParentDashboard() {
         {tab === 'overview' && (
           <div className="space-y-5">
             {/* Summary banner */}
-            <div className="rounded-3xl p-6 text-white shadow-xl overflow-hidden relative"
+            <div className="rounded-2xl sm:rounded-3xl p-4 sm:p-6 text-white shadow-xl overflow-hidden relative"
                  style={{ background: 'linear-gradient(135deg,#6FC911,#396336)' }}>
-              <div className="relative flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-green-200 text-sm font-semibold">Parent Overview</p>
-                  <h1 className="text-2xl font-black mt-1">{child.name}</h1>
-                  <p className="text-green-100 text-sm mt-0.5">{child.class} · Neurobix Method</p>
-                  <div className="flex gap-3 mt-4 flex-wrap">
+              <div className="relative flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-green-200 text-xs sm:text-sm font-semibold">Parent Overview</p>
+                  <h1 className="text-xl sm:text-2xl font-black mt-0.5 truncate">{child.name}</h1>
+                  <p className="text-green-100 text-xs sm:text-sm mt-0.5">{child.class} · Neurobix Method</p>
+                  <div className="grid grid-cols-4 gap-1.5 sm:gap-3 mt-3">
                     {[
-                      [`${overallProgress}%`, 'Avg. Progress'],
-                      [`${child.streak} 🔥`, 'Day Streak'],
-                      [`${child.points} ⭐`, 'Total Points'],
+                      [`${overallProgress}%`, 'Progress'],
+                      [`${child.streak}🔥`, 'Streak'],
+                      [`${child.points}⭐`, 'Points'],
                       [`${child.badges.length}`, 'Badges'],
                     ].map(([v, l]) => (
-                      <div key={l} className="bg-white/20 rounded-2xl px-4 py-2.5 text-center backdrop-blur-sm">
-                        <p className="text-lg font-black">{v}</p>
-                        <p className="text-[11px] text-green-100">{l}</p>
+                      <div key={l} className="bg-white/20 rounded-xl px-1.5 sm:px-4 py-2 text-center backdrop-blur-sm">
+                        <p className="text-sm sm:text-lg font-black leading-tight">{v}</p>
+                        <p className="text-[9px] sm:text-[11px] text-green-100 mt-0.5">{l}</p>
                       </div>
                     ))}
                   </div>
                 </div>
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-black text-nb-dark flex-shrink-0 shadow-lg"
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center text-lg sm:text-2xl font-black text-nb-dark flex-shrink-0 shadow-lg"
                      style={{ background: '#FFEB3C' }}>{child.avatar}</div>
               </div>
             </div>
@@ -314,7 +314,30 @@ export default function ParentDashboard() {
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-nb-olive/20 overflow-hidden">
+            {/* Mobile card list */}
+            <div className="space-y-2 sm:hidden">
+              {child.quizResults.map((q, i) => (
+                <div key={i} className="bg-white rounded-2xl border border-nb-olive/20 p-4">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="min-w-0">
+                      <p className="font-bold text-nb-dark text-sm truncate">{q.title}</p>
+                      <p className="text-xs text-gray-400">{q.subject} · {q.date}</p>
+                    </div>
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-bold flex-shrink-0 ${q.passed ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
+                      {q.passed ? '✅' : '❌'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full" style={{ width: `${q.score}%`, background: q.score >= 70 ? '#36913F' : q.score >= 50 ? '#FFEB3C' : '#ef4444' }} />
+                    </div>
+                    <span className="font-black text-nb-dark text-sm">{q.score}%</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* Table on sm+ */}
+            <div className="hidden sm:block bg-white rounded-2xl border border-nb-olive/20 overflow-hidden">
               <table className="w-full text-sm">
                 <thead className="bg-nb-cream border-b border-nb-olive/20">
                   <tr>

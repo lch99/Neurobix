@@ -18,12 +18,12 @@ function AddUserModal({ onClose, onAdd }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
          style={{ background: 'rgba(0,0,0,0.4)' }}
          onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-7">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-black text-nb-dark">Add New User</h2>
+      <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-md p-5 sm:p-7 max-h-[92vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-lg sm:text-xl font-black text-nb-dark">Add New User</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
         </div>
 
@@ -112,8 +112,8 @@ export default function AdminDashboard() {
       <Navbar role="admin" userName="Admin" />
 
       {/* Sub-tabs */}
-      <div className="bg-white border-b-2 border-nb-olive/20 sticky top-16 z-40">
-        <div className="max-w-7xl mx-auto px-4 flex gap-1 overflow-x-auto py-2">
+      <div className="bg-white border-b-2 border-nb-olive/20 sticky top-14 z-40">
+        <div className="max-w-7xl mx-auto px-2 flex gap-1 overflow-x-auto py-2 scrollbar-hide">
           {[
             { id: 'overview', label: '📊 Overview' },
             { id: 'users',    label: '👥 Users' },
@@ -121,7 +121,7 @@ export default function AdminDashboard() {
             { id: 'reports',  label: '📈 Reports' },
           ].map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
-              className={`px-5 py-2 rounded-lg text-sm font-black whitespace-nowrap transition-all ${tab === t.id ? 'text-white' : 'text-gray-500 hover:bg-nb-cream'}`}
+              className={`px-3 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-black whitespace-nowrap transition-all flex-shrink-0 ${tab === t.id ? 'text-white' : 'text-gray-500 hover:bg-nb-cream'}`}
               style={tab === t.id ? { background: '#396336' } : {}}>
               {t.label}
             </button>
@@ -129,22 +129,22 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
 
         {/* OVERVIEW */}
         {tab === 'overview' && (
           <>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
                 { label: 'Total Users',    value: 132,  icon: '👥',  bg: 'bg-blue-50',   text: 'text-blue-700' },
                 { label: 'Students',       value: 98,   icon: '🎓',  bg: 'bg-green-50',  text: 'text-nb-green' },
                 { label: 'Teachers',       value: 12,   icon: '👩‍🏫', bg: 'bg-nb-cream',  text: 'text-nb-dark' },
                 { label: 'Active Classes', value: 18,   icon: '🏫',  bg: 'bg-amber-50',  text: 'text-amber-700' },
               ].map(s => (
-                <div key={s.label} className={`${s.bg} rounded-2xl p-5 border border-nb-olive/20`}>
-                  <div className="text-3xl mb-2">{s.icon}</div>
-                  <div className={`text-4xl font-black ${s.text}`}>{s.value}</div>
-                  <div className="text-sm text-gray-500 mt-1">{s.label}</div>
+                <div key={s.label} className={`${s.bg} rounded-2xl p-4 border border-nb-olive/20`}>
+                  <div className="text-2xl mb-1">{s.icon}</div>
+                  <div className={`text-2xl sm:text-4xl font-black ${s.text}`}>{s.value}</div>
+                  <div className="text-xs sm:text-sm text-gray-500 mt-0.5">{s.label}</div>
                 </div>
               ))}
             </div>
@@ -209,17 +209,47 @@ export default function AdminDashboard() {
         {/* USERS */}
         {tab === 'users' && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between gap-4 flex-wrap">
-              <h2 className="text-xl font-black text-nb-dark">User Management</h2>
-              <div className="flex gap-3 flex-wrap">
-                <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search users…"
-                  className="px-4 py-2 rounded-xl border-2 border-nb-olive/20 text-sm focus:outline-none focus:border-nb-green bg-white" />
-                <button onClick={() => setShowModal(true)}
-                  className="px-4 py-2 text-white text-sm font-black rounded-xl shadow hover:opacity-90 transition"
-                  style={{ background: '#396336' }}>+ Add User</button>
-              </div>
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-lg sm:text-xl font-black text-nb-dark">User Management</h2>
+              <button onClick={() => setShowModal(true)}
+                className="px-3 sm:px-4 py-2 text-white text-xs sm:text-sm font-black rounded-xl shadow hover:opacity-90 transition whitespace-nowrap flex-shrink-0"
+                style={{ background: '#396336' }}>+ Add User</button>
             </div>
-            <div className="bg-white rounded-2xl border border-nb-olive/20 overflow-hidden">
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search users…"
+              className="w-full px-4 py-2 rounded-xl border-2 border-nb-olive/20 text-sm focus:outline-none focus:border-nb-green bg-white" />
+            {/* Mobile card list */}
+            <div className="space-y-2 sm:hidden">
+              {filtered.map(u => (
+                <div key={u.id} className="bg-white rounded-2xl border border-nb-olive/20 p-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0 ${ROLE_BADGE[u.role]}`}
+                         style={u.role === 'student' ? { background: '#FFEB3C' } : {}}>
+                      {u.name[0]}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-nb-dark text-sm truncate">{u.name}</p>
+                      <p className="text-xs text-gray-400 truncate">{u.email}</p>
+                    </div>
+                    <div className="flex gap-2 flex-shrink-0">
+                      <button className="text-xs font-bold" style={{ color: '#36913F' }}>Edit</button>
+                      <button className="text-xs font-bold text-red-400">Del</button>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 flex-wrap">
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-black capitalize ${ROLE_BADGE[u.role]}`}
+                          style={u.role === 'student' ? { background: '#FFEB3C' } : {}}>
+                      {u.role}
+                    </span>
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${u.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
+                      {u.status}
+                    </span>
+                    <span className="text-xs text-gray-400">{u.joined}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* Table on sm+ */}
+            <div className="hidden sm:block bg-white rounded-2xl border border-nb-olive/20 overflow-hidden">
               <table className="w-full text-sm">
                 <thead className="bg-nb-cream border-b border-nb-olive/20">
                   <tr>{['Name','Email','Role','Status','Joined',''].map(h => (
@@ -269,11 +299,11 @@ export default function AdminDashboard() {
         {tab === 'classes' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-black text-nb-dark">All Classes</h2>
-              <button className="px-4 py-2 text-white text-sm font-black rounded-xl shadow hover:opacity-90 transition"
+              <h2 className="text-lg sm:text-xl font-black text-nb-dark">All Classes</h2>
+              <button className="px-3 sm:px-4 py-2 text-white text-xs sm:text-sm font-black rounded-xl shadow hover:opacity-90 transition"
                       style={{ background: '#396336' }}>+ New Class</button>
             </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {[
                 { name:'Primary 4A', subject:'Mathematics', teacher:'Ms Sarah Tan', students:28, progress:67 },
                 { name:'Primary 4B', subject:'Mathematics', teacher:'Ms Sarah Tan', students:25, progress:50 },
@@ -302,8 +332,8 @@ export default function AdminDashboard() {
         {/* REPORTS */}
         {tab === 'reports' && (
           <div className="space-y-4">
-            <h2 className="text-xl font-black text-nb-dark">Reports</h2>
-            <div className="grid sm:grid-cols-2 gap-4">
+            <h2 className="text-lg sm:text-xl font-black text-nb-dark">Reports</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
                 { title:'Student Progress Report',   desc:'Overview of all student completion rates and scores',       icon:'📊' },
                 { title:'Lesson Engagement Report',  desc:'Which lessons are most accessed and completed',              icon:'📚' },
