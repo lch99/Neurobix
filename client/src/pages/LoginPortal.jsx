@@ -1,50 +1,59 @@
 import { useNavigate } from 'react-router-dom'
-import logoSquare from '../assets/NM_Square.png'
+import logoFull from '../assets/Asset 1@3x.png'
+import charStudent from '../assets/char-student.png'
+import charStaff from '../assets/char-staff.png'
+import BrainBackground from '../components/BrainBackground'
 
 export default function LoginPortal() {
   const navigate = useNavigate()
 
   return (
-    <div className="h-screen flex flex-col items-center justify-center bg-nb-cream overflow-hidden px-4"
-         style={{ backgroundImage: 'radial-gradient(circle at 15% 50%, #6FC91118 0%, transparent 55%), radial-gradient(circle at 85% 20%, #FFEB3C18 0%, transparent 55%)' }}>
+    <BrainBackground>
+      <div className="relative flex flex-col items-center w-full">
+        {/* Logo lockup */}
+        <img src={logoFull} alt="Neurobix Method" className="h-8 sm:h-10 object-contain mb-6" />
 
-      {/* Logo */}
-      <img src={logoSquare} alt="Neurobix Method" className="w-20 h-20 object-contain mb-2" />
-      <h1 className="text-2xl font-black text-nb-dark">Neurobix Method</h1>
-      <p className="text-gray-400 text-sm mt-1 mb-10">Who are you logging in as?</p>
+        {/* Heading */}
+        <h1 className="text-4xl sm:text-6xl font-bold text-nb-dark text-center tracking-tight mb-12 sm:mb-16">
+          Are you a teacher or a student?
+        </h1>
 
-      {/* Two big portal cards */}
-      <div className="flex flex-col sm:flex-row gap-4 w-full max-w-lg px-2">
+        {/* Two portal cards */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-10 sm:gap-16">
 
-        {/* Student */}
-        <button
-          onClick={() => navigate('/login/student')}
-          className="flex-1 rounded-3xl p-6 sm:p-8 flex flex-col items-center gap-3 shadow-xl border-2 border-transparent hover:border-nb-yellow hover:scale-[1.03] transition-all group"
-          style={{ background: 'linear-gradient(135deg,#FFEB3C,#6FC911)' }}>
-          <span className="text-5xl sm:text-6xl group-hover:scale-110 transition-transform">🎒</span>
-          <div className="text-center">
-            <p className="text-xl sm:text-2xl font-black text-nb-dark">I'm a Student</p>
-            <p className="text-nb-dark/60 text-sm mt-1">Age 7 – 12</p>
+          {/* Student */}
+          <div className="flex flex-col items-center gap-5">
+            <button
+              onClick={() => navigate('/login/student')}
+              className="w-40 h-40 sm:w-52 sm:h-52 rounded-[2rem] bg-white shadow-lg flex items-center justify-center hover:scale-[1.03] transition-transform"
+            >
+              <img src={charStudent} alt="Student" className="w-[68%] h-[68%] object-contain" />
+            </button>
+            <button
+              onClick={() => navigate('/login/student')}
+              className="px-12 py-2.5 rounded-full bg-nb-green text-white font-bold text-lg shadow-[0_5px_0_rgba(42,77,40,0.4)] hover:bg-nb-dark active:translate-y-0.5 active:shadow-[0_2px_0_rgba(42,77,40,0.4)] transition-all"
+            >
+              Student
+            </button>
           </div>
-        </button>
 
-        {/* Staff / Parent */}
-        <button
-          onClick={() => navigate('/login/staff')}
-          className="flex-1 rounded-3xl p-6 sm:p-8 flex flex-col items-center gap-3 shadow-xl border-2 border-transparent hover:border-nb-green hover:scale-[1.03] transition-all group"
-          style={{ background: 'linear-gradient(135deg,#396336,#6FC911)' }}>
-          <span className="text-5xl sm:text-6xl group-hover:scale-110 transition-transform">👩‍🏫</span>
-          <div className="text-center">
-            <p className="text-xl sm:text-2xl font-black text-white">Parent / Staff</p>
-            <p className="text-green-200 text-sm mt-1">Teacher · Admin · Parent</p>
+          {/* Parent / Staff */}
+          <div className="flex flex-col items-center gap-5">
+            <button
+              onClick={() => navigate('/login/staff')}
+              className="w-40 h-40 sm:w-52 sm:h-52 rounded-[2rem] bg-white shadow-lg flex items-center justify-center hover:scale-[1.03] transition-transform"
+            >
+              <img src={charStaff} alt="Parent / Staff" className="w-[68%] h-[68%] object-contain" />
+            </button>
+            <button
+              onClick={() => navigate('/login/staff')}
+              className="px-12 py-2.5 rounded-full bg-nb-green text-white font-bold text-lg shadow-[0_5px_0_rgba(42,77,40,0.4)] hover:bg-nb-dark active:translate-y-0.5 active:shadow-[0_2px_0_rgba(42,77,40,0.4)] transition-all"
+            >
+              Parent / Staff
+            </button>
           </div>
-        </button>
+        </div>
       </div>
-
-      {/* Footer */}
-      <p className="absolute bottom-4 left-4 right-4 text-xs text-gray-400 text-center leading-relaxed">
-        © 2025 Neurobix Method Pte Ltd · Singapore
-      </p>
-    </div>
+    </BrainBackground>
   )
 }

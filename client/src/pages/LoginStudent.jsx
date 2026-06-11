@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import logoSquare from '../assets/NM_Square.png'
+import logoFull from '../assets/Asset 1@3x.png'
+import BrainBackground from '../components/BrainBackground'
 
 const DEMO = { email: 'student@neurobix.com', password: 'demo123', path: '/student' }
 
@@ -16,7 +17,7 @@ export default function LoginStudent() {
     if (email === DEMO.email && password === DEMO.password) {
       navigate(DEMO.path)
     } else {
-      setError('Oops! Wrong email or password. Try again! 😅')
+      setError('Oops! Wrong email or password. Try again!')
       setShake(true)
       setTimeout(() => setShake(false), 500)
     }
@@ -29,76 +30,68 @@ export default function LoginStudent() {
   }
 
   return (
-    <div className="h-screen flex flex-col items-center justify-center overflow-hidden px-4"
-         style={{ background: 'linear-gradient(160deg,#FFF7E9 0%,#ffffff 50%,#f0fdf4 100%)' }}>
-
-      {/* Back */}
-      <button onClick={() => navigate('/login')}
-        className="absolute top-5 left-5 flex items-center gap-1.5 text-sm font-bold text-gray-400 hover:text-nb-green transition">
+    <BrainBackground>
+      {/* Back to role selection */}
+      <button
+        onClick={() => navigate('/login')}
+        className="absolute top-5 left-5 flex items-center gap-1.5 text-sm font-bold text-nb-dark/50 hover:text-nb-green transition"
+      >
         ← Back
       </button>
 
-      {/* Card */}
-      <div className={`w-full max-w-sm bg-white rounded-3xl shadow-2xl border-2 border-nb-olive/20 p-8 transition-all ${shake ? 'animate-[wiggle_0.4s_ease]' : ''}`}
-           style={{ boxShadow: '0 20px 60px #6FC91125' }}>
+      {/* Logo + heading */}
+      <img src={logoFull} alt="Neurobix Method" className="h-8 sm:h-10 object-contain mb-5" />
+      <h1 className="text-4xl sm:text-6xl font-bold text-nb-dark text-center tracking-tight mb-8 sm:mb-10">
+        Hello Student
+      </h1>
 
-        {/* Header */}
-        <div className="flex flex-col items-center mb-6">
-          <img src={logoSquare} alt="Neurobix Method" className="w-16 h-16 object-contain mb-3" />
-          <h1 className="text-2xl font-black text-nb-dark text-center">Hello, Student! 👋</h1>
-          <p className="text-gray-400 text-sm mt-1 text-center">Sign in to start learning 🚀</p>
-        </div>
-
-        {error && (
-          <div className="mb-4 p-3 rounded-2xl text-center text-sm font-bold"
-               style={{ background: '#fee2e2', color: '#dc2626' }}>
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleLogin} className="space-y-4">
+      {/* Form card */}
+      <div className={`w-full max-w-xl bg-white rounded-[2rem] shadow-xl p-7 sm:p-10 ${shake ? 'animate-[wiggle_0.4s_ease]' : ''}`}>
+        <form onSubmit={handleLogin} className="space-y-5">
           <div>
-            <label className="block text-sm font-black text-nb-dark mb-1.5">Your Email</label>
+            <label className="block text-base font-bold text-nb-dark mb-2">Email Address</label>
             <input
-              type="email" value={email} onChange={e => { setEmail(e.target.value); setError('') }}
-              placeholder="Enter your email"
-              className="w-full px-4 py-3 rounded-2xl border-2 border-gray-100 focus:outline-none focus:border-nb-green bg-nb-cream text-base transition"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-black text-nb-dark mb-1.5">Your Password</label>
-            <input
-              type="password" value={password} onChange={e => { setPassword(e.target.value); setError('') }}
-              placeholder="••••••••"
-              className="w-full px-4 py-3 rounded-2xl border-2 border-gray-100 focus:outline-none focus:border-nb-green bg-nb-cream text-base transition"
+              type="email"
+              value={email}
+              onChange={e => { setEmail(e.target.value); setError('') }}
+              className="w-full rounded-full border-2 border-nb-green bg-white px-5 py-3 text-nb-dark outline-none focus:ring-2 focus:ring-nb-lime/60 transition"
               required
             />
           </div>
 
-          <button type="submit"
-            className="w-full py-4 rounded-2xl font-black text-nb-dark text-lg shadow-lg transition-all hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
-            style={{ background: 'linear-gradient(135deg,#FFEB3C,#6FC911)' }}>
-            Let's Go! 🚀
-          </button>
+          <div>
+            <label className="block text-base font-bold text-nb-dark mb-2">Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={e => { setPassword(e.target.value); setError('') }}
+              className="w-full rounded-full border-2 border-nb-green bg-white px-5 py-3 text-nb-dark outline-none focus:ring-2 focus:ring-nb-lime/60 transition"
+              required
+            />
+          </div>
+
+          {error && (
+            <p className="text-center text-sm font-semibold text-red-600">{error}</p>
+          )}
+
+          <div className="flex justify-center pt-2">
+            <button
+              type="submit"
+              className="px-12 py-3 rounded-full bg-nb-green text-white font-bold text-lg shadow-[0_5px_0_rgba(42,77,40,0.4)] hover:bg-nb-dark active:translate-y-0.5 active:shadow-[0_2px_0_rgba(42,77,40,0.4)] transition-all"
+            >
+              Let's Go!
+            </button>
+          </div>
         </form>
-
-        {/* Demo quick-fill */}
-        <div className="mt-4 pt-4 border-t border-gray-100 text-center">
-          <p className="text-xs text-gray-400 mb-2">Demo mode</p>
-          <button onClick={fillDemo}
-            className="px-5 py-2 rounded-xl text-sm font-black text-nb-dark border-2 border-nb-yellow hover:scale-105 transition-all"
-            style={{ background: '#FFEB3C22' }}>
-            🎓 Fill Demo Student Account
-          </button>
-        </div>
       </div>
 
-      {/* Decorative blobs */}
-      <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full opacity-10 pointer-events-none"
-           style={{ background: '#6FC911', filter: 'blur(60px)', transform: 'translate(-30%,30%)' }} />
-      <div className="absolute top-0 right-0 w-48 h-48 rounded-full opacity-10 pointer-events-none"
-           style={{ background: '#FFEB3C', filter: 'blur(60px)', transform: 'translate(30%,-30%)' }} />
-    </div>
+      {/* Demo quick-fill (dev convenience) */}
+      <button
+        onClick={fillDemo}
+        className="mt-5 text-sm font-semibold text-nb-green/70 hover:text-nb-green underline underline-offset-2 transition"
+      >
+        Use demo student account
+      </button>
+    </BrainBackground>
   )
 }

@@ -1,32 +1,51 @@
 @import "tailwindcss";
 
-@theme {
-  /* Neurobix Method color palette */
-  --color-nb-white:  #FFFFFF;
-  --color-nb-cream:  #FFF7E9;
-  --color-nb-yellow: #FFEB3C;
-  --color-nb-lime:   #6FC911;
-  --color-nb-green:  #36913F;
-  --color-nb-olive:  #91BA4F;
-  --color-nb-dark:   #396336;
+/* Self-hosted brand font (Fredoka) — bundled in repo, never loaded from a CDN
+   (Google CDN is blocked in China). */
+@font-face {
+  font-family: 'Fredoka'; font-style: normal; font-weight: 400; font-display: swap;
+  src: url('./assets/fonts/fredoka-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Fredoka'; font-style: normal; font-weight: 500; font-display: swap;
+  src: url('./assets/fonts/fredoka-500.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Fredoka'; font-style: normal; font-weight: 600; font-display: swap;
+  src: url('./assets/fonts/fredoka-600.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Fredoka'; font-style: normal; font-weight: 700; font-display: swap;
+  src: url('./assets/fonts/fredoka-700.woff2') format('woff2');
+}
 
-  /* keep old aliases so existing classes still work */
-  --color-brand-white: #FFFFFF;
-  --color-brand-light: #91BA4F;
-  --color-brand-green: #36913F;
-  --color-brand-dark:  #396336;
-  --color-brand-black: #0f0f0f;
+@theme {
+  --font-sans: 'Fredoka', system-ui, 'Segoe UI', Roboto, sans-serif;
+  /* Neurobix Method color palette (updated 2026-06) */
+  --color-nb-white:   #FFFFFF;
+  --color-nb-cream:   #FFF7EA;   /* a */
+  --color-nb-yellow:  #FFEB3C;   /* b */
+  --color-nb-bright:  #DBFF43;   /* c */
+  --color-nb-lime:    #6FC911;   /* d */
+  --color-nb-green:   #36913F;   /* e */
+  --color-nb-dark:    #2A4D28;   /* f */
+  --color-nb-olive:   #91BA4F;
+
 }
 
 * { box-sizing: border-box; }
 
 body {
   margin: 0;
-  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
-  background: #FFF7E9;
+  font-family: 'Fredoka', system-ui, 'Segoe UI', Roboto, sans-serif;
+  background: #FFF7EA;
   color: #1a1a1a;
   -webkit-text-size-adjust: 100%;
+  font-synthesis: none; /* use real weights only — Fredoka tops out at 700 */
 }
+
+/* Form controls don't inherit font-family by default */
+input, button, textarea, select { font-family: inherit; }
 
 #root { min-height: 100vh; }
 
@@ -37,4 +56,20 @@ body {
 }
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+/* Tab content fade-in */
+@keyframes tab-fade {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.tab-panel {
+  animation: tab-fade 0.18s ease both;
+}
+
+/* Wrong-credentials shake */
+@keyframes wiggle {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-8px); }
+  40%, 80% { transform: translateX(8px); }
 }
