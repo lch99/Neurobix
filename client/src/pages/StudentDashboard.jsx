@@ -1,7 +1,37 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import logoHorizontal from '../assets/Asset 1@3x.png'
-import logoWhite from '../assets/Asset 1@3x 1_White.png'
+import { useNavigate, useLocation } from 'react-router-dom'
+import Navbar from '../components/Navbar'
+import LessonBrowser from '../components/LessonBrowser'
+import { brainWatermark } from '../components/BrainBackground'
+import heroMascots from '../assets/hero-mascots.png'
+import rankBadge1 from '../assets/badges/rank-1.png'
+import rankBadge2 from '../assets/badges/rank-2.png'
+import rankBadge3 from '../assets/badges/rank-3.png'
+import rankBadge4 from '../assets/badges/rank-4.png'
+import rankBadge5 from '../assets/badges/rank-5.png'
+import rankBadge6 from '../assets/badges/rank-6.png'
+import rankBadge7 from '../assets/badges/rank-7.png'
+import rankBadge8 from '../assets/badges/rank-8.png'
+import rankBadge9 from '../assets/badges/rank-9.png'
+import rankBadge10 from '../assets/badges/rank-10.png'
+
+const FlameIcon = ({ className }) => (
+  <svg viewBox="0 0 36 36" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M18 2C18 2 9 10.5 9 19.5C9 25.3 13.3 30 18.5 30C24.2 30 28.5 25.6 28.5 20C28.5 16.5 27 13.5 25 11.5C25 11.5 25.5 15 23.5 17C23.5 17 23.5 11 18 2Z" fill="url(#flame-outer)"/>
+    <path d="M18.5 14C18.5 14 14.5 18.5 14.5 22.5C14.5 25.5 16.7 28 19.5 28C22.5 28 25 25.6 25 22.5C25 20.5 24 18.7 22.7 17.5C22.7 17.5 23 19.5 21.8 20.7C21.8 20.7 21.8 17 18.5 14Z" fill="url(#flame-inner)"/>
+    <defs>
+      <linearGradient id="flame-outer" x1="18" y1="2" x2="18" y2="30" gradientUnits="userSpaceOnUse">
+        <stop stopColor="#FFC23C"/>
+        <stop offset="0.5" stopColor="#FF8A1E"/>
+        <stop offset="1" stopColor="#F4511E"/>
+      </linearGradient>
+      <linearGradient id="flame-inner" x1="19.5" y1="14" x2="19.5" y2="28" gradientUnits="userSpaceOnUse">
+        <stop stopColor="#FFE082"/>
+        <stop offset="1" stopColor="#FFB300"/>
+      </linearGradient>
+    </defs>
+  </svg>
+)
 
 const SUBJECTS = [
   { id: 1, name: 'Mathematics', icon: '🔢', color: '#3b82f6', progress: 72, lessons: 14, completed: 10 },
@@ -9,13 +39,27 @@ const SUBJECTS = [
   { id: 3, name: 'Science',     icon: '🔬', color: '#36913F', progress: 40, lessons: 10, completed: 4  },
 ]
 
+const SUBJECT_COLOR = {
+  Mathematics: '#3b82f6',
+  English:     '#9333ea',
+  Science:     '#36913F',
+}
+
 const RECENT_LESSONS = [
-  { id: 1, title: 'Addition & Subtraction', subject: 'Mathematics', status: 'completed',   icon: '🎬' },
-  { id: 3, title: 'Fractions Basics',       subject: 'Mathematics', status: 'in_progress', icon: '📝' },
-  { id: 4, title: 'Alphabet Flash Cards',   subject: 'English',     status: 'in_progress', icon: '🃏' },
-  { id: 7, title: 'The Solar System',       subject: 'Science',     status: 'in_progress', icon: '🎬' },
-  { id: 2, title: 'Reading Comprehension',  subject: 'English',     status: 'overdue',     icon: '📄' },
+  { id: 1, title: 'Addition & Subtraction', subject: 'Mathematics', tag: 'Math',    desc: 'Use story method to remember key facts.',      progress: 100, status: 'completed',   icon: '➕' },
+  { id: 3, title: 'Fraction Basics',        subject: 'Mathematics', tag: 'Math',    desc: 'Understand fractions using stories & visuals.', progress: 60,  status: 'in_progress', icon: '🍕' },
+  { id: 4, title: 'Alphabet Flash Cards',   subject: 'English',     tag: 'English', desc: 'Learn letters with picture associations.',      progress: 30,  status: 'in_progress', icon: '🔤' },
+  { id: 7, title: 'The Solar System',       subject: 'Science',     tag: 'Science', desc: 'Explore planets with memory palace.',           progress: 25,  status: 'in_progress', icon: '🪐' },
+  { id: 2, title: 'Reading Comprehension',  subject: 'English',     tag: 'English', desc: 'Improve reading with story-based techniques.',  progress: 0,   status: 'overdue',     icon: '📖' },
 ]
+
+function StatusPill({ status }) {
+  if (status === 'completed')
+    return <span className="flex items-center gap-1 text-xs font-bold text-nb-green bg-nb-green/10 rounded-full px-3 py-1.5 whitespace-nowrap">✓ Done</span>
+  if (status === 'overdue')
+    return <span className="flex items-center gap-1 text-xs font-bold text-red-500 bg-red-50 rounded-full px-3 py-1.5 whitespace-nowrap">⚠ Overdue</span>
+  return <span className="flex items-center gap-1 text-xs font-bold text-amber-600 bg-amber-50 rounded-full px-3 py-1.5 whitespace-nowrap">▶ Continue</span>
+}
 
 const BADGES = [
   { icon: '⭐', label: 'Star Learner',  earned: true  },
@@ -26,25 +70,12 @@ const BADGES = [
   { icon: '🚀', label: 'Fast Finisher', earned: false },
 ]
 
-const STATUS_STYLE = {
-  completed:   'bg-green-100 text-green-700',
-  in_progress: 'bg-yellow-100 text-yellow-700',
-  pending:     'bg-gray-100 text-gray-400',
-  overdue:     'bg-red-100 text-red-600',
-}
-const STATUS_LABEL = {
-  completed:   '✅ Done',
-  in_progress: '▶ Continue',
-  pending:     '🔒 Locked',
-  overdue:     '⚠️ Overdue',
-}
-
 const TABS = [
   { id: 'home',       icon: '🏠', label: 'Home'       },
   { id: 'lessons',    icon: '📚', label: 'Lessons'    },
   { id: 'flashcards', icon: '🃏', label: 'Flash Cards' },
   { id: 'quizzes',    icon: '📝', label: 'Quizzes'    },
-  { id: 'schedule',   icon: '📅', label: 'Schedule'   },
+  { id: 'shop',       icon: '🛍️', label: 'Shop'       },
   { id: 'rewards',    icon: '🏆', label: 'Rewards'    },
 ]
 
@@ -54,131 +85,187 @@ const OPEN_CLASSES = [
   { id: 12, name: 'Science Explorers',     subject: 'Science',     level: 'Year 4–6', slots: 15, enrolled: true  },
 ]
 
+const BADGE_THRESHOLDS = [500, 1000, 1500, 2000, 3000, 5000]
+
+const REDEEM_ITEMS = [
+  { id: 'r1', icon: '📅', name: '1-Week Extension',      category: 'Subscription', cost: 300,  desc: 'Adds 7 days to your active subscription plan. Credited automatically.' },
+  { id: 'r2', icon: '📆', name: '1-Month Extension',     category: 'Subscription', cost: 1000, desc: 'Adds 30 days to your active subscription plan. Credited automatically.' },
+  { id: 'r3', icon: '🏷️', name: '10% Renewal Discount', category: 'Voucher',       cost: 200,  desc: 'Receive a 10% discount code applied on your next subscription renewal.' },
+  { id: 'r4', icon: '🎨', name: 'Sticker Pack (10 pcs)', category: 'Product',      cost: 150,  desc: 'Exclusive Neurobix memory stickers. Collect at the centre or posted to you.' },
+  { id: 'r5', icon: '🃏', name: 'Bonus Flash Deck',      category: 'Product',      cost: 100,  desc: 'Unlock a bonus flash card deck for any subject instantly.' },
+  { id: 'r6', icon: '⚡', name: 'Double XP — 3 Days',    category: 'Digital',      cost: 250,  desc: 'Earn 2× points on every lesson for the next 3 days.' },
+]
+
 export default function StudentDashboard() {
   const navigate = useNavigate()
-  const [tab, setTab] = useState('home')
+  const location = useLocation()
+  const [tab, setTab] = useState(location.state?.tab || 'home')
   const [certModal, setCertModal] = useState(null)
   const [openClasses, setOpenClasses] = useState(OPEN_CLASSES)
+  const [studentPoints, setStudentPoints] = useState(1240)
+  const [redeemConfirm, setRedeemConfirm] = useState(null)
+  const [redeemedIds, setRedeemedIds]     = useState([])
+  const [redeemToast, setRedeemToast]     = useState(null)
 
   return (
-    <div className="min-h-screen bg-nb-cream flex flex-col">
+    <div className={`min-h-screen flex flex-col ${tab === 'home' ? 'bg-white' : 'bg-nb-cream'}`}>
 
       {/* ── Top bar ── */}
-      <header className="bg-white border-b border-nb-olive/20 sticky top-0 z-50 shadow-sm">
-        <div className="max-w-5xl mx-auto px-3 sm:px-6 h-13 flex items-center justify-between gap-2">
-          <img src={logoHorizontal} alt="Neurobix Method" className="h-7 sm:h-8 w-auto object-contain flex-shrink-0" />
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-black text-nb-dark bg-nb-yellow px-2 py-0.5 rounded-full whitespace-nowrap">⭐ 1,240</span>
-            <div className="w-7 h-7 rounded-full flex items-center justify-center font-black text-nb-dark text-xs flex-shrink-0"
-                 style={{ background: '#FFEB3C' }}>AH</div>
-            <button onClick={() => navigate('/login')} className="text-xs text-gray-400 hover:text-red-400 whitespace-nowrap">Logout</button>
+      <Navbar role="student" userName="Ahmad bin Hassan" points={studentPoints} avatar="AH"
+              tabs={TABS} activeTab={tab} onTabChange={setTab} />
+
+      {/* ── Welcome hero (full-width) ── */}
+      {tab === 'home' && (
+        <div className="tab-panel w-full text-white relative overflow-hidden"
+             style={{
+               backgroundColor: '#2A4D28',
+               backgroundImage: `${brainWatermark('rgba(255,255,255,0.13)')}, linear-gradient(135deg,#3C9D45 0%,#2A4D28 100%)`,
+               backgroundSize: '150px 150px, cover',
+             }}>
+          <div className="max-w-6xl w-full mx-auto px-3 sm:px-6 py-6 sm:py-8 relative">
+            <div className="relative pr-24 sm:pr-36">
+              <p className="text-white/85 font-semibold text-sm">Welcome back, Ahmad!</p>
+              <h1 className="text-2xl sm:text-4xl font-bold mt-1">Ready to train your brain?</h1>
+              <p className="text-white/80 text-sm mt-1.5">Every lesson makes your memory stronger!</p>
+            </div>
+
+            {/* Mascot duo */}
+            <img src={heroMascots} alt="" className="absolute right-2 top-2 sm:right-4 sm:top-3 h-20 sm:h-32 w-auto object-contain pointer-events-none select-none" />
+
+            {/* Stat cards */}
+            <div className="relative grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
+              {[
+                { icon: '📘', value: '10',    label: 'Lessons', sub: '10/14 completed' },
+                { icon: <FlameIcon className="w-6 h-6" />, value: '7',     label: 'Streak',  sub: 'Days in a total' },
+                { icon: '🏅', value: '3',     label: 'Badges',  sub: 'Keep collecting!' },
+                { icon: '⭐', value: studentPoints.toLocaleString(), label: 'Points', sub: 'Keep growing!' },
+              ].map(s => (
+                <div key={s.label} className="bg-white rounded-2xl p-3 shadow-sm">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-2xl flex-shrink-0">{s.icon}</span>
+                    <div className="min-w-0">
+                      <p className="text-lg sm:text-xl font-bold text-nb-dark leading-none">{s.value}</p>
+                      <p className="text-xs font-semibold text-gray-500 mt-0.5">{s.label}</p>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-gray-400 mt-2 text-center">{s.sub}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-
-        {/* Tab bar — scrollable on mobile */}
-        <div className="max-w-5xl mx-auto border-t border-gray-100 flex overflow-x-auto scrollbar-hide">
-          {TABS.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)}
-              className={`flex-shrink-0 flex flex-col items-center py-2 gap-0.5 text-[10px] sm:text-xs font-bold transition-colors border-b-2 px-3 sm:px-0 sm:flex-1 ${
-                tab === t.id ? 'border-nb-green text-nb-green' : 'border-transparent text-gray-400 hover:text-nb-dark'
-              }`}>
-              <span className="text-lg sm:text-xl leading-none">{t.icon}</span>
-              <span className="leading-none whitespace-nowrap">{t.label}</span>
-            </button>
-          ))}
-        </div>
-      </header>
+      )}
 
       {/* ── Page content ── */}
-      <main className="flex-1 max-w-5xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
+      <main className={`flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 pb-4 sm:pb-6 space-y-4 sm:space-y-6 ${tab === 'home' || tab === 'rewards' || tab === 'lessons' ? 'pt-0' : 'pt-4 sm:pt-6'}`}>
 
         {/* ── HOME ── */}
         {tab === 'home' && (
-          <div className="space-y-6">
+          <div className="tab-panel space-y-6">
 
-            {/* Welcome banner */}
-            <div className="rounded-2xl sm:rounded-3xl p-5 sm:p-7 text-white relative overflow-hidden shadow-xl"
-                 style={{ background: 'linear-gradient(135deg,#6FC911 0%,#396336 100%)' }}>
-              <img src={logoWhite} alt=""
-                   className="absolute -right-4 -top-4 h-32 sm:h-40 opacity-10 pointer-events-none select-none" />
-              <div className="relative">
-                <p className="text-green-200 font-semibold text-sm">Welcome back 👋</p>
-                <h1 className="text-2xl sm:text-3xl font-black mt-1">Hello, Ahmad!</h1>
-                <p className="text-green-100 text-sm mt-1">🔥 7-day streak — you're on fire!</p>
-                <div className="grid grid-cols-4 gap-2 mt-4">
-                  {[['10','Lessons'],['7 🔥','Streak'],['3','Badges'],['1,240⭐','Points']].map(([v,l]) => (
-                    <div key={l} className="bg-white/20 rounded-xl px-2 py-2 text-center backdrop-blur-sm">
-                      <p className="text-base sm:text-xl font-black leading-none">{v}</p>
-                      <p className="text-[10px] sm:text-[11px] text-green-200 mt-0.5">{l}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Subjects */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-lg sm:text-xl font-black text-nb-dark">📚 My Subjects</h2>
-                <button onClick={() => navigate('/lessons')} className="text-sm font-bold text-nb-green hover:text-nb-dark transition">View all →</button>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {SUBJECTS.map(s => (
-                  <div key={s.id} onClick={() => navigate('/lessons')}
-                    className="bg-white rounded-2xl border-2 border-nb-olive/20 p-4 hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer flex sm:flex-col items-center sm:items-start gap-3 sm:gap-0">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl flex-shrink-0 sm:mb-3 shadow-sm"
-                         style={{ background: s.color + '18' }}>{s.icon}</div>
-                    <div className="flex-1 min-w-0 sm:w-full">
-                      <p className="font-black text-nb-dark text-sm sm:text-base">{s.name}</p>
-                      <p className="text-xs text-gray-400 mt-0.5 sm:mt-1">{s.completed}/{s.lessons} lessons done</p>
-                      <div className="mt-2 h-2 bg-gray-100 rounded-full overflow-hidden">
+            {/* My Subjects */}
+            <div className="bg-nb-cream w-screen relative left-1/2 right-1/2 -mx-[50vw] py-4 sm:py-5">
+              <div className="max-w-6xl w-full mx-auto px-3 sm:px-6">
+                <h2 className="text-xl sm:text-2xl font-bold text-nb-dark mb-3">My Subjects</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {SUBJECTS.map(s => (
+                    <div key={s.id} onClick={() => navigate('/lessons')}
+                      className="bg-white rounded-2xl shadow-sm p-4 hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
+                             style={{ background: s.color + '1A' }}>{s.icon}</div>
+                        <div className="min-w-0">
+                          <p className="font-bold text-nb-dark">{s.name}</p>
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            {s.completed}/{s.lessons} lessons done
+                            <span className="font-bold ml-1.5" style={{ color: s.color }}>{s.progress}%</span>
+                          </p>
+                        </div>
+                      </div>
+                      <div className="mt-3 h-2 bg-gray-100 rounded-full overflow-hidden">
                         <div className="h-full rounded-full transition-all" style={{ width: `${s.progress}%`, background: s.color }} />
                       </div>
                     </div>
-                    <p className="text-sm font-black flex-shrink-0 sm:mt-1.5" style={{ color: s.color }}>{s.progress}%</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Continue Learning + Tip side by side */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              {/* Continue learning — takes 2/3 */}
-              <div className="lg:col-span-2">
-                <h2 className="text-lg sm:text-xl font-black text-nb-dark mb-3">▶️ Continue Learning</h2>
-                <div className="space-y-2.5">
-                  {RECENT_LESSONS.map(l => (
-                    <div key={l.id} onClick={() => navigate(`/lessons/${l.id}`)}
-                      className="bg-white rounded-2xl border-2 border-nb-olive/20 p-3 sm:p-4 flex items-center gap-3 hover:shadow-md hover:border-nb-green/40 hover:-translate-y-0.5 transition-all cursor-pointer">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center text-xl sm:text-2xl flex-shrink-0"
-                           style={{ background: '#FFF7E9' }}>{l.icon}</div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-black text-nb-dark text-sm truncate">{l.title}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">{l.subject}</p>
-                      </div>
-                      <span className={`text-xs font-bold px-2 sm:px-3 py-1 rounded-full flex-shrink-0 ${STATUS_STYLE[l.status]}`}>
-                        {STATUS_LABEL[l.status]}
-                      </span>
-                    </div>
                   ))}
                 </div>
               </div>
+            </div>
 
-              {/* Right 1/3: tip + streak stacked */}
-              <div className="grid grid-cols-2 lg:grid-cols-1 gap-4">
-                <div className="bg-white rounded-2xl border-2 border-nb-yellow p-4"
-                     style={{ background: 'linear-gradient(135deg,#FFEB3C15,#ffffff)' }}>
+            {/* Continue Learning + sidebar */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+              {/* Continue Learning — 2/3 */}
+              <div className="lg:col-span-2">
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-xl sm:text-2xl font-bold text-nb-dark">Continue Learning</h2>
+                  <button onClick={() => navigate('/lessons')}
+                    className="text-sm font-bold text-nb-green border-2 border-nb-green/40 rounded-full px-4 py-1.5 hover:bg-nb-green hover:text-white transition">
+                    View All Courses ›
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  {RECENT_LESSONS.map(l => {
+                    const c = SUBJECT_COLOR[l.subject]
+                    const barColor = l.status === 'completed' ? '#36913F' : l.status === 'overdue' ? '#e5e7eb' : '#FBBF24'
+                    return (
+                      <div key={l.id} onClick={() => navigate(`/lessons/${l.id}`)}
+                        className="bg-white rounded-2xl shadow-sm p-3 sm:p-4 flex items-center gap-3 sm:gap-4 hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer">
+                        <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
+                             style={{ background: c + '1A' }}>{l.icon}</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="font-bold text-nb-dark text-sm sm:text-base">{l.title}</p>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                                  style={{ background: c + '1A', color: c }}>{l.tag}</span>
+                          </div>
+                          <p className="text-xs text-gray-500 mt-0.5 truncate">{l.desc}</p>
+                          <div className="mt-2 flex items-center gap-2">
+                            <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                              <div className="h-full rounded-full" style={{ width: `${l.progress}%`, background: barColor }} />
+                            </div>
+                            <span className={`text-[11px] font-semibold flex-shrink-0 ${l.status === 'completed' ? 'text-nb-green' : 'text-gray-400'}`}>
+                              {l.progress}% Completed
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          <StatusPill status={l.status} />
+                          <span className="text-gray-300 text-lg">›</span>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Sidebar — 1/3 */}
+              <div className="flex flex-col sm:flex-row lg:flex-col gap-5">
+                {/* Memory Tip */}
+                <div className="flex-1 rounded-2xl border-2 border-nb-yellow p-4" style={{ background: 'linear-gradient(135deg,#FFEB3C15,#ffffff)' }}>
                   <p className="text-2xl mb-1">💡</p>
                   <p className="font-black text-nb-dark text-sm">Memory Tip</p>
                   <p className="text-xs sm:text-sm text-gray-500 mt-1 leading-relaxed">
                     Use the <strong>Story Method</strong> — turn facts into a funny story. Silly stories stick! 🧠
                   </p>
                 </div>
-                <div className="bg-white rounded-2xl border border-nb-olive/20 p-4 text-center">
-                  <p className="text-3xl mb-1">🔥</p>
-                  <p className="text-2xl font-black text-nb-dark">7 Days</p>
-                  <p className="text-xs text-gray-400 mt-1">Learning Streak</p>
-                  <p className="text-xs font-bold mt-1" style={{ color: '#36913F' }}>Don't break it!</p>
+
+                {/* Streak */}
+                <div className="flex-1 rounded-2xl border-2 border-nb-green/50 p-5" style={{ background: '#F1F8EF' }}>
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm flex-shrink-0"><FlameIcon className="w-9 h-9" /></div>
+                    <div>
+                      <p className="text-2xl font-bold text-nb-dark leading-none">7 Days</p>
+                      <p className="text-xs text-gray-500 mt-1">Learning Streak</p>
+                      <p className="text-xs font-bold text-nb-green mt-0.5">Amazing! Keep it up!</p>
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-xl mt-4 p-3 flex justify-between">
+                    {[['Mon',true],['Tue',true],['Wed',true],['Thu',true],['Fri',true],['Sat',true],['Sun',false]].map(([d,done]) => (
+                      <div key={d} className="flex flex-col items-center gap-1">
+                        <div className={`w-7 h-7 rounded-full flex items-center justify-center text-white text-xs ${done ? 'bg-nb-green' : 'bg-gray-300'}`}>✓</div>
+                        <span className="text-[10px] text-gray-400 font-semibold">{d}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -188,28 +275,8 @@ export default function StudentDashboard() {
 
         {/* ── LESSONS ── */}
         {tab === 'lessons' && (
-          <div className="space-y-5">
-            <h2 className="text-xl sm:text-2xl font-black text-nb-dark">📚 My Lessons</h2>
-            <div className="grid grid-cols-1 gap-3">
-              {RECENT_LESSONS.map(l => (
-                <div key={l.id} onClick={() => navigate(`/lessons/${l.id}`)}
-                  className="bg-white rounded-2xl border-2 border-nb-olive/20 p-4 flex items-center gap-3 hover:shadow-lg hover:border-nb-green/40 hover:-translate-y-0.5 transition-all cursor-pointer">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 shadow"
-                       style={{ background: '#FFF7E9' }}>{l.icon}</div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-black text-nb-dark text-sm truncate">{l.title}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">{l.subject}</p>
-                  </div>
-                  <span className={`text-xs font-bold px-2.5 py-1.5 rounded-full flex-shrink-0 ${STATUS_STYLE[l.status]}`}>
-                    {STATUS_LABEL[l.status]}
-                  </span>
-                </div>
-              ))}
-            </div>
-            <button onClick={() => navigate('/lessons')}
-              className="w-full py-4 rounded-2xl border-2 border-dashed border-nb-olive/40 text-nb-green font-bold hover:border-nb-green hover:bg-white transition text-base">
-              Browse All Lessons →
-            </button>
+          <div className="tab-panel space-y-5">
+            <LessonBrowser />
 
             {/* Open / Extra Classes — self-enrol */}
             <div>
@@ -246,28 +313,98 @@ export default function StudentDashboard() {
         )}
 
         {/* ── FLASH CARDS ── */}
-        {tab === 'flashcards' && <FlashCardsView />}
+        {tab === 'flashcards' && <div className="tab-panel"><FlashCardsView /></div>}
 
         {/* ── QUIZZES ── */}
-        {tab === 'quizzes' && <QuizzesView />}
+        {tab === 'quizzes' && <div className="tab-panel"><QuizzesView /></div>}
 
-        {/* ── SCHEDULE ── */}
-        {tab === 'schedule' && <ScheduleView navigate={navigate} />}
+        {/* ── SHOP ── */}
+        {tab === 'shop' && <div className="tab-panel"><ShopView points={studentPoints} setPoints={setStudentPoints} /></div>}
 
         {/* ── REWARDS ── */}
-        {tab === 'rewards' && (
-          <div className="space-y-6">
+        {tab === 'rewards' && (() => {
+          const nextThreshold = BADGE_THRESHOLDS.find(t => t > studentPoints) || BADGE_THRESHOLDS[BADGE_THRESHOLDS.length - 1]
+          const prevThreshold = (() => { const p = BADGE_THRESHOLDS.filter(t => t <= studentPoints); return p.length ? p[p.length - 1] : 0 })()
+          const barPct = Math.min(100, Math.round(((studentPoints - prevThreshold) / (nextThreshold - prevThreshold)) * 100))
+          const ptsToNext = nextThreshold - studentPoints
+
+          return (
+          <div className="tab-panel space-y-6">
+            {/* Points banner (full-width) */}
+            <div className="w-screen relative left-1/2 right-1/2 -mx-[50vw] p-5 sm:py-7 shadow-xl"
+                 style={{ background: 'linear-gradient(135deg,#FFEB3C,#91BA4F)' }}>
+              <div className="max-w-6xl mx-auto px-3 sm:px-6">
+                <p className="text-nb-dark/60 font-semibold text-sm">Total Points Balance</p>
+                <p className="text-4xl sm:text-5xl font-black text-nb-dark mt-1">{studentPoints.toLocaleString()} ⭐</p>
+                <div className="mt-4 h-3 bg-white/40 rounded-full overflow-hidden">
+                  <div className="h-full bg-white rounded-full transition-all" style={{ width: `${barPct}%` }} />
+                </div>
+                <p className="text-nb-dark/60 text-sm mt-1.5">
+                  {ptsToNext > 0 ? `Only ${ptsToNext} pts away from the next badge!` : 'All badges unlocked! You\'re a legend! 🏆'}
+                </p>
+              </div>
+            </div>
+
             <h2 className="text-2xl font-black text-nb-dark">🏆 My Rewards</h2>
 
-            {/* Points banner */}
-            <div className="rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-xl"
-                 style={{ background: 'linear-gradient(135deg,#FFEB3C,#91BA4F)' }}>
-              <p className="text-nb-dark/60 font-semibold text-sm">Total Points Earned</p>
-              <p className="text-4xl sm:text-5xl font-black text-nb-dark mt-1">1,240 ⭐</p>
-              <div className="mt-4 h-3 bg-white/40 rounded-full overflow-hidden">
-                <div className="h-full bg-white rounded-full" style={{ width: '82%' }} />
+            {/* ── Redeem Points ── */}
+            <div className="bg-white rounded-2xl border-2 border-nb-olive/20 p-4 sm:p-5">
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="text-base sm:text-lg font-black text-nb-dark">🎁 Redeem Points</h3>
+                <span className="text-sm font-bold text-nb-green">⭐ {studentPoints.toLocaleString()} available</span>
               </div>
-              <p className="text-nb-dark/60 text-sm mt-1.5">Only 260 pts away from the next badge!</p>
+              <p className="text-xs text-gray-400 mb-4">Use your earned points to extend your subscription, grab vouchers, or redeem products.</p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {REDEEM_ITEMS.map(item => {
+                  const isRedeemed  = redeemedIds.includes(item.id)
+                  const canAfford   = studentPoints >= item.cost
+                  const CAT_COLOR   = { Subscription: '#3b82f6', Voucher: '#f59e0b', Product: '#36913F', Digital: '#9333ea' }
+                  const catColor    = CAT_COLOR[item.category] || '#91BA4F'
+                  return (
+                    <div key={item.id}
+                      className={`rounded-2xl border-2 p-4 flex flex-col gap-3 transition-all ${isRedeemed ? 'border-nb-green bg-green-50' : 'border-nb-olive/20 bg-nb-cream/40'}`}>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
+                             style={{ background: catColor + '1A' }}>
+                          {item.icon}
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-full flex-shrink-0"
+                              style={{ background: catColor + '1A', color: catColor }}>
+                          {item.category}
+                        </span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-black text-nb-dark text-sm leading-snug">{item.name}</p>
+                        <p className="text-xs text-gray-400 mt-1 leading-relaxed">{item.desc}</p>
+                      </div>
+                      <div className="flex items-center justify-between gap-2 mt-auto">
+                        <span className="flex items-center gap-1 font-black text-nb-dark">
+                          <span className="text-base">⭐</span>
+                          <span>{item.cost.toLocaleString()}</span>
+                          <span className="text-xs text-gray-400 font-semibold">pts</span>
+                        </span>
+                        {isRedeemed ? (
+                          <span className="text-xs font-black text-nb-green bg-green-100 px-3 py-1.5 rounded-xl">✓ Redeemed</span>
+                        ) : (
+                          <button
+                            onClick={() => canAfford ? setRedeemConfirm(item) : setRedeemToast('Not enough points! Keep completing lessons to earn more. ⭐')}
+                            className={`px-3 py-1.5 rounded-xl font-black text-sm border-2 transition-all ${
+                              canAfford ? 'border-transparent text-nb-dark shadow hover:shadow-md' : 'border-gray-200 text-gray-300 cursor-not-allowed'
+                            }`}
+                            style={canAfford ? { background: '#FFEB3C' } : {}}>
+                            {canAfford ? 'Redeem' : 'Need more ⭐'}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              <p className="text-xs text-gray-400 text-center mt-4">
+                Subscription extensions are applied automatically · Voucher codes emailed to parent · Physical products collected at the centre
+              </p>
             </div>
 
             {/* Certificates of Completion */}
@@ -347,8 +484,59 @@ export default function StudentDashboard() {
             </div>
 
           </div>
-        )}
+          )
+        })()}
       </main>
+
+      {/* ── Redeem Confirm Modal ── */}
+      {redeemConfirm && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+             style={{ background: 'rgba(0,0,0,0.5)' }}
+             onClick={e => e.target === e.currentTarget && setRedeemConfirm(null)}>
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-sm p-6 sm:p-8 space-y-5">
+            <div className="text-center">
+              <div className="text-5xl mb-3">{redeemConfirm.icon}</div>
+              <h3 className="text-xl font-black text-nb-dark">{redeemConfirm.name}</h3>
+              <p className="text-sm text-gray-400 mt-1 leading-relaxed">{redeemConfirm.desc}</p>
+            </div>
+            <div className="space-y-2">
+              <div className="bg-nb-cream rounded-2xl p-4 flex items-center justify-between">
+                <span className="font-semibold text-gray-500 text-sm">Points cost</span>
+                <span className="font-black text-nb-dark">⭐ {redeemConfirm.cost.toLocaleString()} pts</span>
+              </div>
+              <div className="bg-nb-cream rounded-2xl p-4 flex items-center justify-between">
+                <span className="font-semibold text-gray-500 text-sm">Balance after</span>
+                <span className="font-black text-nb-dark">⭐ {(studentPoints - redeemConfirm.cost).toLocaleString()} pts</span>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setRedeemConfirm(null)}
+                className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-500 font-bold text-sm">
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setStudentPoints(p => p - redeemConfirm.cost)
+                  setRedeemedIds(ids => [...ids, redeemConfirm.id])
+                  setRedeemConfirm(null)
+                  setRedeemToast(`🎉 "${redeemConfirm.name}" redeemed! Our team will process it within 1–2 school days.`)
+                  setTimeout(() => setRedeemToast(null), 3500)
+                }}
+                className="flex-1 py-3 rounded-xl font-black text-nb-dark text-sm shadow-md"
+                style={{ background: '#FFEB3C' }}>
+                Confirm Redeem
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Redeem Toast ── */}
+      {redeemToast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-nb-dark text-white px-5 py-3 rounded-2xl shadow-xl font-bold text-sm text-center max-w-xs">
+          {redeemToast}
+        </div>
+      )}
 
       {/* ── Certificate Preview Modal ── */}
       {certModal && (
@@ -393,371 +581,522 @@ export default function StudentDashboard() {
   )
 }
 
-/* ─── Schedule ─── */
-function ScheduleView({ navigate }) {
-  const SCHEDULE = [
-    { id: 3,  title: 'Fractions Basics',       subject: 'Mathematics', type: 'quiz',      status: 'in_progress', deadline: '2026-05-25', icon: '📝', class: 'Primary 4A' },
-    { id: 2,  title: 'Reading Comprehension',  subject: 'English',     type: 'reading',   status: 'overdue',     deadline: '2026-05-20', icon: '📄', class: 'Primary 4A' },
-    { id: 7,  title: 'The Solar System',       subject: 'Science',     type: 'video',     status: 'in_progress', deadline: '2026-05-28', icon: '🎬', class: 'Primary 4A' },
-    { id: 19, title: 'Forces & Motion',        subject: 'Science',     type: 'video',     status: 'pending',     deadline: '2026-06-01', icon: '🎬', class: 'Primary 4A', releaseDate: '2026-05-24' },
-    { id: 20, title: 'States of Matter',       subject: 'Science',     type: 'quiz',      status: 'pending',     deadline: '2026-06-05', icon: '📝', class: 'Primary 4A', releaseDate: '2026-05-27' },
-    { id: 6,  title: 'Grammar: Tenses',        subject: 'English',     type: 'quiz',      status: 'pending',     deadline: '2026-05-30', icon: '📝', class: 'Primary 4A' },
-    { id: 4,  title: 'Alphabet Flash Cards',   subject: 'English',     type: 'flashcard', status: 'in_progress', deadline: null,         icon: '🃏', class: 'Primary 4A' },
+/* ─── Shop ─── */
+function ShopView({ points, setPoints }) {
+  const SHOP_ITEMS = [
+    { id: 1,  name: 'Brain Booster Sticker Pack',  category: 'Physical',  icon: '🎨', cost: 200,  desc: 'A set of 20 fun Neurobix memory-themed stickers.',      stock: 50  },
+    { id: 2,  name: 'Neurobix Notebook',           category: 'Physical',  icon: '📓', cost: 500,  desc: 'Branded A5 notebook for memory maps and notes.',        stock: 30  },
+    { id: 3,  name: 'Pencil & Ruler Set',          category: 'Physical',  icon: '✏️', cost: 350,  desc: 'Colour pencil set (12 colours) + a Neurobix ruler.',    stock: 20  },
+    { id: 4,  name: 'Extra Flash Card Deck',       category: 'Digital',   icon: '🃏', cost: 150,  desc: 'Unlock a premium flash card deck for any subject.',     stock: 999 },
+    { id: 5,  name: 'Custom Profile Badge',        category: 'Digital',   icon: '🏅', cost: 300,  desc: 'Choose a special badge to display on your profile.',    stock: 999 },
+    { id: 6,  name: 'Double XP Pass (1 week)',     category: 'Digital',   icon: '⚡', cost: 400,  desc: 'Earn 2× points on all lessons for 7 days.',             stock: 999 },
+    { id: 7,  name: 'Neurobix Water Bottle',       category: 'Physical',  icon: '🥤', cost: 800,  desc: 'Stainless steel water bottle with Neurobix logo.',      stock: 15  },
+    { id: 8,  name: 'Mystery Reward Box',          category: 'Physical',  icon: '🎁', cost: 1000, desc: 'A surprise box of goodies — collected at the centre.',   stock: 10  },
   ]
 
-  const today = new Date('2026-05-22')
+  const CATEGORIES = ['All', 'Digital', 'Physical']
 
-  function daysLeft(deadline) {
-    if (!deadline) return null
-    const diff = Math.round((new Date(deadline) - today) / (1000 * 60 * 60 * 24))
-    return diff
-  }
+  const [filter, setFilter]         = useState('All')
+  const [cart, setCart]             = useState([])
+  const [bought, setBought]         = useState([])
+  const [toast, setToast]           = useState(null)
+  const [confirmItem, setConfirmItem] = useState(null)
 
-  const STATUS_STYLE = {
-    completed:   'bg-green-100 text-green-700',
-    in_progress: 'bg-yellow-100 text-yellow-700',
-    pending:     'bg-gray-100 text-gray-400',
-    overdue:     'bg-red-100 text-red-600',
-    locked:      'bg-gray-100 text-gray-400',
-  }
-  const STATUS_LABEL = {
-    completed:   '✅ Done',
-    in_progress: '▶ In Progress',
-    pending:     '🔒 Upcoming',
-    overdue:     '⚠️ Overdue',
-  }
+  const visible = filter === 'All' ? SHOP_ITEMS : SHOP_ITEMS.filter(i => i.category === filter)
+  const CAT_COLOR = { Digital: '#3b82f6', Physical: '#36913F' }
 
-  const overdue  = SCHEDULE.filter(l => l.status === 'overdue')
-  const active   = SCHEDULE.filter(l => l.status === 'in_progress')
-  const upcoming = SCHEDULE.filter(l => l.status === 'pending').sort((a, b) => (a.deadline || 'z').localeCompare(b.deadline || 'z'))
+  function showToast(msg) { setToast(msg); setTimeout(() => setToast(null), 2500) }
+
+  function purchase(item) {
+    if (points < item.cost) { showToast('Not enough points! Keep learning to earn more. ⭐'); return }
+    setPoints(p => p - item.cost)
+    setBought(b => [...b, item.id])
+    setConfirmItem(null)
+    showToast(`🎉 ${item.name} purchased! Check with your teacher for physical items.`)
+  }
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-black text-nb-dark">📅 My Schedule</h2>
 
-      {/* Summary cards */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-3">
-        {[
-          { label: 'In Progress', value: active.length,   bg: 'bg-yellow-50',  text: 'text-yellow-700', icon: '▶' },
-          { label: 'Overdue',     value: overdue.length,  bg: 'bg-red-50',     text: 'text-red-600',    icon: '⚠️' },
-          { label: 'Upcoming',    value: upcoming.length, bg: 'bg-blue-50',    text: 'text-blue-700',   icon: '📅' },
-        ].map(s => (
-          <div key={s.label} className={`${s.bg} rounded-2xl p-3 border border-nb-olive/20 text-center`}>
-            <p className="text-xl mb-0.5">{s.icon}</p>
-            <p className={`text-2xl sm:text-3xl font-black ${s.text}`}>{s.value}</p>
-            <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5">{s.label}</p>
+      {/* Header + balance */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-black text-nb-dark">🛍️ Neurobix Shop</h2>
+          <p className="text-sm text-gray-400 font-semibold mt-0.5">Spend your hard-earned points on cool rewards!</p>
+        </div>
+        <div className="flex items-center gap-2 bg-white border-2 border-nb-yellow rounded-2xl px-5 py-3 shadow-sm self-start">
+          <span className="text-2xl">⭐</span>
+          <div>
+            <p className="text-xl font-black text-nb-dark leading-none">{points.toLocaleString()}</p>
+            <p className="text-[11px] text-gray-400 font-semibold mt-0.5">Points balance</p>
           </div>
+        </div>
+      </div>
+
+      {/* Category filter */}
+      <div className="flex gap-2 flex-wrap">
+        {CATEGORIES.map(c => (
+          <button key={c} onClick={() => setFilter(c)}
+            className={`px-4 py-2 rounded-full font-black text-sm border-2 transition-all ${
+              filter === c
+                ? 'border-nb-green bg-nb-green text-white shadow-sm'
+                : 'border-gray-200 text-gray-500 bg-white hover:border-nb-olive'
+            }`}>
+            {c === 'All' ? '🛍️ All' : c === 'Digital' ? '💻 Digital' : '📦 Physical'}
+          </button>
         ))}
       </div>
 
-      {/* Overdue alert */}
-      {overdue.length > 0 && (
-        <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-5">
-          <h3 className="font-black text-red-700 mb-3">⚠️ Overdue — Action Required</h3>
-          <div className="space-y-2.5">
-            {overdue.map(l => (
-              <div key={l.id} onClick={() => navigate(`/lessons/${l.id}`)}
-                className="bg-white rounded-xl p-3.5 flex items-center justify-between cursor-pointer hover:shadow-md transition border-2 border-red-100">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0 bg-red-50">{l.icon}</div>
-                  <div>
-                    <p className="font-bold text-nb-dark text-sm">{l.title}</p>
-                    <p className="text-xs text-gray-400">{l.subject}</p>
-                  </div>
+      {/* Items grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {visible.map(item => {
+          const alreadyBought = bought.includes(item.id)
+          const canAfford = points >= item.cost
+          return (
+            <div key={item.id}
+              className={`bg-white rounded-2xl border-2 p-5 flex flex-col gap-3 transition-all ${
+                alreadyBought ? 'border-nb-green' : 'border-nb-olive/20 hover:shadow-md hover:-translate-y-0.5'
+              }`}>
+              <div className="flex items-start justify-between">
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0"
+                     style={{ background: (CAT_COLOR[item.category] || '#91BA4F') + '1A' }}>
+                  {item.icon}
                 </div>
-                <div className="text-right flex-shrink-0">
-                  <span className="text-xs font-black text-red-600 bg-red-100 px-2.5 py-1 rounded-full block">Due {l.deadline}</span>
-                  <span className="text-xs font-black text-red-500 mt-1 block">{Math.abs(daysLeft(l.deadline))} days overdue</span>
-                </div>
+                <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full"
+                      style={{ background: (CAT_COLOR[item.category] || '#91BA4F') + '1A', color: CAT_COLOR[item.category] || '#91BA4F' }}>
+                  {item.category}
+                </span>
               </div>
-            ))}
-          </div>
-        </div>
-      )}
 
-      {/* In Progress */}
-      {active.length > 0 && (
-        <div>
-          <h3 className="text-lg font-black text-nb-dark mb-3">▶ Continue Where You Left Off</h3>
-          <div className="space-y-2.5">
-            {active.map(l => {
-              const days = daysLeft(l.deadline)
-              return (
-                <div key={l.id} onClick={() => navigate(`/lessons/${l.id}`)}
-                  className="bg-white rounded-2xl border-2 border-nb-yellow p-4 flex items-center gap-4 cursor-pointer hover:shadow-md transition">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 bg-nb-cream">{l.icon}</div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-black text-nb-dark truncate">{l.title}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">{l.subject} · {l.class}</p>
-                  </div>
-                  <div className="text-right flex-shrink-0 space-y-1">
-                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full block ${STATUS_STYLE.in_progress}`}>▶ In Progress</span>
-                    {l.deadline && (
-                      <span className={`text-xs font-bold block ${days !== null && days <= 3 ? 'text-amber-600' : 'text-gray-400'}`}>
-                        {days !== null && days <= 3 ? `⏰ ${days}d left` : `Due ${l.deadline}`}
-                      </span>
-                    )}
-                  </div>
+              <div className="flex-1">
+                <p className="font-black text-nb-dark text-sm leading-snug">{item.name}</p>
+                <p className="text-xs text-gray-400 mt-1 leading-relaxed">{item.desc}</p>
+              </div>
+
+              {item.category === 'Physical' && item.stock < 20 && (
+                <p className="text-[11px] text-amber-600 font-bold">⚠️ Only {item.stock} left!</p>
+              )}
+
+              <div className="flex items-center justify-between gap-3 mt-auto">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-lg">⭐</span>
+                  <span className="font-black text-nb-dark text-base">{item.cost.toLocaleString()}</span>
+                  <span className="text-xs text-gray-400 font-semibold">pts</span>
                 </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
 
-      {/* Upcoming */}
-      {upcoming.length > 0 && (
-        <div>
-          <h3 className="text-lg font-black text-nb-dark mb-3">📋 Upcoming Lessons</h3>
-          <div className="space-y-2.5">
-            {upcoming.map(l => {
-              const days = daysLeft(l.deadline)
-              return (
-                <div key={l.id}
-                  className="bg-white rounded-2xl border-2 border-nb-olive/20 p-4 flex items-center gap-4 opacity-80">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 bg-gray-50">{l.icon}</div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-black text-nb-dark truncate">{l.title}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">{l.subject}</p>
-                    {l.releaseDate && <p className="text-xs text-blue-500 font-bold mt-0.5">📅 Releases {l.releaseDate}</p>}
-                  </div>
-                  <div className="text-right flex-shrink-0 space-y-1">
-                    <span className="text-xs font-bold px-2.5 py-1 rounded-full block bg-gray-100 text-gray-400">🔒 Not yet</span>
-                    {l.deadline && (
-                      <span className={`text-xs font-bold block ${days !== null && days <= 3 ? 'text-amber-600' : 'text-gray-400'}`}>
-                        Due {l.deadline}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
+                {alreadyBought ? (
+                  <span className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-black text-sm bg-nb-green/10 text-nb-green border-2 border-nb-green/30">
+                    ✓ Purchased
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => canAfford ? setConfirmItem(item) : showToast('Not enough points! Keep learning. ⭐')}
+                    className={`px-4 py-2 rounded-xl font-black text-sm border-2 transition-all ${
+                      canAfford
+                        ? 'text-nb-dark border-transparent shadow hover:shadow-md'
+                        : 'border-gray-200 text-gray-300 cursor-not-allowed'
+                    }`}
+                    style={canAfford ? { background: '#FFEB3C' } : {}}>
+                    {canAfford ? 'Buy Now' : 'Not enough ⭐'}
+                  </button>
+                )}
+              </div>
+            </div>
+          )
+        })}
+      </div>
 
-      {/* Neurobix tip */}
+      {/* Earn more tip */}
       <div className="rounded-2xl p-4 border-2 border-nb-yellow flex items-start gap-3"
            style={{ background: '#FFEB3C10' }}>
         <span className="text-xl flex-shrink-0">💡</span>
         <div>
-          <p className="font-black text-nb-dark text-sm">Neurobix Method Tip</p>
+          <p className="font-black text-nb-dark text-sm">How to earn more points?</p>
           <p className="text-xs text-gray-600 mt-0.5 leading-relaxed">
-            Review lessons in short 15–20 minute sessions daily. Spaced repetition is the secret to making memories stick long-term!
+            Complete lessons (+50 pts), pass quizzes (+30 pts per question), maintain your daily streak (+20 pts/day),
+            and earn badges (+100 pts each). Physical items can be collected at the Neurobix centre — ask your teacher!
           </p>
         </div>
       </div>
+
+      {/* Confirm modal */}
+      {confirmItem && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+             style={{ background: 'rgba(0,0,0,0.5)' }}
+             onClick={e => e.target === e.currentTarget && setConfirmItem(null)}>
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-sm p-6 sm:p-8 space-y-5">
+            <div className="text-center">
+              <div className="text-5xl mb-3">{confirmItem.icon}</div>
+              <h3 className="text-xl font-black text-nb-dark">{confirmItem.name}</h3>
+              <p className="text-sm text-gray-400 mt-1">{confirmItem.desc}</p>
+            </div>
+            <div className="bg-nb-cream rounded-2xl p-4 flex items-center justify-between">
+              <span className="font-semibold text-gray-500 text-sm">Cost</span>
+              <span className="font-black text-nb-dark">⭐ {confirmItem.cost.toLocaleString()} pts</span>
+            </div>
+            <div className="bg-nb-cream rounded-2xl p-4 flex items-center justify-between">
+              <span className="font-semibold text-gray-500 text-sm">Balance after</span>
+              <span className="font-black text-nb-dark">⭐ {(points - confirmItem.cost).toLocaleString()} pts</span>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmItem(null)}
+                className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-500 font-bold text-sm">
+                Cancel
+              </button>
+              <button onClick={() => purchase(confirmItem)}
+                className="flex-1 py-3 rounded-xl font-black text-nb-dark text-sm shadow-md"
+                style={{ background: '#FFEB3C' }}>
+                Confirm Purchase
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast */}
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-nb-dark text-white px-5 py-3 rounded-2xl shadow-xl font-bold text-sm whitespace-nowrap">
+          {toast}
+        </div>
+      )}
     </div>
   )
 }
 
 /* ─── Flash Cards ─── */
 function FlashCardsView() {
-  const DECKS = [
-    { subject: 'Mathematics', icon: '🔢', cards: [
-      { front: 'What is 7 × 8?',  back: '56 🎉',  hint: 'Think: 7 × 7 = 49, then +7' },
-      { front: 'What is 12 × 12?', back: '144 ⭐', hint: 'A dozen dozens!' },
-      { front: 'What is √49?',    back: '7 💡',   hint: '7 × 7 = 49' },
+  const ALL_DECKS = [
+    { id: 1, subject: 'Mathematics', title: 'Multiplication Tables', icon: '🔢', cards: [
+      { front: 'What is 7 × 8?',    back: '56',     hint: 'Think: 7 × 7 = 49, then +7'     },
+      { front: 'What is 12 × 12?',  back: '144',    hint: 'A dozen dozens!'                  },
+      { front: 'What is 9 × 6?',    back: '54',     hint: '9 × 5 = 45, then +9'             },
+      { front: 'What is 4 × 7?',    back: '28',     hint: 'Imagine 4 weeks = 28 days'        },
+      { front: 'What is √49?',      back: '7',      hint: '7 × 7 = 49'                       },
     ]},
-    { subject: 'English', icon: '📖', cards: [
-      { front: 'Spell: Beautiful',    back: 'B-E-A-U-T-I-F-U-L 🌸', hint: '"Big Elephants Are Ugly"' },
-      { front: 'Opposite of: Happy',  back: 'Sad / Unhappy 😢',      hint: 'Prefix un- makes opposites!' },
-      { front: 'Plural of: Mouse',    back: 'Mice 🐭',               hint: 'Irregular plural — no rules!' },
+    { id: 2, subject: 'Mathematics', title: 'Fractions', icon: '📐', cards: [
+      { front: '1/2 + 1/4 = ?',      back: '3/4',      hint: 'Convert to same denominator' },
+      { front: 'What is 3/4 of 20?', back: '15',        hint: '20 ÷ 4 × 3 = 15'            },
+      { front: '1/3 as a decimal?',  back: '0.333…',    hint: 'Repeating decimal'           },
     ]},
-    { subject: 'Science', icon: '🔬', cards: [
-      { front: 'What gas do plants absorb?',          back: 'Carbon Dioxide (CO₂) 🌿', hint: 'They breathe what we breathe out!' },
-      { front: 'How many planets in our solar system?', back: '8 Planets 🪐',           hint: 'My Very Educated Mother Just Served Us Nachos' },
-      { front: 'Closest star to Earth?',              back: 'The Sun ☀️',              hint: '150 million km away!' },
+    { id: 3, subject: 'English', title: 'Spelling & Vocabulary', icon: '📖', cards: [
+      { front: 'Spell: Beautiful',   back: 'B-E-A-U-T-I-F-U-L', hint: '"Big Elephants Are Ugly"' },
+      { front: 'Opposite of: Happy', back: 'Sad / Unhappy',       hint: 'Prefix un- = opposite'   },
+      { front: 'Plural of: Mouse',   back: 'Mice',                hint: 'Irregular plural!'        },
+      { front: 'Synonym of: Big',    back: 'Large / Huge / Vast', hint: 'All mean the same!'       },
+    ]},
+    { id: 4, subject: 'English', title: 'Grammar: Tenses', icon: '✏️', cards: [
+      { front: 'Past tense of "run"', back: 'Ran',        hint: 'Irregular verb'     },
+      { front: 'Past tense of "eat"', back: 'Ate',        hint: 'Irregular verb'     },
+      { front: 'Future of "I go"',    back: 'I will go',  hint: 'Add "will" before'  },
+    ]},
+    { id: 5, subject: 'Science', title: 'The Solar System', icon: '🪐', cards: [
+      { front: 'Closest planet to the Sun?', back: 'Mercury',   hint: 'My Very Educated Mother…' },
+      { front: 'The Red Planet?',            back: 'Mars',      hint: '4th planet from the Sun'   },
+      { front: 'Largest planet?',            back: 'Jupiter',   hint: '5th planet, a gas giant'   },
+      { front: 'How many planets?',          back: '8 planets', hint: 'Pluto is a dwarf planet!'  },
+    ]},
+    { id: 6, subject: 'Science', title: 'States of Matter', icon: '🔬', cards: [
+      { front: 'What gas do plants absorb?',  back: 'Carbon Dioxide (CO₂)', hint: 'They breathe what we exhale!' },
+      { front: 'Water at 100°C becomes?',     back: 'Steam (gas)',           hint: 'Boiling point of water'       },
+      { front: 'Solid → Liquid is called?',   back: 'Melting',               hint: 'Ice → water'                  },
     ]},
   ]
 
-  const [deckIdx, setDeckIdx]   = useState(0)
-  const [cardIdx, setCardIdx]   = useState(0)
-  const [flipped, setFlipped]   = useState(false)
-  const [showHint, setShowHint] = useState(false)
-  const [library, setLibrary]   = useState([])
-  const [showLibrary, setShowLibrary] = useState(false)
-
-  const deck = DECKS[deckIdx]
-  const card = deck.cards[cardIdx]
-  const cardKey = `${deckIdx}-${cardIdx}`
-  const isSaved = library.some(c => c.key === cardKey)
-
-  function changeDeck(i) { setDeckIdx(i); setCardIdx(0); setFlipped(false); setShowHint(false) }
-  function next() { setCardIdx((cardIdx + 1) % deck.cards.length); setFlipped(false); setShowHint(false) }
-  function prev() { setCardIdx((cardIdx - 1 + deck.cards.length) % deck.cards.length); setFlipped(false); setShowHint(false) }
-  function toggleSave() {
-    if (isSaved) {
-      setLibrary(l => l.filter(c => c.key !== cardKey))
-    } else {
-      setLibrary(l => [...l, { key: cardKey, subject: deck.subject, front: card.front, back: card.back, hint: card.hint }])
-    }
+  const SUBJECT_CFG = {
+    Mathematics: { color: '#3b82f6', bg: '#EFF6FF', badge: 'bg-blue-100 text-blue-700',    icon: '🔢' },
+    English:     { color: '#9333ea', bg: '#FAF5FF', badge: 'bg-purple-100 text-purple-700', icon: '📖' },
+    Science:     { color: '#36913F', bg: '#F0FDF4', badge: 'bg-green-100 text-green-700',  icon: '🔬' },
   }
 
-  /* My Library view */
+  const [subjectFilter, setSubjectFilter] = useState('All')
+  const [activeDeck, setActiveDeck]       = useState(null)
+  const [cards, setCards]                 = useState([])
+  const [cardIdx, setCardIdx]             = useState(0)
+  const [flipped, setFlipped]             = useState(false)
+  const [known, setKnown]                 = useState(new Set())
+  const [library, setLibrary]             = useState([])
+  const [showLibrary, setShowLibrary]     = useState(false)
+
+  const subjectCounts = {}
+  ALL_DECKS.forEach(d => { subjectCounts[d.subject] = (subjectCounts[d.subject] || 0) + 1 })
+  const filteredDecks = ALL_DECKS.filter(d => subjectFilter === 'All' || d.subject === subjectFilter)
+
+  function enterDeck(deck) {
+    setActiveDeck(deck); setCards([...deck.cards]); setCardIdx(0)
+    setFlipped(false); setKnown(new Set())
+  }
+  function exitDeck() { setActiveDeck(null) }
+
+  const card    = activeDeck ? cards[cardIdx] : null
+  const cardKey = activeDeck ? `${activeDeck.id}-${cardIdx}` : ''
+  const isSaved = library.some(c => c.key === cardKey)
+
+  function markKnown()  { setKnown(s => new Set([...s, cardIdx])); goNext() }
+  function goNext()     { setFlipped(false); setCardIdx(i => (i + 1) % cards.length) }
+  function goPrev()     { setFlipped(false); setCardIdx(i => (i - 1 + cards.length) % cards.length) }
+  function shuffle()    { setCards(c => [...c].sort(() => Math.random() - 0.5)); setCardIdx(0); setFlipped(false) }
+  function restart()    { setCardIdx(0); setFlipped(false); setKnown(new Set()) }
+  function toggleSave() {
+    if (!activeDeck || !card) return
+    if (isSaved) setLibrary(l => l.filter(c => c.key !== cardKey))
+    else setLibrary(l => [...l, { key: cardKey, subject: activeDeck.subject, front: card.front, back: card.back, hint: card.hint }])
+  }
+
+  /* ── Saved library view ── */
   if (showLibrary) return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-black text-nb-dark">📖 My Saved Library</h2>
-        <button onClick={() => setShowLibrary(false)} className="text-sm font-bold text-gray-400 hover:text-nb-dark">← Back to Cards</button>
+        <h2 className="text-2xl font-black text-nb-dark">⭐ My Saved Cards</h2>
+        <button onClick={() => setShowLibrary(false)}
+          className="text-sm font-bold text-gray-400 hover:text-nb-dark transition px-3 py-1.5 rounded-lg hover:bg-gray-100">
+          ← Back
+        </button>
       </div>
       {library.length === 0 ? (
         <div className="text-center py-16 text-gray-400">
           <p className="text-5xl mb-3">📭</p>
           <p className="font-bold">No saved cards yet</p>
-          <p className="text-sm mt-1">Tap the ⭐ Save button on any card to add it here</p>
+          <p className="text-sm mt-1">Tap ⭐ on any card while studying to save it here</p>
         </div>
       ) : (
-        <div className="grid sm:grid-cols-2 gap-4">
-          {library.map((c, i) => (
-            <div key={i} className="bg-white rounded-2xl border-2 border-nb-yellow p-5">
-              <div className="flex items-start justify-between mb-3">
-                <span className="text-xs font-black text-nb-olive uppercase tracking-widest">{c.subject}</span>
-                <button onClick={() => setLibrary(l => l.filter((_, j) => j !== i))}
-                  className="text-xs text-red-400 font-bold hover:text-red-600">✕ Remove</button>
+        <div className="grid sm:grid-cols-2 gap-3">
+          {library.map((c, i) => {
+            const cfg = SUBJECT_CFG[c.subject]
+            return (
+              <div key={i} className="bg-white rounded-2xl border-2 border-nb-yellow overflow-hidden">
+                <div className="h-1 w-full" style={{ background: cfg?.color }} />
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${cfg?.badge}`}>{cfg?.icon} {c.subject}</span>
+                    <button onClick={() => setLibrary(l => l.filter((_, j) => j !== i))}
+                      className="text-xs text-red-400 font-bold hover:text-red-600">✕ Remove</button>
+                  </div>
+                  <p className="font-black text-nb-dark text-sm">{c.front}</p>
+                  <p className="font-bold mt-2 text-sm" style={{ color: '#36913F' }}>{c.back}</p>
+                  {c.hint && <p className="text-xs text-gray-400 mt-1.5 italic">🧠 {c.hint}</p>}
+                </div>
               </div>
-              <p className="font-black text-nb-dark">{c.front}</p>
-              <p className="text-nb-green font-bold mt-2">{c.back}</p>
-              {c.hint && <p className="text-xs text-gray-400 mt-2 italic">🧠 {c.hint}</p>}
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>
   )
 
-  return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-black text-nb-dark">🃏 Flash Cards</h2>
-        <button onClick={() => setShowLibrary(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl border-2 border-nb-yellow text-nb-dark text-sm font-black hover:bg-nb-yellow transition">
-          📖 My Library {library.length > 0 && <span className="bg-nb-dark text-white text-[10px] px-1.5 py-0.5 rounded-full">{library.length}</span>}
-        </button>
-      </div>
-
-      {/* Deck picker — big buttons */}
-      <div className="grid grid-cols-3 gap-2">
-        {DECKS.map((d, i) => (
-          <button key={d.subject} onClick={() => changeDeck(i)}
-            className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-3 rounded-2xl text-xs sm:text-base font-black border-2 transition-all hover:scale-[1.02] ${
-              deckIdx === i ? 'text-nb-dark border-nb-yellow shadow-md' : 'bg-white border-gray-200 text-gray-400 hover:border-nb-olive'
-            }`}
-            style={deckIdx === i ? { background: '#FFEB3C' } : {}}>
-            <span className="text-xl sm:text-2xl">{d.icon}</span>
-            <span className="text-center leading-tight">{d.subject}</span>
+  /* ── Study view ── */
+  if (activeDeck && card) {
+    const cfg      = SUBJECT_CFG[activeDeck.subject]
+    const knownPct = cards.length > 0 ? (known.size / cards.length) * 100 : 0
+    return (
+      <div className="space-y-4">
+        {/* Header */}
+        <div className="flex items-center gap-3">
+          <button onClick={exitDeck}
+            className="text-sm font-bold text-gray-400 hover:text-nb-dark transition px-3 py-1.5 rounded-lg hover:bg-gray-100">
+            ← Back
           </button>
-        ))}
-      </div>
-
-      {/* Main card area — wider, taller, fixed height */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 items-start">
-
-        {/* Card — takes 3 cols */}
-        <div className="lg:col-span-3 space-y-4">
-          {/* Progress dots */}
-          <div className="flex gap-2 justify-center">
-            {deck.cards.map((_, i) => (
-              <div key={i} className="h-2.5 rounded-full transition-all cursor-pointer"
-                style={{ width: i === cardIdx ? 32 : 10, background: i === cardIdx ? '#36913F' : '#d1d5db' }}
-                onClick={() => { setCardIdx(i); setFlipped(false); setShowHint(false) }} />
-            ))}
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] font-bold uppercase tracking-wide" style={{ color: cfg?.color }}>{activeDeck.subject}</p>
+            <p className="font-black text-nb-dark text-sm truncate">{activeDeck.title}</p>
           </div>
-
-          {/* Fixed-height card — NEVER grows */}
-          <div
-            onClick={() => { setFlipped(!flipped); setShowHint(false) }}
-            className="cursor-pointer bg-white rounded-3xl border-2 select-none transition-all hover:shadow-xl"
-            style={{
-              borderColor: flipped ? '#6FC911' : '#91BA4F44',
-              height: 220,
-              display: 'flex', flexDirection: 'column',
-              alignItems: 'center', justifyContent: 'center',
-              padding: '24px 32px',
-              overflow: 'hidden',
-              textAlign: 'center',
-            }}>
-            {!flipped ? (
-              <>
-                <p className="text-xs font-black uppercase tracking-widest mb-3" style={{ color: '#91BA4F' }}>{deck.subject}</p>
-                <p className="font-black text-nb-dark leading-snug"
-                   style={{ fontSize: card.front.length > 30 ? 17 : 24, maxHeight: 100, overflow: 'hidden' }}>
-                  {card.front}
-                </p>
-                <p className="text-sm text-gray-300 mt-4">👆 Tap to flip!</p>
-              </>
-            ) : (
-              <>
-                <p className="text-xs font-black uppercase tracking-widest mb-3" style={{ color: '#6FC911' }}>Answer</p>
-                <p className="font-black leading-snug"
-                   style={{ color: '#36913F', fontSize: card.back.length > 20 ? 18 : 30, maxHeight: 100, overflow: 'hidden' }}>
-                  {card.back}
-                </p>
-                <p className="text-sm text-gray-300 mt-4">👆 Tap to flip back</p>
-              </>
-            )}
+          <div className="flex gap-2 flex-shrink-0">
+            <button onClick={shuffle} title="Shuffle"
+              className="w-9 h-9 rounded-xl border-2 border-gray-200 flex items-center justify-center hover:border-gray-300 transition">🔀</button>
+            <button onClick={restart} title="Restart"
+              className="w-9 h-9 rounded-xl border-2 border-gray-200 flex items-center justify-center hover:border-gray-300 transition text-base font-black text-gray-400">↺</button>
           </div>
+        </div>
 
-          {/* Fixed-height hint slot — buttons never shift */}
-          <div className="h-10 flex items-center justify-center">
-            {!flipped && (
-              !showHint
-                ? <button onClick={() => setShowHint(true)}
-                    className="text-sm font-bold text-nb-olive hover:text-nb-green transition">
-                    💡 Show Memory Hint
-                  </button>
-                : <p className="text-sm font-semibold text-nb-dark text-center px-4 py-2 rounded-xl"
-                     style={{ background: '#FFEB3C33' }}>
-                    🧠 {card.hint}
-                  </p>
-            )}
+        {/* Progress: know it (green) vs still learning (gray) */}
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs text-gray-400">{cardIdx + 1} / {cards.length}</span>
+            <span className="text-xs font-bold" style={{ color: '#36913F' }}>
+              {known.size} know it · {cards.length - known.size} still learning
+            </span>
           </div>
+          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${knownPct}%`, background: '#36913F' }} />
+          </div>
+        </div>
 
-          {/* Navigation — always anchored here */}
-          <div className="flex gap-3">
-            <button onClick={prev}
-              className="flex-1 py-3.5 rounded-2xl border-2 border-gray-200 text-gray-500 font-black hover:border-nb-olive transition text-base">
+        {/* Card position dots */}
+        <div className="flex gap-1.5 justify-center flex-wrap">
+          {cards.map((_, i) => (
+            <div key={i} onClick={() => { setCardIdx(i); setFlipped(false) }}
+              className="rounded-full cursor-pointer transition-all"
+              style={{
+                width: i === cardIdx ? 28 : 8, height: 8,
+                background: known.has(i) ? '#36913F' : i === cardIdx ? cfg?.color || '#FFEB3C' : '#e5e7eb',
+              }} />
+          ))}
+        </div>
+
+        {/* Flip card */}
+        <div
+          onClick={() => setFlipped(f => !f)}
+          className="cursor-pointer rounded-3xl border-2 select-none transition-all hover:shadow-xl flex flex-col items-center justify-center text-center"
+          style={{
+            minHeight: 220, padding: '24px 28px',
+            borderColor: flipped ? cfg?.color || '#6FC911' : '#e5e7eb',
+            background: flipped ? (cfg?.bg || '#F0FDF4') : '#fff',
+          }}>
+          {!flipped ? (
+            <>
+              <span className="text-[11px] font-black uppercase tracking-widest mb-3 text-gray-300">
+                {activeDeck.subject} · {activeDeck.title}
+              </span>
+              <p className="font-black text-nb-dark leading-snug"
+                 style={{ fontSize: card.front.length > 35 ? 16 : 22 }}>
+                {card.front}
+              </p>
+              <span className="text-xs text-gray-300 mt-5">Tap to reveal answer</span>
+            </>
+          ) : (
+            <>
+              <span className="text-[11px] font-black uppercase tracking-widest mb-3" style={{ color: cfg?.color }}>
+                Answer
+              </span>
+              <p className="font-black leading-snug" style={{ color: cfg?.color, fontSize: card.back.length > 20 ? 18 : 28 }}>
+                {card.back}
+              </p>
+              {card.hint && (
+                <p className="text-xs text-gray-400 mt-3 italic leading-snug max-w-xs">🧠 {card.hint}</p>
+              )}
+              <span className="text-xs text-gray-300 mt-3">Tap to flip back</span>
+            </>
+          )}
+        </div>
+
+        {/* Confidence buttons after flip · Nav before flip */}
+        {flipped ? (
+          <div className="grid grid-cols-2 gap-3">
+            <button onClick={goNext}
+              className="py-4 rounded-xl font-black text-red-500 border-2 border-red-200 bg-red-50 hover:bg-red-100 transition text-sm flex items-center justify-center gap-2">
+              🔁 Still Learning
+            </button>
+            <button onClick={markKnown}
+              className="py-4 rounded-xl font-black text-white border-2 border-transparent shadow-md hover:opacity-90 transition text-sm flex items-center justify-center gap-2"
+              style={{ background: '#36913F' }}>
+              ✓ Know It
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 gap-2.5">
+            <button onClick={goPrev}
+              className="py-3.5 rounded-xl border-2 border-gray-200 text-gray-500 font-black hover:border-nb-olive transition text-sm">
               ← Prev
             </button>
-            <button onClick={next}
-              className="flex-1 py-3.5 rounded-2xl font-black text-nb-dark shadow-md transition hover:shadow-lg text-base"
-              style={{ background: '#FFEB3C' }}>
+            <button onClick={toggleSave}
+              className={`py-3.5 rounded-xl font-black text-sm border-2 transition-all ${isSaved ? 'border-nb-yellow text-nb-dark' : 'border-gray-200 text-gray-400 hover:border-nb-yellow'}`}
+              style={isSaved ? { background: '#FFEB3C' } : {}}>
+              {isSaved ? '⭐ Saved' : '☆ Save'}
+            </button>
+            <button onClick={goNext}
+              className="py-3.5 rounded-xl border-2 border-nb-green font-black text-nb-dark hover:bg-nb-green hover:text-white transition text-sm">
               Next →
             </button>
           </div>
-          <p className="text-center text-sm text-gray-400">Card {cardIdx + 1} of {deck.cards.length}</p>
+        )}
 
-          {/* Save to Library */}
-          <button onClick={toggleSave}
-            className={`w-full py-3 rounded-2xl font-black text-sm border-2 transition-all ${
-              isSaved
-                ? 'border-nb-yellow text-nb-dark'
-                : 'border-gray-200 text-gray-400 hover:border-nb-yellow hover:text-nb-dark'
-            }`}
-            style={isSaved ? { background: '#FFEB3C' } : {}}>
-            {isSaved ? '⭐ Saved to My Library' : '☆ Save to My Library'}
-          </button>
+        {/* All cards in set */}
+        <div>
+          <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2">All Cards in Set</p>
+          <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+            {cards.map((c, i) => (
+              <div key={i} onClick={() => { setCardIdx(i); setFlipped(false) }}
+                className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all flex items-center gap-3 ${
+                  i === cardIdx ? 'border-nb-green shadow-sm' : 'bg-white border-gray-100 hover:border-nb-olive'
+                }`}
+                style={i === cardIdx ? { background: '#6FC91112' } : {}}>
+                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0 ${known.has(i) ? 'bg-nb-green text-white' : 'bg-gray-100 text-gray-400'}`}>
+                  {known.has(i) ? '✓' : i + 1}
+                </span>
+                <p className="text-sm font-black text-nb-dark leading-snug flex-1">{c.front}</p>
+                {i === cardIdx && flipped && (
+                  <p className="text-xs font-bold flex-shrink-0" style={{ color: '#36913F' }}>{c.back}</p>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
+      </div>
+    )
+  }
 
-        {/* Side panel — all cards in deck (2 cols) */}
-        <div className="lg:col-span-2 space-y-2.5">
-          <p className="text-sm font-black text-gray-400 uppercase tracking-widest">All Cards</p>
-          {deck.cards.map((c, i) => (
-            <div key={i}
-              onClick={() => { setCardIdx(i); setFlipped(false); setShowHint(false) }}
-              className={`p-3.5 rounded-2xl border-2 cursor-pointer transition-all ${
-                i === cardIdx
-                  ? 'border-nb-green shadow-sm'
-                  : 'bg-white border-gray-100 hover:border-nb-olive'
+  /* ── Deck library ── */
+  return (
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h2 className="text-2xl font-black text-nb-dark">🃏 Flash Cards</h2>
+          <p className="text-sm text-gray-400 font-semibold mt-0.5">Learn faster. Remember longer.</p>
+        </div>
+        <button onClick={() => setShowLibrary(true)}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl border-2 border-nb-yellow text-nb-dark text-sm font-black hover:bg-nb-yellow transition flex-shrink-0">
+          ⭐ My Saved Cards
+          {library.length > 0 && <span className="bg-nb-dark text-white text-[10px] px-1.5 py-0.5 rounded-full">{library.length}</span>}
+        </button>
+      </div>
+
+      {/* Subject filter pills */}
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        {['All', 'Mathematics', 'English', 'Science'].map(s => {
+          const active = subjectFilter === s
+          const cfg    = SUBJECT_CFG[s]
+          return (
+            <button key={s} onClick={() => setSubjectFilter(s)}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all border-2 flex-shrink-0 ${
+                active ? 'text-white border-transparent shadow-md' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
               }`}
-              style={i === cardIdx ? { background: '#6FC91112' } : {}}>
-              <p className="text-sm font-black text-nb-dark leading-snug">{c.front}</p>
-              {i === cardIdx && flipped && (
-                <p className="text-xs font-bold mt-1.5" style={{ color: '#36913F' }}>{c.back}</p>
-              )}
-            </div>
-          ))}
+              style={active ? { background: cfg?.color || '#36913F' } : {}}>
+              {s === 'All' ? '📋' : cfg?.icon} {s}
+              <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full ml-0.5 ${active ? 'bg-white/25 text-white' : 'bg-gray-100 text-gray-400'}`}>
+                {s === 'All' ? ALL_DECKS.length : (subjectCounts[s] || 0)}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Subject banner when filtered */}
+      {subjectFilter !== 'All' && (
+        <div className="flex items-center gap-3 p-4 rounded-2xl" style={{ background: SUBJECT_CFG[subjectFilter]?.bg }}>
+          <span className="text-3xl">{SUBJECT_CFG[subjectFilter]?.icon}</span>
+          <div>
+            <p className="font-black text-nb-dark">{subjectFilter}</p>
+            <p className="text-xs text-gray-500">{subjectCounts[subjectFilter] || 0} study sets · Primary 4A</p>
+          </div>
         </div>
+      )}
+
+      {/* Deck cards grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {filteredDecks.map(deck => {
+          const cfg = SUBJECT_CFG[deck.subject]
+          return (
+            <div key={deck.id}
+              className="bg-white rounded-2xl border-2 border-nb-olive/20 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer group"
+              onClick={() => enterDeck(deck)}>
+              <div className="h-1.5 w-full" style={{ background: cfg?.color }} />
+              <div className="p-4">
+                <div className="flex items-center gap-1.5 mb-2.5">
+                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${cfg?.badge}`}>
+                    {cfg?.icon} {deck.subject}
+                  </span>
+                </div>
+                <p className="font-black text-nb-dark text-[15px] leading-snug mb-1 group-hover:text-nb-green transition-colors">
+                  {deck.title}
+                </p>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-gray-400">{deck.cards.length} terms · Primary 4A</p>
+                  <span className="text-xs font-bold text-nb-green opacity-0 group-hover:opacity-100 transition-opacity">Study →</span>
+                </div>
+              </div>
+            </div>
+          )
+        })}
       </div>
     </div>
   )
@@ -853,7 +1192,10 @@ function QuizzesView() {
     { rank: 4, name: 'Siti Nur Aisyah',     score: 80, points: 980,  isMe: false },
     { rank: 5, name: 'Justin Ng',           score: 72, points: 790,  isMe: false },
   ]
-  const RANK_MEDAL = { 1: '🥇', 2: '🥈', 3: '🥉' }
+  const RANK_BADGES = {
+    1: rankBadge1, 2: rankBadge2, 3: rankBadge3, 4: rankBadge4, 5: rankBadge5,
+    6: rankBadge6, 7: rankBadge7, 8: rankBadge8, 9: rankBadge9, 10: rankBadge10,
+  }
 
   return (
     <div className="space-y-4">
@@ -893,7 +1235,11 @@ function QuizzesView() {
                 s.isMe ? 'border-nb-yellow shadow-md' : 'border-transparent bg-nb-cream/50'
               }`}
               style={s.isMe ? { background: '#FFEB3C20' } : {}}>
-              <span className="text-xl w-7 text-center flex-shrink-0">{RANK_MEDAL[s.rank] || `#${s.rank}`}</span>
+              <span className="w-9 h-9 flex items-center justify-center flex-shrink-0">
+                {RANK_BADGES[s.rank]
+                  ? <img src={RANK_BADGES[s.rank]} alt={`Rank ${s.rank}`} className="w-9 h-9 object-contain" />
+                  : <span className="text-sm font-black text-gray-400">#{s.rank}</span>}
+              </span>
               <div className="flex-1 min-w-0">
                 <p className={`font-black text-sm truncate ${s.isMe ? 'text-nb-dark' : 'text-gray-600'}`}>
                   {s.name} {s.isMe && <span className="text-xs font-bold text-nb-green">(You)</span>}

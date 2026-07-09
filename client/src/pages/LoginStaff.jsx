@@ -2,18 +2,24 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import logoSquare from '../assets/NM_Square.png'
 import logoWhite from '../assets/Asset 1@3x 1_White.png'
+import { useAuth } from '../context/AuthContext'
+import ServerStatusBadge from '../components/ServerStatusBadge'
 
 const DEMO_ACCOUNTS = [
-  { role: 'parent',  label: '👨‍👩‍👧 Parent',  email: 'parent@neurobix.com',  password: 'demo123', path: '/parent',  style: 'bg-nb-olive text-white border-nb-olive' },
-  { role: 'teacher', label: '👩‍🏫 Teacher', email: 'teacher@neurobix.com', password: 'demo123', path: '/teacher', style: 'bg-nb-green text-white border-nb-green' },
-  { role: 'admin',   label: '🔐 Admin',   email: 'admin@neurobix.com',   password: 'demo123', path: '/admin',   style: 'bg-nb-dark text-white border-nb-dark' },
+  { role: 'parent',  label: '👨‍👩‍👧 Parent',  email: 'parent1@neurobix.com',  password: 'password123', path: '/parent',  style: 'bg-nb-olive text-white border-nb-olive' },
+  { role: 'teacher', label: '👩‍🏫 Teacher', email: 'sarah.tan@neurobix.com', password: 'password123', path: '/teacher', style: 'bg-nb-green text-white border-nb-green' },
+  { role: 'admin',   label: '🔐 Admin',   email: 'admin@neurobix.com',   password: 'password123', path: '/admin',   style: 'bg-nb-dark text-white border-nb-dark' },
 ]
+
+const ROLE_PATH = { admin: '/admin', teacher: '/teacher', parent: '/parent' }
 
 export default function LoginStaff() {
   const navigate = useNavigate()
+  const { login } = useAuth()
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
   const [error, setError]       = useState('')
+  const [showPw, setShowPw]     = useState(false)
 
   function fillDemo(account) {
     setEmail(account.email)
@@ -21,11 +27,16 @@ export default function LoginStaff() {
     setError('')
   }
 
-  function handleLogin(e) {
+  async function handleLogin(e) {
     e.preventDefault()
-    const match = DEMO_ACCOUNTS.find(a => a.email === email && a.password === password)
-    if (match) navigate(match.path)
-    else setError('Invalid credentials. Use a demo account below.')
+    try {
+      const user = await login(email, password)
+      const path = ROLE_PATH[user.role]
+      if (!path) throw new Error('This account is not a staff/parent account.')
+      navigate(path)
+    } catch (err) {
+      setError(err.message || 'Invalid credentials.')
+    }
   }
 
   return (
@@ -99,12 +110,18 @@ export default function LoginStaff() {
             </div>
             <div>
               <label className="block text-xs font-black text-gray-500 uppercase tracking-wider mb-1.5">Password</label>
-              <input
-                type="password" value={password} onChange={e => { setPassword(e.target.value); setError('') }}
-                placeholder="••••••••"
-                className="w-full px-4 py-2.5 rounded-xl border-2 border-gray-100 focus:outline-none focus:border-nb-green bg-nb-cream text-sm transition"
-                required
-              />
+              <div className="relative">
+                <input
+                  type={showPw ? 'text' : 'password'} value={password} onChange={e => { setPassword(e.target.value); setError('') }}
+                  placeholder="••••••••"
+                  className="w-full px-4 py-2.5 pr-10 rounded-xl border-2 border-gray-100 focus:outline-none focus:border-nb-green bg-nb-cream text-sm transition"
+                  required
+                />
+                <button type="button" onClick={() => setShowPw(v => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-nb-green transition text-base select-none">
+                  {showPw ? '🙈' : '👁️'}
+                </button>
+              </div>
             </div>
             <button type="submit"
               className="w-full py-3 rounded-xl font-black text-nb-dark shadow-md transition-all hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] text-sm"
@@ -132,6 +149,7 @@ export default function LoginStaff() {
           </div>
         </div>
       </div>
+      <ServerStatusBadge />
     </div>
   )
 }

@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import logoHorizontal from '../assets/Asset 1@3x.png'
+import Navbar from '../components/Navbar'
 
 const CHILDREN = [
   {
@@ -78,7 +77,6 @@ const SUBJECT_ACTIVITY_COLOR = {
 }
 
 export default function ParentDashboard() {
-  const navigate = useNavigate()
   const [childIdx, setChildIdx] = useState(0)
   const [tab, setTab] = useState('overview')
   const child = CHILDREN[childIdx]
@@ -99,18 +97,22 @@ export default function ParentDashboard() {
   return (
     <div className="min-h-screen bg-nb-cream">
 
-      {/* Navbar */}
-      <nav className="bg-white border-b-2 border-nb-olive/20 sticky top-0 z-50 shadow-sm">
-        <div className="max-w-6xl mx-auto px-3 sm:px-4 h-14 flex items-center justify-between gap-2">
-          <img src={logoHorizontal} alt="Neurobix Method" className="h-7 sm:h-9 w-auto object-contain flex-shrink-0" />
-          <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-nb-olive/20 text-nb-dark hidden sm:inline">Parent Portal</span>
-            <div className="w-8 h-8 rounded-full flex items-center justify-center font-black text-nb-dark text-xs flex-shrink-0"
-                 style={{ background: '#FFEB3C' }}>EH</div>
-            <button onClick={() => navigate('/login')} className="text-xs text-gray-400 hover:text-red-400 font-medium whitespace-nowrap">Logout</button>
-          </div>
+      <Navbar role="parent" userName="Encik Hassan" avatar="EH" />
+
+      {/* Sub-tabs (full-width) */}
+      <div className="bg-white border-b border-nb-olive/15">
+        <div className="max-w-6xl mx-auto px-3 sm:px-4 flex overflow-x-auto scrollbar-hide">
+          {TABS.map(t => (
+            <button key={t.id} onClick={() => setTab(t.id)}
+              className={`px-3 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-bold whitespace-nowrap border-b-2 transition-all flex-shrink-0 ${
+                tab === t.id ? 'border-nb-green text-nb-dark' : 'border-transparent text-gray-400 hover:text-nb-dark hover:bg-nb-cream/50'
+              }`}
+              style={tab === t.id ? { background: '#FFEB3C22' } : {}}>
+              {t.label}
+            </button>
+          ))}
         </div>
-      </nav>
+      </div>
 
       <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-5">
 
@@ -136,47 +138,33 @@ export default function ParentDashboard() {
           </div>
         </div>
 
-        {/* Sub-tabs */}
-        <div className="bg-white rounded-2xl border border-nb-olive/20 overflow-hidden">
-          <div className="flex overflow-x-auto scrollbar-hide">
-            {TABS.map(t => (
-              <button key={t.id} onClick={() => setTab(t.id)}
-                className={`px-3 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-bold whitespace-nowrap border-b-2 transition-all flex-shrink-0 ${
-                  tab === t.id ? 'border-nb-green text-nb-dark' : 'border-transparent text-gray-400 hover:text-nb-dark hover:bg-nb-cream/50'
-                }`}
-                style={tab === t.id ? { background: '#6FC91108' } : {}}>
-                {t.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
         {/* ── OVERVIEW ── */}
         {tab === 'overview' && (
-          <div className="space-y-5">
+          <div className="tab-panel space-y-5">
             {/* Summary banner */}
-            <div className="rounded-2xl sm:rounded-3xl p-4 sm:p-6 text-white shadow-xl overflow-hidden relative"
-                 style={{ background: 'linear-gradient(135deg,#6FC911,#396336)' }}>
+            <div className="rounded-3xl p-4 sm:p-6 shadow-lg border-2 border-nb-yellow overflow-hidden relative"
+                 style={{ background: 'linear-gradient(135deg,#FFF6CC,#E9F8D9)' }}>
+              <span className="absolute -right-4 -bottom-6 text-7xl sm:text-8xl opacity-20 select-none pointer-events-none">🌟</span>
               <div className="relative flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                  <p className="text-green-200 text-xs sm:text-sm font-semibold">Parent Overview</p>
-                  <h1 className="text-xl sm:text-2xl font-black mt-0.5 truncate">{child.name}</h1>
-                  <p className="text-green-100 text-xs sm:text-sm mt-0.5">{child.class} · Neurobix Method</p>
+                  <p className="text-nb-green text-xs sm:text-sm font-bold">👋 Parent Overview</p>
+                  <h1 className="text-xl sm:text-2xl font-black mt-0.5 truncate text-nb-dark">{child.name}</h1>
+                  <p className="text-gray-500 text-xs sm:text-sm mt-0.5">{child.class} · Neurobix Method</p>
                   <div className="grid grid-cols-4 gap-1.5 sm:gap-3 mt-3">
                     {[
-                      [`${overallProgress}%`, 'Progress'],
-                      [`${child.streak}🔥`, 'Streak'],
-                      [`${child.points}⭐`, 'Points'],
-                      [`${child.badges.length}`, 'Badges'],
-                    ].map(([v, l]) => (
-                      <div key={l} className="bg-white/20 rounded-xl px-1.5 sm:px-4 py-2 text-center backdrop-blur-sm">
-                        <p className="text-sm sm:text-lg font-black leading-tight">{v}</p>
-                        <p className="text-[9px] sm:text-[11px] text-green-100 mt-0.5">{l}</p>
+                      [`${overallProgress}%`, 'Progress', '#6FC911'],
+                      [`${child.streak}🔥`, 'Streak', '#f97316'],
+                      [`${child.points}⭐`, 'Points', '#eab308'],
+                      [`${child.badges.length}`, 'Badges', '#9333ea'],
+                    ].map(([v, l, c]) => (
+                      <div key={l} className="bg-white rounded-xl px-1.5 sm:px-4 py-2 text-center shadow-sm border border-nb-olive/10">
+                        <p className="text-sm sm:text-lg font-black leading-tight" style={{ color: c }}>{v}</p>
+                        <p className="text-[9px] sm:text-[11px] text-gray-400 mt-0.5">{l}</p>
                       </div>
                     ))}
                   </div>
                 </div>
-                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center text-lg sm:text-2xl font-black text-nb-dark flex-shrink-0 shadow-lg"
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center text-lg sm:text-2xl font-black text-nb-dark flex-shrink-0 shadow-lg relative z-10"
                      style={{ background: '#FFEB3C' }}>{child.avatar}</div>
               </div>
             </div>
@@ -246,7 +234,7 @@ export default function ParentDashboard() {
 
         {/* ── PROGRESS ── */}
         {tab === 'progress' && (
-          <div className="space-y-4">
+          <div className="tab-panel space-y-4">
             <h2 className="text-xl font-black text-nb-dark">📚 Subject Progress</h2>
             {child.subjects.map(s => (
               <div key={s.name} className="bg-white rounded-2xl border border-nb-olive/20 p-5">
@@ -295,7 +283,7 @@ export default function ParentDashboard() {
 
         {/* ── QUIZZES ── */}
         {tab === 'quizzes' && (
-          <div className="space-y-4">
+          <div className="tab-panel space-y-4">
             <h2 className="text-xl font-black text-nb-dark">📝 Quiz Performance</h2>
             {/* Average score card */}
             <div className="rounded-3xl p-5 border-2 border-nb-yellow"
@@ -375,7 +363,7 @@ export default function ParentDashboard() {
 
         {/* ── REWARDS ── */}
         {tab === 'rewards' && (
-          <div className="space-y-5">
+          <div className="tab-panel space-y-5">
             <h2 className="text-xl font-black text-nb-dark">🏆 Rewards & Achievements</h2>
 
             <div className="rounded-3xl p-6 shadow-lg"
@@ -415,7 +403,7 @@ export default function ParentDashboard() {
 
         {/* ── MESSAGES ── */}
         {tab === 'messages' && (
-          <div className="space-y-4">
+          <div className="tab-panel space-y-4">
             <h2 className="text-xl font-black text-nb-dark">💬 Teacher Messages</h2>
             {child.teacherNotes.length === 0 ? (
               <div className="text-center py-12 text-gray-400">
@@ -471,7 +459,7 @@ export default function ParentDashboard() {
 
         {/* ── DEADLINES ── */}
         {tab === 'deadlines' && (
-          <div className="space-y-4">
+          <div className="tab-panel space-y-4">
             <h2 className="text-xl font-black text-nb-dark">📅 Upcoming Deadlines</h2>
             {child.upcomingDeadlines.length === 0 ? (
               <div className="text-center py-12 text-gray-400">

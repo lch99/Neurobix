@@ -3,6 +3,7 @@ import logoFull from '../assets/Asset 1@3x.png'
 import charStudent from '../assets/char-student.png'
 import charStaff from '../assets/char-staff.png'
 import BrainBackground from '../components/BrainBackground'
+import ServerStatusBadge from '../components/ServerStatusBadge'
 
 export default function LoginPortal() {
   const navigate = useNavigate()
@@ -54,6 +55,7 @@ export default function LoginPortal() {
           </div>
         </div>
       </div>
+      <ServerStatusBadge />
     </BrainBackground>
   )
 }

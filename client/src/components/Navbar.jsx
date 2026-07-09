@@ -1,16 +1,7 @@
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import logoHorizontal from '../assets/Asset 1@3x.png'
-
-// Teacher, Admin and Parent have their own in-page tab bars — no links needed here.
-const NAV_LINKS = {
-  student: [
-    { label: 'Home',        path: '/student' },
-    { label: 'Lessons',     path: '/lessons' },
-    { label: 'Flash Cards', path: '/student#flashcards' },
-    { label: 'Quizzes',     path: '/student#quizzes' },
-    { label: 'Rewards',     path: '/student#rewards' },
-  ],
-}
+import { useAuth } from '../context/AuthContext'
 
 const ROLE_BADGE = {
   student: 'bg-nb-yellow text-nb-dark',
@@ -18,47 +9,99 @@ const ROLE_BADGE = {
   admin:   'bg-nb-dark text-white',
 }
 
-export default function Navbar({ role, userName }) {
+export default function Navbar({ role, userName, points, avatar, children, tabs, activeTab, onTabChange }) {
   const navigate = useNavigate()
-  const location = useLocation()
-  const links = NAV_LINKS[role] || []
+  const { logout } = useAuth()
+  const [menuOpen, setMenuOpen] = useState(false)
+
+  async function handleLogout() {
+    await logout()
+    navigate('/login')
+  }
 
   return (
-    <nav className="bg-white border-b-2 border-nb-olive/20 sticky top-0 z-50 shadow-sm">
+    <nav className="bg-white border-b border-nb-olive/15 sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-14">
+        <div className="flex items-center justify-between h-16 gap-4">
           {/* Logo */}
-          <div className="flex items-center min-w-0">
-            <img src={logoHorizontal} alt="Neurobix Method" className="h-7 sm:h-9 w-auto object-contain" />
-          </div>
+          <img src={logoHorizontal} alt="Neurobix Method" className="h-7 sm:h-9 w-auto object-contain flex-shrink-0" />
 
-          {/* Links — hidden on mobile */}
-          <div className="hidden md:flex items-center gap-1">
-            {links.map(link => (
-              <a key={link.label} href={link.path}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-                  location.pathname === link.path
-                    ? 'bg-nb-yellow text-nb-dark'
-                    : 'text-gray-500 hover:text-nb-dark hover:bg-nb-cream'
-                }`}>
-                {link.label}
-              </a>
-            ))}
-          </div>
+          {/* Inline nav links (desktop) */}
+          {tabs && (
+            <div className="hidden md:flex items-center gap-5 lg:gap-8">
+              {tabs.map(t => (
+                <button key={t.id} onClick={() => onTabChange(t.id)}
+                  className={`text-sm font-semibold transition-colors ${
+                    activeTab === t.id ? 'text-nb-green' : 'text-nb-dark/55 hover:text-nb-dark'
+                  }`}>
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          )}
 
-          {/* User */}
-          <div className="flex items-center gap-2">
-            <span className={`px-2 py-0.5 rounded-full text-xs font-bold capitalize ${ROLE_BADGE[role]}`}>
-              {role}
-            </span>
-            <span className="text-sm font-semibold text-nb-dark hidden sm:block truncate max-w-[120px]">{userName}</span>
-            <button onClick={() => navigate('/login')}
-              className="text-xs text-gray-400 hover:text-red-500 transition-colors font-medium whitespace-nowrap">
-              Logout
-            </button>
+          {/* Right cluster */}
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+            {points != null && (
+              <span className="flex items-center gap-1 text-sm font-bold text-nb-dark bg-nb-yellow/20 border-2 border-nb-yellow/60 rounded-full px-3 py-1 whitespace-nowrap">
+                ⭐ {points.toLocaleString()} <span className="text-[10px] font-bold text-nb-dark/50">XP</span>
+              </span>
+            )}
+
+            {tabs ? (
+              /* Avatar + dropdown */
+              <div className="relative">
+                <button onClick={() => setMenuOpen(o => !o)} className="flex items-center gap-1">
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-nb-dark text-xs bg-nb-yellow">
+                    {avatar || '🙂'}
+                  </div>
+                  <span className="text-nb-dark/50 text-xs">▾</span>
+                </button>
+                {menuOpen && (
+                  <div className="absolute right-0 mt-2 w-44 bg-white rounded-2xl shadow-lg border border-nb-olive/15 py-1.5 z-50">
+                    {userName && <p className="px-4 py-1.5 text-xs text-gray-400 truncate">{userName}</p>}
+                    <button onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 text-sm font-semibold text-red-500 hover:bg-red-50 transition">
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Legacy right cluster (other dashboards) */
+              <>
+                <span className={`px-2 py-0.5 rounded-full text-xs font-bold capitalize ${ROLE_BADGE[role]}`}>{role}</span>
+                {avatar ? (
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center font-black text-nb-dark text-xs flex-shrink-0 bg-nb-yellow">{avatar}</div>
+                ) : (
+                  <span className="text-sm font-semibold text-nb-dark hidden sm:block truncate max-w-[120px]">{userName}</span>
+                )}
+                <button onClick={handleLogout}
+                  className="text-xs text-gray-400 hover:text-red-500 transition-colors font-medium whitespace-nowrap">
+                  Logout
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Mobile nav tabs (scrollable) */}
+      {tabs && (
+        <div className="md:hidden border-t border-gray-100 flex overflow-x-auto scrollbar-hide">
+          {tabs.map(t => (
+            <button key={t.id} onClick={() => onTabChange(t.id)}
+              className={`flex-shrink-0 px-4 py-2.5 text-xs font-bold border-b-2 transition-colors ${
+                activeTab === t.id ? 'border-nb-green text-nb-green' : 'border-transparent text-gray-400 hover:text-nb-dark'
+              }`}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Legacy tab-bar slot */}
+      {children && <div className="border-t border-gray-100">{children}</div>}
     </nav>
   )
 }

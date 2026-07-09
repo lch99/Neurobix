@@ -1,8 +1,19 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { LOCKED_IDS } from './LessonsPage'
-import logoHorizontal from '../assets/Asset 1@3x.png'
+import { LOCKED_IDS } from '../data/lessons'
+import Navbar from '../components/Navbar'
 import logoWhite from '../assets/Asset 1@3x 1_White.png'
+
+const TABS = [
+  { id: 'home',       icon: '🏠', label: 'Home'       },
+  { id: 'lessons',    icon: '📚', label: 'Lessons'    },
+  { id: 'flashcards', icon: '🃏', label: 'Flash Cards' },
+  { id: 'quizzes',    icon: '📝', label: 'Quizzes'    },
+  { id: 'schedule',   icon: '📅', label: 'Schedule'   },
+  { id: 'rewards',    icon: '🏆', label: 'Rewards'    },
+]
+
+const TYPE_LABEL = { video: 'Video', flashcard: 'Flash Cards', quiz: 'Quiz', reading: 'Reading' }
 
 const LESSON_DATA = {
   1: {
@@ -103,64 +114,82 @@ export default function LessonDetail() {
 
   const DIFF_COLOR = { Easy: 'bg-green-100 text-green-700', Medium: 'bg-yellow-100 text-yellow-700', Hard: 'bg-red-100 text-red-600' }
 
+  function handleTabChange(tab) {
+    if (tab === 'lessons') { navigate('/lessons'); return }
+    navigate('/student', { state: { tab } })
+  }
+
   return (
     <div className="min-h-screen bg-nb-cream">
-      {/* Header */}
-      <div className="bg-white border-b-2 border-nb-olive/20 sticky top-0 z-50 shadow-sm">
-        <div className="max-w-3xl mx-auto px-4 h-16 flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="text-gray-400 hover:text-nb-green text-2xl font-bold">←</button>
-          <img src={logoHorizontal} alt="Neurobix Method" className="h-7 w-auto object-contain flex-shrink-0" />
-          <div className="flex-1 min-w-0">
-            <p className="font-black text-nb-dark truncate">{lesson.title}</p>
-            <p className="text-xs text-gray-400">{lesson.subject} · {lesson.duration} · {lesson.teacher}</p>
+      <Navbar role="student" userName="Ahmad bin Hassan" points={1240} avatar="AH"
+              tabs={TABS} activeTab="lessons" onTabChange={handleTabChange} />
+
+      {/* Hero (full-width) */}
+      <div className="w-full text-white relative overflow-hidden"
+           style={{ background: 'linear-gradient(135deg,#6FC911,#396336)' }}>
+        <img src={logoWhite} alt="" className="absolute -right-2 -top-2 h-24 w-auto opacity-20 select-none pointer-events-none" />
+        <div className="max-w-5xl mx-auto px-4 py-6 relative">
+          <p className="text-sm text-green-100/80 mb-3">
+            <button onClick={() => navigate('/lessons')} className="hover:text-white font-semibold">Lessons</button>
+            {' '}&gt;{' '}
+            <span className="text-white font-semibold">{lesson.title}</span>
+            {completed && (
+              <span className="ml-3 bg-green-100 text-green-700 text-xs font-black px-3 py-1.5 rounded-full align-middle">✅ Done!</span>
+            )}
+          </p>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xs font-bold bg-blue-100 text-blue-700 px-2.5 py-1 rounded-full">{lesson.subject}</span>
+            <span className="text-xs font-bold bg-white/20 px-2.5 py-1 rounded-full">{TYPE_LABEL[lesson.content] || lesson.type}</span>
+            <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${DIFF_COLOR[lesson.difficulty]}`}>{lesson.difficulty}</span>
           </div>
-          {completed && (
-            <span className="bg-green-100 text-green-700 text-xs font-black px-3 py-1.5 rounded-full flex-shrink-0">✅ Done!</span>
-          )}
+          <h1 className="text-2xl sm:text-3xl font-black leading-tight">{lesson.title}</h1>
+          <p className="text-green-100 mt-2 text-sm leading-relaxed">{lesson.desc}</p>
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-4 py-6 space-y-5">
-        {/* Hero */}
-        <div className="rounded-3xl p-6 text-white shadow-xl overflow-hidden relative"
-             style={{ background: 'linear-gradient(135deg,#6FC911,#396336)' }}>
-          <img src={logoWhite} alt="" className="absolute -right-2 -top-2 h-24 w-auto opacity-20 select-none pointer-events-none" />
-          <div className="relative">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-bold bg-white/20 px-2.5 py-1 rounded-full">{lesson.subject}</span>
-              <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${DIFF_COLOR[lesson.difficulty]}`}>{lesson.difficulty}</span>
+      <div className="max-w-5xl mx-auto px-4 py-6 space-y-5">
+        {/* Info bar */}
+        <div className="bg-white rounded-2xl border border-nb-olive/20 p-4 flex flex-wrap gap-4 sm:gap-8 justify-between sm:justify-start">
+          <div className="flex items-center gap-2.5">
+            <span className="w-9 h-9 rounded-full bg-nb-cream flex items-center justify-center text-lg flex-shrink-0">👤</span>
+            <div>
+              <p className="text-xs text-gray-400">Teacher</p>
+              <p className="text-sm font-bold text-nb-dark">{lesson.teacher}</p>
             </div>
-            <h1 className="text-2xl font-black leading-tight">{lesson.title}</h1>
-            <p className="text-green-100 mt-2 text-sm leading-relaxed">{lesson.desc}</p>
-            <div className="flex gap-3 mt-4 flex-wrap text-xs">
-              <span className="bg-white/20 rounded-full px-3 py-1.5 font-semibold">⏱ {lesson.duration}</span>
-              <span className="bg-white/20 rounded-full px-3 py-1.5 font-semibold">⭐ +{lesson.points} pts</span>
-              <span className="bg-white/20 rounded-full px-3 py-1.5 font-semibold">👩‍🏫 {lesson.teacher}</span>
+          </div>
+          <div className="flex items-center gap-2.5">
+            <span className="w-9 h-9 rounded-full bg-nb-cream flex items-center justify-center text-lg flex-shrink-0">⏱</span>
+            <div>
+              <p className="text-xs text-gray-400">Duration</p>
+              <p className="text-sm font-bold text-nb-dark">{lesson.duration}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2.5">
+            <span className="w-9 h-9 rounded-full bg-nb-cream flex items-center justify-center text-lg flex-shrink-0">⭐</span>
+            <div>
+              <p className="text-xs text-gray-400">Points</p>
+              <p className="text-sm font-bold text-nb-dark">+{lesson.points} pts</p>
             </div>
           </div>
         </div>
 
-        {/* Objectives */}
-        <div className="bg-white rounded-2xl border border-nb-olive/20 p-5">
-          <h2 className="font-black text-nb-dark mb-3">🎯 What You'll Learn</h2>
-          <ul className="space-y-2">
-            {lesson.objectives.map((obj, i) => (
-              <li key={i} className="flex items-start gap-2.5 text-sm text-gray-700">
-                <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0 mt-0.5"
-                      style={{ background: '#FFEB3C', color: '#396336' }}>{i + 1}</span>
-                {obj}
-              </li>
-            ))}
-          </ul>
-        </div>
+        {/* Objectives + Memory Tip */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="bg-white rounded-2xl border border-nb-olive/20 p-5">
+            <h2 className="font-black text-nb-dark mb-3">💡 What You'll Learn</h2>
+            <ul className="space-y-2">
+              {lesson.objectives.map((obj, i) => (
+                <li key={i} className="flex items-start gap-2.5 text-sm text-gray-700">
+                  <span className="text-nb-green font-bold flex-shrink-0">✔</span>
+                  {obj}
+                </li>
+              ))}
+            </ul>
+          </div>
 
-        {/* Memory Tip */}
-        <div className="rounded-2xl p-4 border-2 flex items-start gap-3"
-             style={{ background: '#FFF7E9', borderColor: '#FFEB3C' }}>
-          <span className="text-2xl flex-shrink-0">🧠</span>
-          <div>
-            <p className="font-black text-nb-dark text-sm">Neurobix Memory Tip</p>
-            <p className="text-gray-600 text-sm mt-0.5 leading-relaxed">{lesson.memoryTip}</p>
+          <div className="rounded-2xl p-5 border-2" style={{ background: '#FFF7E9', borderColor: '#FFEB3C' }}>
+            <h2 className="font-black text-nb-dark mb-3">🧠 Neurobix Memory Tip</h2>
+            <p className="text-gray-600 text-sm leading-relaxed">{lesson.memoryTip}</p>
           </div>
         </div>
 
@@ -219,33 +248,105 @@ function VideoContent({ lesson, onComplete, completed }) {
 
 /* ─── Flash Cards ─── */
 function FlashCardContent({ cards, points, onComplete, completed }) {
+  const [deck, setDeck] = useState(cards)
   const [index, setIndex] = useState(0)
   const [flipped, setFlipped] = useState(false)
   const [seen, setSeen] = useState(new Set())
+  const [isShuffled, setIsShuffled] = useState(false)
+  const [speaking, setSpeaking] = useState(false)
+
+  useEffect(() => () => window.speechSynthesis?.cancel(), [])
+
+  function shuffleDeck() {
+    setDeck(d => [...d].sort(() => Math.random() - 0.5))
+    setIsShuffled(true)
+    setIndex(0)
+    setFlipped(false)
+    setSeen(new Set())
+    window.speechSynthesis?.cancel()
+  }
+
+  function restart() {
+    setDeck([...cards])
+    setIsShuffled(false)
+    setIndex(0)
+    setFlipped(false)
+    setSeen(new Set())
+    window.speechSynthesis?.cancel()
+    setSpeaking(false)
+  }
+
+  function speak(text) {
+    if (!window.speechSynthesis) return
+    window.speechSynthesis.cancel()
+    const clean = text.replace(/[\u{1F000}-\u{1FFFF}]/gu, '').trim()
+    const utter = new SpeechSynthesisUtterance(clean)
+    utter.rate = 0.85
+    utter.onstart = () => setSpeaking(true)
+    utter.onend = () => setSpeaking(false)
+    utter.onerror = () => setSpeaking(false)
+    window.speechSynthesis.speak(utter)
+  }
 
   function next() {
     setSeen(prev => new Set(prev).add(index))
     setFlipped(false)
-    if (index + 1 < cards.length) setIndex(index + 1)
+    window.speechSynthesis?.cancel()
+    setSpeaking(false)
+    if (index + 1 < deck.length) setIndex(index + 1)
     else if (!completed) onComplete()
   }
 
-  const card = cards[index]
+  function prev() {
+    setFlipped(false)
+    window.speechSynthesis?.cancel()
+    setSpeaking(false)
+    if (index > 0) setIndex(index - 1)
+  }
+
+  const card = deck[index]
+  const currentText = flipped ? card.back : card.front
+
   return (
     <div className="space-y-4">
-      <div className="flex justify-between text-sm text-gray-500 font-medium">
-        <span>Card {index + 1} / {cards.length}</span>
-        <span>{seen.size} reviewed ✓</span>
+      {/* Toolbar */}
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex gap-2">
+          <button onClick={shuffleDeck}
+            className={`px-4 py-2 rounded-xl font-bold text-sm border-2 transition-all ${isShuffled ? 'border-nb-green bg-green-50 text-nb-green' : 'border-gray-200 text-gray-500 hover:border-nb-olive'}`}>
+            🔀 Shuffle{isShuffled ? ' ✓' : ''}
+          </button>
+          <button onClick={restart}
+            className="px-4 py-2 rounded-xl font-bold text-sm border-2 border-gray-200 text-gray-500 hover:border-nb-olive transition-all">
+            🔁 Restart
+          </button>
+        </div>
+        <div className="text-sm text-gray-500 font-medium">
+          Card {index + 1} / {deck.length} · {seen.size} reviewed ✓
+        </div>
       </div>
+
+      {/* Progress dots */}
       <div className="flex gap-1.5 justify-center">
-        {cards.map((_, i) => (
+        {deck.map((_, i) => (
           <div key={i} className={`h-2 rounded-full transition-all ${i === index ? 'w-6' : i < index ? 'w-2' : 'w-2 bg-gray-200'}`}
                style={i === index ? { background: '#36913F' } : i < index ? { background: '#91BA4F' } : {}} />
         ))}
       </div>
-      <div onClick={() => setFlipped(!flipped)}
-        className="cursor-pointer bg-white rounded-3xl shadow-lg border-2 p-10 min-h-[200px] flex flex-col items-center justify-center text-center transition-all hover:shadow-xl"
+
+      {/* Card */}
+      <div onClick={() => { setFlipped(f => !f); window.speechSynthesis?.cancel(); setSpeaking(false) }}
+        className="cursor-pointer bg-white rounded-3xl shadow-lg border-2 p-10 min-h-[220px] flex flex-col items-center justify-center text-center transition-all hover:shadow-xl relative"
         style={{ borderColor: flipped ? '#6FC911' : '#91BA4F40' }}>
+
+        {/* Audio button */}
+        <button
+          onClick={e => { e.stopPropagation(); speak(currentText) }}
+          title="Read aloud"
+          className={`absolute top-4 right-4 w-9 h-9 rounded-full flex items-center justify-center text-base border-2 transition-all ${speaking ? 'border-nb-green bg-green-50 animate-pulse' : 'border-gray-100 bg-nb-cream hover:border-nb-green'}`}>
+          🔊
+        </button>
+
         {!flipped ? (
           <>
             <p className="text-xs font-black uppercase tracking-widest mb-4" style={{ color: '#36913F' }}>Question</p>
@@ -265,15 +366,17 @@ function FlashCardContent({ cards, points, onComplete, completed }) {
           </>
         )}
       </div>
+
+      {/* Navigation */}
       <div className="flex gap-3">
-        <button onClick={() => { setFlipped(false); if (index > 0) setIndex(index - 1) }} disabled={index === 0}
+        <button onClick={prev} disabled={index === 0}
           className="flex-1 py-3 rounded-2xl border-2 border-gray-200 text-gray-500 font-bold hover:border-nb-olive transition disabled:opacity-30">
           ← Previous
         </button>
         <button onClick={next}
           className="flex-1 py-3 rounded-2xl font-black text-nb-dark shadow-md hover:shadow-lg transition"
           style={{ background: '#FFEB3C' }}>
-          {index + 1 < cards.length ? 'Next →' : '✅ Finish!'}
+          {index + 1 < deck.length ? 'Next →' : '✅ Finish!'}
         </button>
       </div>
       {completed && <CompletionBanner points={points} />}
@@ -282,7 +385,7 @@ function FlashCardContent({ cards, points, onComplete, completed }) {
 }
 
 /* ─── Quiz ─── */
-function QuizContent({ questions, points, onComplete, completed }) {
+function QuizContent({ questions, points, onComplete }) {
   const [current, setCurrent] = useState(0)
   const [selected, setSelected] = useState(null)
   const [score, setScore] = useState(0)

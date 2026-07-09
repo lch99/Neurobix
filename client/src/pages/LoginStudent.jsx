@@ -2,22 +2,27 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import logoFull from '../assets/Asset 1@3x.png'
 import BrainBackground from '../components/BrainBackground'
+import { useAuth } from '../context/AuthContext'
+import ServerStatusBadge from '../components/ServerStatusBadge'
 
-const DEMO = { email: 'student@neurobix.com', password: 'demo123', path: '/student' }
+const DEMO = { email: 'student1@neurobix.com', password: 'password123' }
 
 export default function LoginStudent() {
   const navigate = useNavigate()
+  const { login } = useAuth()
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
   const [error, setError]       = useState('')
   const [shake, setShake]       = useState(false)
 
-  function handleLogin(e) {
+  async function handleLogin(e) {
     e.preventDefault()
-    if (email === DEMO.email && password === DEMO.password) {
-      navigate(DEMO.path)
-    } else {
-      setError('Oops! Wrong email or password. Try again!')
+    try {
+      const user = await login(email, password)
+      if (user.role !== 'student') throw new Error('This account is not a student account.')
+      navigate('/student')
+    } catch (err) {
+      setError(err.message || 'Oops! Wrong email or password. Try again!')
       setShake(true)
       setTimeout(() => setShake(false), 500)
     }
@@ -92,6 +97,7 @@ export default function LoginStudent() {
       >
         Use demo student account
       </button>
+      <ServerStatusBadge />
     </BrainBackground>
   )
 }

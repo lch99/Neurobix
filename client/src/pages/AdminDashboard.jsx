@@ -109,10 +109,7 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-nb-cream">
       {showModal && <AddUserModal onClose={() => setShowModal(false)} onAdd={handleAddUser} />}
-      <Navbar role="admin" userName="Admin" />
-
-      {/* Sub-tabs */}
-      <div className="bg-white border-b-2 border-nb-olive/20 sticky top-14 z-40">
+      <Navbar role="admin" userName="Admin">
         <div className="max-w-7xl mx-auto px-2 flex gap-1 overflow-x-auto py-2 scrollbar-hide">
           {[
             { id: 'overview', label: '📊 Overview' },
@@ -121,19 +118,23 @@ export default function AdminDashboard() {
             { id: 'reports',  label: '📈 Reports' },
           ].map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
-              className={`px-3 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-black whitespace-nowrap transition-all flex-shrink-0 ${tab === t.id ? 'text-white' : 'text-gray-500 hover:bg-nb-cream'}`}
+              className={`px-3 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-black whitespace-nowrap transition-all flex-shrink-0 border-b-2 ${
+                tab === t.id
+                  ? 'text-white border-nb-lime'
+                  : 'text-gray-500 hover:bg-nb-cream border-transparent'
+              }`}
               style={tab === t.id ? { background: '#396336' } : {}}>
               {t.label}
             </button>
           ))}
         </div>
-      </div>
+      </Navbar>
 
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
 
         {/* OVERVIEW */}
         {tab === 'overview' && (
-          <>
+          <div className="tab-panel space-y-4 sm:space-y-6">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
                 { label: 'Total Users',    value: 132,  icon: '👥',  bg: 'bg-blue-50',   text: 'text-blue-700' },
@@ -203,12 +204,12 @@ export default function AdminDashboard() {
                 <p className="text-sm text-gray-500 mt-3 text-center">Total: <span className="font-black" style={{ color: '#36913F' }}>47</span> certificates</p>
               </div>
             </div>
-          </>
+          </div>
         )}
 
         {/* USERS */}
         {tab === 'users' && (
-          <div className="space-y-4">
+          <div className="tab-panel space-y-4">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg sm:text-xl font-black text-nb-dark">User Management</h2>
               <button onClick={() => setShowModal(true)}
@@ -219,6 +220,13 @@ export default function AdminDashboard() {
               className="w-full px-4 py-2 rounded-xl border-2 border-nb-olive/20 text-sm focus:outline-none focus:border-nb-green bg-white" />
             {/* Mobile card list */}
             <div className="space-y-2 sm:hidden">
+              {filtered.length === 0 && (
+                <div className="bg-white rounded-2xl border border-nb-olive/20 py-10 flex flex-col items-center gap-2 text-center">
+                  <span className="text-4xl">🔍</span>
+                  <p className="font-black text-nb-dark">No users found</p>
+                  <p className="text-sm text-gray-400">Try a different name or email</p>
+                </div>
+              )}
               {filtered.map(u => (
                 <div key={u.id} className="bg-white rounded-2xl border border-nb-olive/20 p-4">
                   <div className="flex items-center gap-3 mb-2">
@@ -257,6 +265,15 @@ export default function AdminDashboard() {
                   ))}</tr>
                 </thead>
                 <tbody className="divide-y divide-nb-olive/10">
+                  {filtered.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="py-12 text-center">
+                        <span className="text-4xl block mb-2">🔍</span>
+                        <p className="font-black text-nb-dark">No users found</p>
+                        <p className="text-sm text-gray-400 mt-1">Try a different name or email</p>
+                      </td>
+                    </tr>
+                  )}
                   {filtered.map(u => (
                     <tr key={u.id} className="hover:bg-nb-cream/50 transition">
                       <td className="px-5 py-3">
@@ -297,7 +314,7 @@ export default function AdminDashboard() {
 
         {/* CLASSES */}
         {tab === 'classes' && (
-          <div className="space-y-4">
+          <div className="tab-panel space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg sm:text-xl font-black text-nb-dark">All Classes</h2>
               <button className="px-3 sm:px-4 py-2 text-white text-xs sm:text-sm font-black rounded-xl shadow hover:opacity-90 transition"
@@ -331,7 +348,7 @@ export default function AdminDashboard() {
 
         {/* REPORTS */}
         {tab === 'reports' && (
-          <div className="space-y-4">
+          <div className="tab-panel space-y-4">
             <h2 className="text-lg sm:text-xl font-black text-nb-dark">Reports</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
