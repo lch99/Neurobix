@@ -1,5 +1,10 @@
 import { useState } from 'react'
 import Navbar from '../components/Navbar'
+import {
+  subjectNumbers, subjectBook, subjectMicroscope,
+  starYellow, streakIcon, badgeIcon, medalIcon, bookIcon, passIcon, retryIcon,
+  overdueIcon, scoreIcon, lightBulbIcon,
+} from '../assets/icons'
 
 const CHILDREN = [
   {
@@ -8,13 +13,13 @@ const CHILDREN = [
     class: 'Primary 4A',
     avatar: 'AH',
     subjects: [
-      { name: 'Mathematics', icon: '🔢', progress: 72, completed: 10, total: 14, color: '#3b82f6', lastActive: 'Today' },
-      { name: 'English',     icon: '📖', progress: 55, completed: 6,  total: 12, color: '#9333ea', lastActive: 'Yesterday' },
-      { name: 'Science',     icon: '🔬', progress: 40, completed: 4,  total: 10, color: '#36913F', lastActive: '3 days ago' },
+      { name: 'Mathematics', icon: subjectNumbers,    progress: 72, completed: 10, total: 14, color: '#3b82f6', lastActive: 'Today' },
+      { name: 'English',     icon: subjectBook,       progress: 55, completed: 6,  total: 12, color: '#9333ea', lastActive: 'Yesterday' },
+      { name: 'Science',     icon: subjectMicroscope, progress: 40, completed: 4,  total: 10, color: '#36913F', lastActive: '3 days ago' },
     ],
     points: 1240,
     streak: 7,
-    badges: ['⭐ Star Learner', '🏆 Quiz Champion', '🔥 7-Day Streak'],
+    badges: [{ icon: starYellow, label: 'Star Learner' }, { icon: medalIcon, label: 'Quiz Champion' }, { icon: streakIcon, label: '7-Day Streak' }],
     quizResults: [
       { title: 'Times Tables Challenge', subject: 'Mathematics', score: 90, date: '2025-05-06', passed: true },
       { title: 'Fractions Basics',       subject: 'Mathematics', score: 75, date: '2025-05-05', passed: true },
@@ -44,12 +49,12 @@ const CHILDREN = [
     class: 'Primary 2B',
     avatar: 'NA',
     subjects: [
-      { name: 'Mathematics', icon: '🔢', progress: 50, completed: 5, total: 10, color: '#3b82f6', lastActive: '2 days ago' },
-      { name: 'English',     icon: '📖', progress: 80, completed: 8, total: 10, color: '#9333ea', lastActive: 'Today' },
+      { name: 'Mathematics', icon: subjectNumbers, progress: 50, completed: 5, total: 10, color: '#3b82f6', lastActive: '2 days ago' },
+      { name: 'English',     icon: subjectBook,    progress: 80, completed: 8, total: 10, color: '#9333ea', lastActive: 'Today' },
     ],
     points: 620,
     streak: 3,
-    badges: ['⭐ Star Learner'],
+    badges: [{ icon: starYellow, label: 'Star Learner' }],
     quizResults: [
       { title: 'Alphabet Quiz',    subject: 'English',     score: 95, date: '2025-05-06', passed: true },
       { title: 'Numbers 1–20',     subject: 'Mathematics', score: 70, date: '2025-05-04', passed: true },
@@ -152,13 +157,15 @@ export default function ParentDashboard() {
                   <p className="text-gray-500 text-xs sm:text-sm mt-0.5">{child.class} · Neurobix Method</p>
                   <div className="grid grid-cols-4 gap-1.5 sm:gap-3 mt-3">
                     {[
-                      [`${overallProgress}%`, 'Progress', '#6FC911'],
-                      [`${child.streak}🔥`, 'Streak', '#f97316'],
-                      [`${child.points}⭐`, 'Points', '#eab308'],
-                      [`${child.badges.length}`, 'Badges', '#9333ea'],
-                    ].map(([v, l, c]) => (
+                      [`${overallProgress}%`, 'Progress', '#6FC911', null],
+                      [child.streak, 'Streak', '#f97316', streakIcon],
+                      [child.points.toLocaleString(), 'Points', '#eab308', starYellow],
+                      [child.badges.length, 'Badges', '#9333ea', badgeIcon],
+                    ].map(([v, l, c, icon]) => (
                       <div key={l} className="bg-white rounded-xl px-1.5 sm:px-4 py-2 text-center shadow-sm border border-nb-olive/10">
-                        <p className="text-sm sm:text-lg font-black leading-tight" style={{ color: c }}>{v}</p>
+                        <p className="text-sm sm:text-lg font-black leading-tight flex items-center justify-center gap-1" style={{ color: c }}>
+                          {icon && <img src={icon} alt="" className="w-3.5 h-3.5 sm:w-4 sm:h-4 object-contain" />}{v}
+                        </p>
                         <p className="text-[9px] sm:text-[11px] text-gray-400 mt-0.5">{l}</p>
                       </div>
                     ))}
@@ -172,7 +179,7 @@ export default function ParentDashboard() {
             {/* Quick stats */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               <div className="bg-white rounded-2xl border border-nb-olive/20 p-5">
-                <p className="text-2xl mb-1">📚</p>
+                <img src={bookIcon} alt="" className="w-7 h-7 mb-1 object-contain" />
                 <p className="text-3xl font-black text-nb-dark">
                   {child.subjects.reduce((s, x) => s + x.completed, 0)}/{child.subjects.reduce((s, x) => s + x.total, 0)}
                 </p>
@@ -186,7 +193,7 @@ export default function ParentDashboard() {
                 <p className="text-sm text-gray-500 mt-0.5">Avg. quiz score</p>
               </div>
               <div className="bg-white rounded-2xl border border-nb-olive/20 p-5 col-span-2 sm:col-span-1">
-                <p className="text-2xl mb-1">✅</p>
+                <img src={passIcon} alt="" className="w-7 h-7 mb-1 object-contain" />
                 <p className="text-3xl font-black text-nb-dark">
                   {child.quizResults.filter(q => q.passed).length}/{child.quizResults.length}
                 </p>
@@ -215,7 +222,7 @@ export default function ParentDashboard() {
             {/* Urgent deadlines */}
             {child.upcomingDeadlines.some(d => d.urgent) && (
               <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-4">
-                <h3 className="font-black text-red-700 mb-3">⚠️ Urgent — Action Needed</h3>
+                <h3 className="font-black text-red-700 mb-3 flex items-center gap-1.5"><img src={overdueIcon} alt="" className="w-4 h-4 object-contain" /> Urgent — Action Needed</h3>
                 <div className="space-y-2">
                   {child.upcomingDeadlines.filter(d => d.urgent).map((d, i) => (
                     <div key={i} className="bg-white rounded-xl p-3 flex items-center justify-between">
@@ -235,13 +242,13 @@ export default function ParentDashboard() {
         {/* ── PROGRESS ── */}
         {tab === 'progress' && (
           <div className="tab-panel space-y-4">
-            <h2 className="text-xl font-black text-nb-dark">📚 Subject Progress</h2>
+            <h2 className="text-xl font-black text-nb-dark flex items-center gap-2"><img src={bookIcon} alt="" className="w-6 h-6 object-contain" /> Subject Progress</h2>
             {child.subjects.map(s => (
               <div key={s.name} className="bg-white rounded-2xl border border-nb-olive/20 p-5">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-2xl shadow-sm"
-                         style={{ background: s.color + '20' }}>{s.icon}</div>
+                    <div className="w-11 h-11 rounded-2xl flex items-center justify-center p-2.5 shadow-sm"
+                         style={{ background: s.color + '20' }}><img src={s.icon} alt="" className="w-full h-full object-contain" /></div>
                     <div>
                       <p className="font-black text-nb-dark">{s.name}</p>
                       <p className="text-xs text-gray-400">Last active: {s.lastActive}</p>
@@ -289,7 +296,7 @@ export default function ParentDashboard() {
             <div className="rounded-3xl p-5 border-2 border-nb-yellow"
                  style={{ background: 'linear-gradient(135deg,#FFEB3C22,#6FC91115)' }}>
               <div className="flex items-center gap-4">
-                <div className="text-5xl">📊</div>
+                <img src={scoreIcon} alt="" className="w-14 h-14 object-contain flex-shrink-0" />
                 <div>
                   <p className="text-sm text-gray-500 font-semibold">Average Quiz Score</p>
                   <p className="text-4xl font-black text-nb-dark">
@@ -312,7 +319,7 @@ export default function ParentDashboard() {
                       <p className="text-xs text-gray-400">{q.subject} · {q.date}</p>
                     </div>
                     <span className={`px-2 py-0.5 rounded-full text-xs font-bold flex-shrink-0 ${q.passed ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
-                      {q.passed ? '✅' : '❌'}
+                      <img src={q.passed ? passIcon : retryIcon} alt="" className="w-3.5 h-3.5 object-contain" />
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -348,8 +355,8 @@ export default function ParentDashboard() {
                         </div>
                       </td>
                       <td className="px-5 py-3">
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${q.passed ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
-                          {q.passed ? '✅ Passed' : '❌ Retry'}
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1 w-fit ${q.passed ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
+                          <img src={q.passed ? passIcon : retryIcon} alt="" className="w-3 h-3 object-contain" /> {q.passed ? 'Passed' : 'Retry'}
                         </span>
                       </td>
                       <td className="px-5 py-3 text-xs text-gray-400">{q.date}</td>
@@ -364,22 +371,22 @@ export default function ParentDashboard() {
         {/* ── REWARDS ── */}
         {tab === 'rewards' && (
           <div className="tab-panel space-y-5">
-            <h2 className="text-xl font-black text-nb-dark">🏆 Rewards & Achievements</h2>
+            <h2 className="text-xl font-black text-nb-dark flex items-center gap-2"><img src={medalIcon} alt="" className="w-6 h-6 object-contain" /> Rewards & Achievements</h2>
 
             <div className="rounded-3xl p-6 shadow-lg"
                  style={{ background: 'linear-gradient(135deg,#FFEB3C,#91BA4F)' }}>
               <p className="text-nb-dark/70 font-semibold text-sm">Total Points Earned</p>
-              <p className="text-5xl font-black text-nb-dark mt-1">{child.points.toLocaleString()} ⭐</p>
+              <p className="text-5xl font-black text-nb-dark mt-1 flex items-center gap-2">{child.points.toLocaleString()} <img src={starYellow} alt="" className="w-10 h-10 object-contain" /></p>
               <p className="text-nb-dark/60 text-sm mt-2">Rank: Top 15% of class · {child.streak}-day learning streak 🔥</p>
             </div>
 
             <div className="bg-white rounded-2xl border border-nb-olive/20 p-5">
-              <h3 className="font-black text-nb-dark mb-4">🎖️ Badges Earned</h3>
+              <h3 className="font-black text-nb-dark mb-4 flex items-center gap-1.5"><img src={badgeIcon} alt="" className="w-5 h-5 object-contain" /> Badges Earned</h3>
               <div className="flex flex-wrap gap-3">
                 {child.badges.map((b, i) => (
                   <div key={i} className="flex items-center gap-2 bg-nb-cream border-2 border-nb-yellow rounded-2xl px-4 py-2.5 shadow-sm">
-                    <span className="text-xl">{b.split(' ')[0]}</span>
-                    <span className="font-bold text-nb-dark text-sm">{b.split(' ').slice(1).join(' ')}</span>
+                    <img src={b.icon} alt="" className="w-6 h-6 object-contain" />
+                    <span className="font-bold text-nb-dark text-sm">{b.label}</span>
                   </div>
                 ))}
               </div>
@@ -474,8 +481,8 @@ export default function ParentDashboard() {
                     <div key={i}
                       className={`bg-white rounded-2xl border-2 p-5 flex items-center justify-between gap-4 ${d.urgent ? 'border-red-200' : 'border-nb-olive/20'}`}>
                       <div className="flex items-center gap-4">
-                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 ${d.urgent ? 'bg-red-50' : 'bg-nb-cream'}`}>
-                          {d.urgent ? '⚠️' : '📋'}
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${d.urgent ? 'bg-red-50 p-2.5' : 'bg-nb-cream text-2xl'}`}>
+                          {d.urgent ? <img src={overdueIcon} alt="" className="w-full h-full object-contain" /> : '📋'}
                         </div>
                         <div>
                           <p className="font-black text-nb-dark">{d.title}</p>
@@ -496,7 +503,7 @@ export default function ParentDashboard() {
             {/* Reminder tip */}
             <div className="rounded-2xl p-4 border-2 border-nb-yellow flex items-start gap-3"
                  style={{ background: '#FFEB3C15' }}>
-              <span className="text-xl flex-shrink-0">💡</span>
+              <img src={lightBulbIcon} alt="" className="w-6 h-6 flex-shrink-0 object-contain" />
               <div>
                 <p className="font-black text-nb-dark text-sm">Neurobix Parent Tip</p>
                 <p className="text-xs text-gray-600 mt-0.5 leading-relaxed">

@@ -17,41 +17,63 @@ import iconHumanBody from '../assets/icons/human-body.png'
 import iconForces from '../assets/icons/forces.png'
 import iconStatesMatter from '../assets/icons/states-matter.png'
 import iconFoodChain from '../assets/icons/food-chain.png'
+import { subjectNumbers, subjectBook, subjectMicroscope } from '../assets/icons'
+
+// Each term runs roughly 1–3 months and is broken into weeks; every lesson
+// is scheduled for a specific week within its term so students/parents can
+// see what's coming up week by week.
+export const TERMS = [
+  { id: 1, name: 'Term 1', startDate: '2026-01-02', endDate: '2026-03-14', status: 'completed' },
+  { id: 2, name: 'Term 2', startDate: '2026-03-30', endDate: '2026-05-30', status: 'completed' },
+  { id: 3, name: 'Term 3', startDate: '2026-06-29', endDate: '2026-09-05', status: 'active' },
+  { id: 4, name: 'Term 4', startDate: '2026-09-21', endDate: '2026-11-19', status: 'upcoming' },
+]
+
+const MONTH_ABBR = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+
+// e.g. "2 Jan – 14 Mar 2026"
+export function formatTermRange(term) {
+  const s = new Date(term.startDate)
+  const e = new Date(term.endDate)
+  const start = `${s.getDate()} ${MONTH_ABBR[s.getMonth()]}`
+  const end = `${e.getDate()} ${MONTH_ABBR[e.getMonth()]} ${e.getFullYear()}`
+  return `${start} – ${end}`
+}
 
 export const ALL_LESSONS = [
   // Mathematics — Term 1: Whole Numbers & Operations
-  { id: 1,  term: 1, title: 'Addition & Subtraction',      subject: 'Mathematics', type: 'video',     status: 'completed',   duration: '12 min', icon: iconAddSub,      difficulty: 'Easy',   desc: 'Master adding and subtracting numbers up to 100 using fun memory tricks!' },
-  { id: 2,  term: 1, title: 'Multiplication Tables',        subject: 'Mathematics', type: 'flashcard', status: 'completed',   duration: '10 min', icon: iconMultiply,    difficulty: 'Easy',   desc: 'Flip your way through times tables 1–12 with our visual memory cards.' },
+  { id: 1,  term: 1, week: 1, title: 'Addition & Subtraction',      subject: 'Mathematics', type: 'video',     status: 'completed',   duration: '12 min', icon: iconAddSub,      difficulty: 'Easy',   desc: 'Master adding and subtracting numbers up to 100 using fun memory tricks!' },
+  { id: 2,  term: 1, week: 2, title: 'Multiplication Tables',        subject: 'Mathematics', type: 'flashcard', status: 'completed',   duration: '10 min', icon: iconMultiply,    difficulty: 'Easy',   desc: 'Flip your way through times tables 1–12 with our visual memory cards.' },
   // Mathematics — Term 2: Fractions & Division
-  { id: 3,  term: 2, title: 'Fractions Basics',             subject: 'Mathematics', type: 'quiz',      status: 'in_progress', duration: '15 min', icon: iconFraction,    difficulty: 'Medium', desc: 'Learn numerators, denominators and simple fractions with pizza examples!' },
-  { id: 11, term: 2, title: 'Division for Beginners',       subject: 'Mathematics', type: 'video',     status: 'pending',     duration: '14 min', icon: iconDivide,      difficulty: 'Easy',   desc: 'Sharing equally — understand division through real-life situations.' },
+  { id: 3,  term: 2, week: 1, title: 'Fractions Basics',             subject: 'Mathematics', type: 'quiz',      status: 'in_progress', duration: '15 min', icon: iconFraction,    difficulty: 'Medium', desc: 'Learn numerators, denominators and simple fractions with pizza examples!' },
+  { id: 11, term: 2, week: 4, title: 'Division for Beginners',       subject: 'Mathematics', type: 'video',     status: 'pending',     duration: '14 min', icon: iconDivide,      difficulty: 'Easy',   desc: 'Sharing equally — understand division through real-life situations.' },
   // Mathematics — Term 3: Measurement & Geometry
-  { id: 12, term: 3, title: 'Place Value & Digits',         subject: 'Mathematics', type: 'flashcard', status: 'pending',     duration: '12 min', icon: iconPlaceValue,  difficulty: 'Easy',   desc: 'Hundreds, tens, ones — know exactly what each digit means!' },
-  { id: 13, term: 3, title: 'Geometry: Shapes',             subject: 'Mathematics', type: 'activity',  status: 'pending',     duration: '18 min', icon: iconShapes,      difficulty: 'Medium', desc: 'Identify 2D & 3D shapes and their properties through interactive drawing.' },
+  { id: 12, term: 3, week: 1, title: 'Place Value & Digits',         subject: 'Mathematics', type: 'flashcard', status: 'pending',     duration: '12 min', icon: iconPlaceValue,  difficulty: 'Easy',   desc: 'Hundreds, tens, ones — know exactly what each digit means!' },
+  { id: 13, term: 3, week: 2, title: 'Geometry: Shapes',             subject: 'Mathematics', type: 'activity',  status: 'pending',     duration: '18 min', icon: iconShapes,      difficulty: 'Medium', desc: 'Identify 2D & 3D shapes and their properties through interactive drawing.' },
   // Mathematics — Term 4: Data Analysis & Problem Solving
-  { id: 14, term: 4, title: 'Word Problems Challenge',      subject: 'Mathematics', type: 'quiz',      status: 'pending',     duration: '20 min', icon: iconQuiz,        difficulty: 'Hard',   desc: 'Apply maths to real-world problems. Think like a mathematician!' },
+  { id: 14, term: 4, week: 1, title: 'Word Problems Challenge',      subject: 'Mathematics', type: 'quiz',      status: 'pending',     duration: '20 min', icon: iconQuiz,        difficulty: 'Hard',   desc: 'Apply maths to real-world problems. Think like a mathematician!' },
 
   // English — Term 1: Phonics & Reading
-  { id: 4,  term: 1, title: 'Alphabet Flash Cards',         subject: 'English',     type: 'flashcard', status: 'in_progress', duration: '8 min',  icon: iconAlphabet,    difficulty: 'Easy',   desc: 'Review all 26 letters with pictures and phonics memory cues.' },
-  { id: 5,  term: 1, title: 'Reading Comprehension',        subject: 'English',     type: 'reading',   status: 'pending',     duration: '20 min', icon: iconReading,     difficulty: 'Medium', desc: 'Read a short story then answer questions to check your understanding.' },
+  { id: 4,  term: 1, week: 1, title: 'Alphabet Flash Cards',         subject: 'English',     type: 'flashcard', status: 'in_progress', duration: '8 min',  icon: iconAlphabet,    difficulty: 'Easy',   desc: 'Review all 26 letters with pictures and phonics memory cues.' },
+  { id: 5,  term: 1, week: 3, title: 'Reading Comprehension',        subject: 'English',     type: 'reading',   status: 'pending',     duration: '20 min', icon: iconReading,     difficulty: 'Medium', desc: 'Read a short story then answer questions to check your understanding.' },
   // English — Term 2: Grammar & Spelling
-  { id: 6,  term: 2, title: 'Grammar: Tenses',              subject: 'English',     type: 'quiz',      status: 'pending',     duration: '15 min', icon: iconTense,       difficulty: 'Medium', desc: 'Past, present and future tense — learn the rules with colourful examples!' },
-  { id: 15, term: 2, title: 'Spelling Bee — Level 1',       subject: 'English',     type: 'quiz',      status: 'pending',     duration: '10 min', icon: iconBee,         difficulty: 'Easy',   desc: 'Spell 20 common words correctly using the Neurobix memory method.' },
+  { id: 6,  term: 2, week: 2, title: 'Grammar: Tenses',              subject: 'English',     type: 'quiz',      status: 'pending',     duration: '15 min', icon: iconTense,       difficulty: 'Medium', desc: 'Past, present and future tense — learn the rules with colourful examples!' },
+  { id: 15, term: 2, week: 5, title: 'Spelling Bee — Level 1',       subject: 'English',     type: 'quiz',      status: 'pending',     duration: '10 min', icon: iconBee,         difficulty: 'Easy',   desc: 'Spell 20 common words correctly using the Neurobix memory method.' },
   // English — Term 3: Vocabulary
-  { id: 16, term: 3, title: 'Vocabulary Builder',           subject: 'English',     type: 'flashcard', status: 'pending',     duration: '12 min', icon: iconBookAz,      difficulty: 'Medium', desc: 'Expand your word bank with 30 new words and their meanings.' },
+  { id: 16, term: 3, week: 1, title: 'Vocabulary Builder',           subject: 'English',     type: 'flashcard', status: 'pending',     duration: '12 min', icon: iconBookAz,      difficulty: 'Medium', desc: 'Expand your word bank with 30 new words and their meanings.' },
   // English — Term 4: Creative Writing
-  { id: 17, term: 4, title: 'Creative Writing Starter',     subject: 'English',     type: 'activity',  status: 'pending',     duration: '25 min', icon: iconWriting,     difficulty: 'Medium', desc: 'Use story prompts and mind maps to write your own short story!' },
+  { id: 17, term: 4, week: 1, title: 'Creative Writing Starter',     subject: 'English',     type: 'activity',  status: 'pending',     duration: '25 min', icon: iconWriting,     difficulty: 'Medium', desc: 'Use story prompts and mind maps to write your own short story!' },
 
   // Science — Term 1: Space
-  { id: 7,  term: 1, title: 'The Solar System',             subject: 'Science',     type: 'video',     status: 'in_progress', duration: '18 min', icon: iconSolarSystem,  difficulty: 'Easy',   desc: 'Journey through the 8 planets using the mnemonic "My Very Educated Mother".' },
+  { id: 7,  term: 1, week: 2, title: 'The Solar System',             subject: 'Science',     type: 'video',     status: 'in_progress', duration: '18 min', icon: iconSolarSystem,  difficulty: 'Easy',   desc: 'Journey through the 8 planets using the mnemonic "My Very Educated Mother".' },
   // Science — Term 2: Life Science
-  { id: 8,  term: 2, title: 'Plants & Photosynthesis',      subject: 'Science',     type: 'reading',   status: 'pending',     duration: '14 min', icon: iconPlants,       difficulty: 'Medium', desc: "Discover how plants turn sunlight into food — nature's own factory!" },
-  { id: 18, term: 2, title: 'The Human Body',               subject: 'Science',     type: 'flashcard', status: 'pending',     duration: '16 min', icon: iconHumanBody,    difficulty: 'Medium', desc: 'Learn the major organs and their functions with labelled flash cards.' },
+  { id: 8,  term: 2, week: 1, title: 'Plants & Photosynthesis',      subject: 'Science',     type: 'reading',   status: 'pending',     duration: '14 min', icon: iconPlants,       difficulty: 'Medium', desc: "Discover how plants turn sunlight into food — nature's own factory!" },
+  { id: 18, term: 2, week: 3, title: 'The Human Body',               subject: 'Science',     type: 'flashcard', status: 'pending',     duration: '16 min', icon: iconHumanBody,    difficulty: 'Medium', desc: 'Learn the major organs and their functions with labelled flash cards.' },
   // Science — Term 3: Physics
-  { id: 19, term: 3, title: 'Forces & Motion',              subject: 'Science',     type: 'video',     status: 'pending',     duration: '15 min', icon: iconForces,       difficulty: 'Medium', desc: 'Push, pull, gravity — understand forces through fun experiments!' },
-  { id: 20, term: 3, title: 'States of Matter',             subject: 'Science',     type: 'quiz',      status: 'pending',     duration: '12 min', icon: iconStatesMatter, difficulty: 'Easy',   desc: 'Solid, liquid, gas — quiz yourself on how matter changes state.' },
+  { id: 19, term: 3, week: 2, title: 'Forces & Motion',              subject: 'Science',     type: 'video',     status: 'pending',     duration: '15 min', icon: iconForces,       difficulty: 'Medium', desc: 'Push, pull, gravity — understand forces through fun experiments!' },
+  { id: 20, term: 3, week: 1, title: 'States of Matter',             subject: 'Science',     type: 'quiz',      status: 'pending',     duration: '12 min', icon: iconStatesMatter, difficulty: 'Easy',   desc: 'Solid, liquid, gas — quiz yourself on how matter changes state.' },
   // Science — Term 4: Ecosystems
-  { id: 21, term: 4, title: 'Food Chains & Ecosystems',     subject: 'Science',     type: 'activity',  status: 'pending',     duration: '20 min', icon: iconFoodChain,    difficulty: 'Hard',   desc: 'Build your own food chain and understand how ecosystems balance.' },
+  { id: 21, term: 4, week: 1, title: 'Food Chains & Ecosystems',     subject: 'Science',     type: 'activity',  status: 'pending',     duration: '20 min', icon: iconFoodChain,    difficulty: 'Hard',   desc: 'Build your own food chain and understand how ecosystems balance.' },
 ]
 
 export const SUBJECTS     = ['All', 'Mathematics', 'English', 'Science']
@@ -83,9 +105,9 @@ export const TYPE_COLOR = {
 export const TYPE_ICON = { video:'🎬', flashcard:'🃏', quiz:'📝', reading:'📄', activity:'🎨' }
 
 export const SUBJECT_META = {
-  Mathematics: { emoji: '🔢', color: '#3b82f6', sequential: true  },
-  English:     { emoji: '📖', color: '#9333ea', sequential: false },
-  Science:     { emoji: '🔬', color: '#36913F', sequential: false },
+  Mathematics: { emoji: '🔢', icon: subjectNumbers,    color: '#3b82f6', sequential: true  },
+  English:     { emoji: '📖', icon: subjectBook,       color: '#9333ea', sequential: false },
+  Science:     { emoji: '🔬', icon: subjectMicroscope, color: '#36913F', sequential: false },
 }
 export const SUBJECT_BADGE = {
   Mathematics: 'bg-blue-100 text-blue-700',
@@ -109,3 +131,32 @@ function computeLockedIds(lessons) {
 }
 
 export const LOCKED_IDS = computeLockedIds(ALL_LESSONS)
+
+// ─── Weekly schedule helpers ────────────────────────────────────────────────
+
+export function getTermWeekCount(term) {
+  return Math.max(1, Math.ceil((new Date(term.endDate) - new Date(term.startDate)) / (7 * 24 * 60 * 60 * 1000)) + 1)
+}
+
+// Which term + week "today" falls in — used to open the weekly schedule on the current week.
+export function getCurrentTermWeek(today = new Date()) {
+  const active = TERMS.find(t => new Date(t.startDate) <= today && today <= new Date(t.endDate))
+  if (!active) {
+    const upcoming = [...TERMS].filter(t => new Date(t.startDate) > today).sort((a, b) => a.startDate.localeCompare(b.startDate))[0]
+    return { term: upcoming || TERMS[TERMS.length - 1], week: 1 }
+  }
+  const dayDiff = Math.floor((today - new Date(active.startDate)) / (24 * 60 * 60 * 1000))
+  const week = Math.min(getTermWeekCount(active), Math.max(1, Math.floor(dayDiff / 7) + 1))
+  return { term: active, week }
+}
+
+// Groups a term's lessons as { [weekNumber]: lessons[] } — only weeks with content.
+export function getLessonsByWeek(termId, lessons = ALL_LESSONS) {
+  const byWeek = {}
+  lessons.filter(l => l.term === termId).forEach(l => {
+    const wk = l.week || 1
+    if (!byWeek[wk]) byWeek[wk] = []
+    byWeek[wk].push(l)
+  })
+  return byWeek
+}

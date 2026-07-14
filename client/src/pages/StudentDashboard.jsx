@@ -2,8 +2,18 @@ import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import LessonBrowser from '../components/LessonBrowser'
+import WeeklySchedule from '../components/WeeklySchedule'
 import { brainWatermark } from '../components/BrainBackground'
-import heroMascots from '../assets/hero-mascots.png'
+import QuestionBody, { hasAnswer, isCorrectAnswer } from '../components/QuizQuestion'
+import {
+  mascotFemale, mascotMale, mascotRocket,
+  subjectNumbers, subjectBook, subjectMicroscope,
+  starYellow, starOutline, badgeIcon, badgeLockIcon, medalIcon, brainIcon, bookIcon, streakIcon,
+  lightBulbIcon, lockIcon, flashcardIcon,
+  passIcon, overdueIcon, inProgressIcon, retryIcon, quizPassIcon, scoreboardIcon,
+  certMath, certEnglish, certScience, certDesign,
+  previewIcon, downloadIcon,
+} from '../assets/icons'
 import rankBadge1 from '../assets/badges/rank-1.png'
 import rankBadge2 from '../assets/badges/rank-2.png'
 import rankBadge3 from '../assets/badges/rank-3.png'
@@ -34,9 +44,9 @@ const FlameIcon = ({ className }) => (
 )
 
 const SUBJECTS = [
-  { id: 1, name: 'Mathematics', icon: '🔢', color: '#3b82f6', progress: 72, lessons: 14, completed: 10 },
-  { id: 2, name: 'English',     icon: '📖', color: '#9333ea', progress: 55, lessons: 12, completed: 6  },
-  { id: 3, name: 'Science',     icon: '🔬', color: '#36913F', progress: 40, lessons: 10, completed: 4  },
+  { id: 1, name: 'Mathematics', icon: subjectNumbers,    color: '#3b82f6', progress: 72, lessons: 14, completed: 10 },
+  { id: 2, name: 'English',     icon: subjectBook,       color: '#9333ea', progress: 55, lessons: 12, completed: 6  },
+  { id: 3, name: 'Science',     icon: subjectMicroscope, color: '#36913F', progress: 40, lessons: 10, completed: 4  },
 ]
 
 const SUBJECT_COLOR = {
@@ -46,8 +56,8 @@ const SUBJECT_COLOR = {
 }
 
 const RECENT_LESSONS = [
-  { id: 1, title: 'Addition & Subtraction', subject: 'Mathematics', tag: 'Math',    desc: 'Use story method to remember key facts.',      progress: 100, status: 'completed',   icon: '➕' },
-  { id: 3, title: 'Fraction Basics',        subject: 'Mathematics', tag: 'Math',    desc: 'Understand fractions using stories & visuals.', progress: 60,  status: 'in_progress', icon: '🍕' },
+  { id: 1, title: 'Addition & Subtraction', subject: 'Mathematics', tag: 'Maths',   desc: 'Use story method to remember key facts.',      progress: 100, status: 'completed',   icon: '➕' },
+  { id: 3, title: 'Fraction Basics',        subject: 'Mathematics', tag: 'Maths',   desc: 'Understand fractions using stories & visuals.', progress: 60,  status: 'in_progress', icon: '🍕' },
   { id: 4, title: 'Alphabet Flash Cards',   subject: 'English',     tag: 'English', desc: 'Learn letters with picture associations.',      progress: 30,  status: 'in_progress', icon: '🔤' },
   { id: 7, title: 'The Solar System',       subject: 'Science',     tag: 'Science', desc: 'Explore planets with memory palace.',           progress: 25,  status: 'in_progress', icon: '🪐' },
   { id: 2, title: 'Reading Comprehension',  subject: 'English',     tag: 'English', desc: 'Improve reading with story-based techniques.',  progress: 0,   status: 'overdue',     icon: '📖' },
@@ -55,34 +65,36 @@ const RECENT_LESSONS = [
 
 function StatusPill({ status }) {
   if (status === 'completed')
-    return <span className="flex items-center gap-1 text-xs font-bold text-nb-green bg-nb-green/10 rounded-full px-3 py-1.5 whitespace-nowrap">✓ Done</span>
+    return <span className="flex items-center gap-1 text-xs font-bold text-nb-green bg-nb-green/10 rounded-full px-3 py-1.5 whitespace-nowrap"><img src={passIcon} alt="" className="w-3.5 h-3.5 object-contain" /> Done</span>
   if (status === 'overdue')
-    return <span className="flex items-center gap-1 text-xs font-bold text-red-500 bg-red-50 rounded-full px-3 py-1.5 whitespace-nowrap">⚠ Overdue</span>
-  return <span className="flex items-center gap-1 text-xs font-bold text-amber-600 bg-amber-50 rounded-full px-3 py-1.5 whitespace-nowrap">▶ Continue</span>
+    return <span className="flex items-center gap-1 text-xs font-bold text-red-500 bg-red-50 rounded-full px-3 py-1.5 whitespace-nowrap"><img src={overdueIcon} alt="" className="w-3.5 h-3.5 object-contain" /> Overdue</span>
+  return <span className="flex items-center gap-1 text-xs font-bold text-amber-600 bg-amber-50 rounded-full px-3 py-1.5 whitespace-nowrap"><img src={inProgressIcon} alt="" className="w-3.5 h-3.5 object-contain" /> Continue</span>
 }
 
 const BADGES = [
-  { icon: '⭐', label: 'Star Learner',  earned: true  },
-  { icon: '🏆', label: 'Quiz Champ',    earned: true  },
-  { icon: '🔥', label: '7-Day Streak',  earned: true  },
-  { icon: '🧠', label: 'Memory Master', earned: false },
-  { icon: '📚', label: 'Bookworm',      earned: false },
-  { icon: '🚀', label: 'Fast Finisher', earned: false },
+  { icon: starYellow,   label: 'Star Learner',  earned: true  },
+  { icon: medalIcon,    label: 'Quiz Champ',    earned: true  },
+  { icon: streakIcon,   label: '7-Day Streak',  earned: true  },
+  { icon: brainIcon,    label: 'Memory Master', earned: false },
+  { icon: bookIcon,     label: 'Bookworm',      earned: false },
+  { icon: mascotRocket, label: 'Fast Finisher', earned: false },
 ]
 
 const TABS = [
   { id: 'home',       icon: '🏠', label: 'Home'       },
-  { id: 'lessons',    icon: '📚', label: 'Lessons'    },
+  { id: 'lessons',    icon: '📚', label: 'My Courses' },
+  { id: 'schedule',   icon: '🗓️', label: 'Schedule'   },
   { id: 'flashcards', icon: '🃏', label: 'Flash Cards' },
+  { id: 'memory',     icon: '🧠', label: 'Memory Techniques' },
   { id: 'quizzes',    icon: '📝', label: 'Quizzes'    },
   { id: 'shop',       icon: '🛍️', label: 'Shop'       },
   { id: 'rewards',    icon: '🏆', label: 'Rewards'    },
 ]
 
 const OPEN_CLASSES = [
-  { id: 10, name: 'Extra Math Practice',   subject: 'Mathematics', level: 'Year 4', slots: 12, enrolled: false },
-  { id: 11, name: 'English Writing Club',  subject: 'English',     level: 'Year 3–5', slots: 8, enrolled: false },
-  { id: 12, name: 'Science Explorers',     subject: 'Science',     level: 'Year 4–6', slots: 15, enrolled: true  },
+  { id: 10, name: 'Extra Maths Practice',  subject: 'Mathematics', level: 'Primary 4', slots: 12, enrolled: false },
+  { id: 11, name: 'English Writing Club',  subject: 'English',     level: 'Primary 3–5', slots: 8, enrolled: false },
+  { id: 12, name: 'Science Explorers',     subject: 'Science',     level: 'Primary 4–6', slots: 15, enrolled: true  },
 ]
 
 const BADGE_THRESHOLDS = [500, 1000, 1500, 2000, 3000, 5000]
@@ -92,7 +104,7 @@ const REDEEM_ITEMS = [
   { id: 'r2', icon: '📆', name: '1-Month Extension',     category: 'Subscription', cost: 1000, desc: 'Adds 30 days to your active subscription plan. Credited automatically.' },
   { id: 'r3', icon: '🏷️', name: '10% Renewal Discount', category: 'Voucher',       cost: 200,  desc: 'Receive a 10% discount code applied on your next subscription renewal.' },
   { id: 'r4', icon: '🎨', name: 'Sticker Pack (10 pcs)', category: 'Product',      cost: 150,  desc: 'Exclusive Neurobix memory stickers. Collect at the centre or posted to you.' },
-  { id: 'r5', icon: '🃏', name: 'Bonus Flash Deck',      category: 'Product',      cost: 100,  desc: 'Unlock a bonus flash card deck for any subject instantly.' },
+  { id: 'r5', icon: <img src={flashcardIcon} alt="" className="w-9 h-9 object-contain" />, name: 'Bonus Flash Deck', category: 'Product', cost: 100,  desc: 'Unlock a bonus flash card deck for any subject instantly.' },
   { id: 'r6', icon: '⚡', name: 'Double XP — 3 Days',    category: 'Digital',      cost: 250,  desc: 'Earn 2× points on every lesson for the next 3 days.' },
 ]
 
@@ -130,15 +142,18 @@ export default function StudentDashboard() {
             </div>
 
             {/* Mascot duo */}
-            <img src={heroMascots} alt="" className="absolute right-2 top-2 sm:right-4 sm:top-3 h-20 sm:h-32 w-auto object-contain pointer-events-none select-none" />
+            <div className="absolute right-0 top-0 sm:right-2 sm:top-1 flex items-end pointer-events-none select-none">
+              <img src={mascotFemale} alt="" className="h-16 sm:h-28 w-auto object-contain -mr-3 sm:-mr-5" />
+              <img src={mascotMale} alt="" className="h-20 sm:h-32 w-auto object-contain" />
+            </div>
 
             {/* Stat cards */}
             <div className="relative grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
               {[
-                { icon: '📘', value: '10',    label: 'Lessons', sub: '10/14 completed' },
+                { icon: <img src={bookIcon} alt="" className="w-6 h-6 object-contain" />, value: '10',    label: 'Lessons', sub: '10/14 completed' },
                 { icon: <FlameIcon className="w-6 h-6" />, value: '7',     label: 'Streak',  sub: 'Days in a total' },
-                { icon: '🏅', value: '3',     label: 'Badges',  sub: 'Keep collecting!' },
-                { icon: '⭐', value: studentPoints.toLocaleString(), label: 'Points', sub: 'Keep growing!' },
+                { icon: <img src={badgeIcon} alt="" className="w-6 h-6 object-contain" />, value: '3',     label: 'Badges',  sub: 'Keep collecting!' },
+                { icon: <img src={starYellow} alt="" className="w-6 h-6 object-contain" />, value: studentPoints.toLocaleString(), label: 'Points', sub: 'Keep growing!' },
               ].map(s => (
                 <div key={s.label} className="bg-white rounded-2xl p-3 shadow-sm">
                   <div className="flex items-center gap-2.5">
@@ -172,8 +187,8 @@ export default function StudentDashboard() {
                     <div key={s.id} onClick={() => navigate('/lessons')}
                       className="bg-white rounded-2xl shadow-sm p-4 hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
-                             style={{ background: s.color + '1A' }}>{s.icon}</div>
+                        <div className="w-12 h-12 rounded-xl flex items-center justify-center p-2.5 flex-shrink-0"
+                             style={{ background: s.color + '1A' }}><img src={s.icon} alt="" className="w-full h-full object-contain" /></div>
                         <div className="min-w-0">
                           <p className="font-bold text-nb-dark">{s.name}</p>
                           <p className="text-xs text-gray-500 mt-0.5">
@@ -241,7 +256,7 @@ export default function StudentDashboard() {
               <div className="flex flex-col sm:flex-row lg:flex-col gap-5">
                 {/* Memory Tip */}
                 <div className="flex-1 rounded-2xl border-2 border-nb-yellow p-4" style={{ background: 'linear-gradient(135deg,#FFEB3C15,#ffffff)' }}>
-                  <p className="text-2xl mb-1">💡</p>
+                  <img src={lightBulbIcon} alt="" className="w-7 h-7 mb-1 object-contain" />
                   <p className="font-black text-nb-dark text-sm">Memory Tip</p>
                   <p className="text-xs sm:text-sm text-gray-500 mt-1 leading-relaxed">
                     Use the <strong>Story Method</strong> — turn facts into a funny story. Silly stories stick! 🧠
@@ -288,8 +303,8 @@ export default function StudentDashboard() {
                 {openClasses.map(c => (
                   <div key={c.id} className={`bg-white rounded-2xl border-2 p-5 ${c.enrolled ? 'border-nb-green' : 'border-nb-olive/20'}`}>
                     <div className="flex items-start justify-between mb-2">
-                      <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
-                           style={{ background: '#FFF7E9' }}>📚</div>
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center p-2"
+                           style={{ background: '#FFF7E9' }}><img src={bookIcon} alt="" className="w-full h-full object-contain" /></div>
                       {c.enrolled && <span className="text-[10px] font-black bg-nb-green text-white px-2 py-1 rounded-full">✓ Enrolled</span>}
                     </div>
                     <p className="font-black text-nb-dark text-sm mt-2">{c.name}</p>
@@ -312,8 +327,30 @@ export default function StudentDashboard() {
           </div>
         )}
 
+        {/* ── SCHEDULE ── */}
+        {tab === 'schedule' && <div className="tab-panel"><WeeklySchedule /></div>}
+
         {/* ── FLASH CARDS ── */}
         {tab === 'flashcards' && <div className="tab-panel"><FlashCardsView /></div>}
+
+        {/* ── MEMORY TECHNIQUES (coming soon) ── */}
+        {tab === 'memory' && (
+          <div className="tab-panel flex items-center justify-center py-10 sm:py-16">
+            <div className="bg-white rounded-3xl border-2 border-nb-olive/20 p-8 sm:p-12 text-center max-w-lg">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl mx-auto mb-4 flex items-center justify-center p-3.5"
+                   style={{ background: '#FFEB3C1A' }}>
+                <img src={brainIcon} alt="" className="w-full h-full object-contain" />
+              </div>
+              <span className="inline-block text-[11px] font-black uppercase tracking-widest text-nb-dark px-3 py-1 rounded-full mb-3"
+                    style={{ background: '#FFEB3C' }}>🚧 Coming Soon</span>
+              <h2 className="text-xl sm:text-2xl font-black text-nb-dark">Memory Techniques</h2>
+              <p className="text-sm text-gray-400 mt-2 leading-relaxed">
+                A dedicated space to learn the Story Method, Memory Palace, mnemonics and other memory
+                techniques that power every lesson. We're building it now — check back soon!
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* ── QUIZZES ── */}
         {tab === 'quizzes' && <div className="tab-panel"><QuizzesView /></div>}
@@ -335,7 +372,7 @@ export default function StudentDashboard() {
                  style={{ background: 'linear-gradient(135deg,#FFEB3C,#91BA4F)' }}>
               <div className="max-w-6xl mx-auto px-3 sm:px-6">
                 <p className="text-nb-dark/60 font-semibold text-sm">Total Points Balance</p>
-                <p className="text-4xl sm:text-5xl font-black text-nb-dark mt-1">{studentPoints.toLocaleString()} ⭐</p>
+                <p className="text-4xl sm:text-5xl font-black text-nb-dark mt-1 flex items-center gap-2">{studentPoints.toLocaleString()} <img src={starYellow} alt="" className="w-9 h-9 sm:w-11 sm:h-11 object-contain" /></p>
                 <div className="mt-4 h-3 bg-white/40 rounded-full overflow-hidden">
                   <div className="h-full bg-white rounded-full transition-all" style={{ width: `${barPct}%` }} />
                 </div>
@@ -345,13 +382,13 @@ export default function StudentDashboard() {
               </div>
             </div>
 
-            <h2 className="text-2xl font-black text-nb-dark">🏆 My Rewards</h2>
+            <h2 className="text-2xl font-black text-nb-dark flex items-center gap-2"><img src={medalIcon} alt="" className="w-7 h-7 object-contain" /> My Rewards</h2>
 
             {/* ── Redeem Points ── */}
             <div className="bg-white rounded-2xl border-2 border-nb-olive/20 p-4 sm:p-5">
               <div className="flex items-center justify-between mb-1">
                 <h3 className="text-base sm:text-lg font-black text-nb-dark">🎁 Redeem Points</h3>
-                <span className="text-sm font-bold text-nb-green">⭐ {studentPoints.toLocaleString()} available</span>
+                <span className="text-sm font-bold text-nb-green flex items-center gap-1"><img src={starYellow} alt="" className="w-4 h-4 object-contain" /> {studentPoints.toLocaleString()} available</span>
               </div>
               <p className="text-xs text-gray-400 mb-4">Use your earned points to extend your subscription, grab vouchers, or redeem products.</p>
 
@@ -380,7 +417,7 @@ export default function StudentDashboard() {
                       </div>
                       <div className="flex items-center justify-between gap-2 mt-auto">
                         <span className="flex items-center gap-1 font-black text-nb-dark">
-                          <span className="text-base">⭐</span>
+                          <img src={starYellow} alt="" className="w-4 h-4 object-contain" />
                           <span>{item.cost.toLocaleString()}</span>
                           <span className="text-xs text-gray-400 font-semibold">pts</span>
                         </span>
@@ -393,7 +430,7 @@ export default function StudentDashboard() {
                               canAfford ? 'border-transparent text-nb-dark shadow hover:shadow-md' : 'border-gray-200 text-gray-300 cursor-not-allowed'
                             }`}
                             style={canAfford ? { background: '#FFEB3C' } : {}}>
-                            {canAfford ? 'Redeem' : 'Need more ⭐'}
+                            {canAfford ? 'Redeem' : <span className="flex items-center gap-1">Need more <img src={starYellow} alt="" className="w-3.5 h-3.5 object-contain" /></span>}
                           </button>
                         )}
                       </div>
@@ -413,8 +450,8 @@ export default function StudentDashboard() {
               <div className="space-y-3">
                 <div className="bg-nb-cream rounded-2xl p-4 border-2 border-nb-yellow">
                   <div className="flex items-start gap-3 mb-3">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center text-xl sm:text-2xl flex-shrink-0"
-                         style={{ background: '#FFEB3C' }}>🏆</div>
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center p-2 flex-shrink-0"
+                         style={{ background: '#FFEB3C' }}><img src={certMath} alt="" className="w-full h-full object-contain" /></div>
                     <div className="flex-1 min-w-0">
                       <p className="font-black text-nb-dark text-sm">Mathematics — Primary 4</p>
                       <p className="text-xs text-gray-400 mt-0.5">All 14 lessons · All quizzes passed · Issued 2025-05-10</p>
@@ -422,17 +459,20 @@ export default function StudentDashboard() {
                   </div>
                   <div className="flex gap-2">
                     <button onClick={() => setCertModal('Mathematics')}
-                      className="flex-1 py-2 rounded-xl font-bold text-nb-green border-2 border-nb-green/30 text-xs hover:bg-nb-green hover:text-white transition">
-                      👁 Preview
+                      className="flex-1 py-2 rounded-xl font-bold text-nb-green border-2 border-nb-green/30 text-xs hover:bg-nb-green hover:text-white transition flex items-center justify-center gap-1.5">
+                      <img src={previewIcon} alt="" className="w-3.5 h-3.5 object-contain" /> Preview
                     </button>
-                    <button className="flex-1 py-2 rounded-xl font-black text-nb-dark text-xs shadow"
-                            style={{ background: '#FFEB3C' }}>⬇ PDF</button>
+                    <button className="flex-1 py-2 rounded-xl font-black text-nb-dark text-xs shadow flex items-center justify-center gap-1.5"
+                            style={{ background: '#FFEB3C' }}><img src={downloadIcon} alt="" className="w-3.5 h-3.5 object-contain" /> PDF</button>
                   </div>
                 </div>
-                {[{name:'English', pct:55, done:6, total:12}, {name:'Science', pct:40, done:4, total:10}].map(s => (
+                {[{name:'English', pct:55, done:6, total:12, icon: certEnglish}, {name:'Science', pct:40, done:4, total:10, icon: certScience}].map(s => (
                   <div key={s.name} className="bg-gray-50 rounded-2xl p-4 border-2 border-gray-200 opacity-60">
                     <div className="flex items-center gap-3 mb-2">
-                      <div className="w-10 h-10 rounded-xl bg-gray-200 flex items-center justify-center text-xl flex-shrink-0">🔒</div>
+                      <div className="relative w-10 h-10 rounded-xl bg-gray-200 flex items-center justify-center p-2 flex-shrink-0 grayscale">
+                        <img src={s.icon} alt="" className="w-full h-full object-contain" />
+                        <img src={lockIcon} alt="" className="absolute -bottom-1 -right-1 w-4 h-4 object-contain bg-white rounded-full p-0.5 shadow" />
+                      </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-black text-gray-500 text-sm">{s.name} Certificate</p>
                         <p className="text-xs text-gray-400 mt-0.5">{s.done}/{s.total} lessons · {s.pct}% complete</p>
@@ -450,14 +490,14 @@ export default function StudentDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Badges */}
               <div>
-                <h3 className="text-base sm:text-lg font-black text-nb-dark mb-3">🎖️ Badges</h3>
+                <h3 className="text-base sm:text-lg font-black text-nb-dark mb-3 flex items-center gap-1.5"><img src={badgeIcon} alt="" className="w-5 h-5 object-contain" /> Badges</h3>
                 <div className="grid grid-cols-3 gap-2 sm:gap-3">
                   {BADGES.map(b => (
                     <div key={b.label}
                       className={`rounded-2xl p-3 text-center border-2 transition-all ${b.earned ? 'bg-white border-nb-yellow shadow-md hover:scale-105' : 'bg-gray-50 border-gray-200 opacity-50'}`}>
-                      <div className="text-3xl sm:text-4xl mb-1 sm:mb-2">{b.icon}</div>
+                      <img src={b.icon} alt="" className="w-9 h-9 sm:w-11 sm:h-11 mx-auto mb-1 sm:mb-2 object-contain" />
                       <p className="text-[10px] sm:text-xs font-black text-gray-700 leading-tight">{b.label}</p>
-                      {!b.earned && <p className="text-[9px] sm:text-[10px] text-gray-400 mt-0.5">🔒 Locked</p>}
+                      {!b.earned && <p className="text-[9px] sm:text-[10px] text-gray-400 mt-0.5 flex items-center justify-center gap-0.5"><img src={badgeLockIcon} alt="" className="w-2.5 h-2.5 object-contain" /> Locked</p>}
                     </div>
                   ))}
                 </div>
@@ -470,7 +510,7 @@ export default function StudentDashboard() {
                   {SUBJECTS.map(s => (
                     <div key={s.id} className="bg-white rounded-2xl p-5 border-2 border-nb-olive/20">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="font-black text-nb-dark">{s.icon} {s.name}</span>
+                        <span className="font-black text-nb-dark flex items-center gap-1.5"><img src={s.icon} alt="" className="w-4 h-4 object-contain" /> {s.name}</span>
                         <span className="font-black text-base" style={{ color: s.color }}>{s.progress}%</span>
                       </div>
                       <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
@@ -502,11 +542,11 @@ export default function StudentDashboard() {
             <div className="space-y-2">
               <div className="bg-nb-cream rounded-2xl p-4 flex items-center justify-between">
                 <span className="font-semibold text-gray-500 text-sm">Points cost</span>
-                <span className="font-black text-nb-dark">⭐ {redeemConfirm.cost.toLocaleString()} pts</span>
+                <span className="font-black text-nb-dark flex items-center gap-1"><img src={starYellow} alt="" className="w-4 h-4 object-contain" /> {redeemConfirm.cost.toLocaleString()} pts</span>
               </div>
               <div className="bg-nb-cream rounded-2xl p-4 flex items-center justify-between">
                 <span className="font-semibold text-gray-500 text-sm">Balance after</span>
-                <span className="font-black text-nb-dark">⭐ {(studentPoints - redeemConfirm.cost).toLocaleString()} pts</span>
+                <span className="font-black text-nb-dark flex items-center gap-1"><img src={starYellow} alt="" className="w-4 h-4 object-contain" /> {(studentPoints - redeemConfirm.cost).toLocaleString()} pts</span>
               </div>
             </div>
             <div className="flex gap-3">
@@ -547,9 +587,7 @@ export default function StudentDashboard() {
             {/* Certificate */}
             <div className="relative p-6 sm:p-10 text-center"
                  style={{ background: 'linear-gradient(135deg,#396336 0%,#36913F 50%,#6FC911 100%)' }}>
-              <div className="absolute inset-0 opacity-5 flex items-center justify-center text-[120px] sm:text-[200px] font-black select-none pointer-events-none">
-                NM
-              </div>
+              <img src={certDesign} alt="" className="absolute inset-0 w-full h-full object-cover opacity-10 select-none pointer-events-none" />
               <div className="relative">
                 <p className="text-nb-yellow font-black text-[10px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.3em] mb-3">Certificate of Completion</p>
                 <p className="text-white/80 text-xs sm:text-sm mb-1">This certifies that</p>
@@ -560,7 +598,7 @@ export default function StudentDashboard() {
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-6 text-xs text-white/60">
                   <span>📅 Issued: 2025-05-10</span>
                   <span>🏫 Neurobix Method</span>
-                  <span>🔒 Cert #NM-2025-0041</span>
+                  <span className="flex items-center gap-1"><img src={lockIcon} alt="" className="w-3 h-3 object-contain opacity-70" /> Cert #NM-2025-0041</span>
                 </div>
               </div>
             </div>
@@ -569,9 +607,9 @@ export default function StudentDashboard() {
                 className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-500 font-bold text-sm">
                 Close
               </button>
-              <button className="flex-1 py-3 rounded-xl font-black text-nb-dark text-sm shadow-md"
+              <button className="flex-1 py-3 rounded-xl font-black text-nb-dark text-sm shadow-md flex items-center justify-center gap-1.5"
                       style={{ background: '#FFEB3C' }}>
-                ⬇ Download PDF
+                <img src={downloadIcon} alt="" className="w-4 h-4 object-contain" /> Download PDF
               </button>
             </div>
           </div>
@@ -594,26 +632,73 @@ function ShopView({ points, setPoints }) {
     { id: 8,  name: 'Mystery Reward Box',          category: 'Physical',  icon: '🎁', cost: 1000, desc: 'A surprise box of goodies — collected at the centre.',   stock: 10  },
   ]
 
-  const CATEGORIES = ['All', 'Digital', 'Physical']
+  const SHOP_CLASSES = [
+    {
+      id: 'cls1', subject: 'Mathematics', level: 'P4', icon: subjectNumbers, color: '#3b82f6',
+      name: 'Primary 4 Mathematics Intensive',
+      teacher: 'Ms Sarah Tan', sessions: '2 sessions / week', duration: '1.5 hrs each',
+      price: 49, billing: 'month',
+      slots: 4,
+      desc: 'Master P4 Maths using the Neurobix memory method. Covers all MOE topics with weekly quizzes and flashcard drills.',
+    },
+    {
+      id: 'cls2', subject: 'English', level: 'P4', icon: subjectBook, color: '#9333ea',
+      name: 'Primary 4 English Excellence',
+      teacher: 'Ms Sarah Tan', sessions: '2 sessions / week', duration: '1 hr each',
+      price: 45, billing: 'month',
+      slots: 6,
+      desc: 'Build strong comprehension and writing skills with story-based memory techniques for vocabulary and grammar.',
+    },
+    {
+      id: 'cls3', subject: 'Science', level: 'P5', icon: subjectMicroscope, color: '#36913F',
+      name: 'Primary 5 Science Explorer',
+      teacher: 'Ms Sarah Tan', sessions: '1 session / week', duration: '2 hrs each',
+      price: 52, billing: 'month',
+      slots: 3,
+      desc: 'Deep-dive into P5 Science using visual memory maps, concept linking and hands-on experiment recall.',
+    },
+    {
+      id: 'cls4', subject: 'All Subjects', level: 'P4–P6', icon: brainIcon, color: '#f59e0b',
+      name: 'Memory Booster — All Subjects',
+      teacher: 'Ms Sarah Tan', sessions: '3 sessions / week', duration: '1 hr each',
+      price: 99, billing: 'month',
+      slots: 2,
+      desc: 'The complete Neurobix experience — Maths, English and Science bundled together at a special rate.',
+      badge: 'Best Value',
+    },
+  ]
 
-  const [filter, setFilter]         = useState('All')
-  const [cart, setCart]             = useState([])
-  const [bought, setBought]         = useState([])
-  const [toast, setToast]           = useState(null)
+  const CATEGORIES = ['All', 'Classes', 'Digital', 'Physical']
+  const CAT_COLOR   = { Digital: '#3b82f6', Physical: '#36913F' }
+
+  const [filter, setFilter]           = useState('All')
+  const [bought, setBought]           = useState([])
+  const [enrolled, setEnrolled]       = useState([])
+  const [toast, setToast]             = useState(null)
   const [confirmItem, setConfirmItem] = useState(null)
+  const [confirmClass, setConfirmClass] = useState(null)
+  const [payMethod, setPayMethod]     = useState('card')
 
-  const visible = filter === 'All' ? SHOP_ITEMS : SHOP_ITEMS.filter(i => i.category === filter)
-  const CAT_COLOR = { Digital: '#3b82f6', Physical: '#36913F' }
+  const showItems   = filter === 'All' || filter === 'Digital' || filter === 'Physical'
+  const showClasses = filter === 'All' || filter === 'Classes'
+  const visibleItems = filter === 'All' ? SHOP_ITEMS : SHOP_ITEMS.filter(i => i.category === filter)
 
-  function showToast(msg) { setToast(msg); setTimeout(() => setToast(null), 2500) }
+  function showToast(msg) { setToast(msg); setTimeout(() => setToast(null), 3000) }
 
   function purchase(item) {
-    if (points < item.cost) { showToast('Not enough points! Keep learning to earn more. ⭐'); return }
     setPoints(p => p - item.cost)
     setBought(b => [...b, item.id])
     setConfirmItem(null)
     showToast(`🎉 ${item.name} purchased! Check with your teacher for physical items.`)
   }
+
+  function enrol(cls) {
+    setEnrolled(e => [...e, cls.id])
+    setConfirmClass(null)
+    showToast(`🎓 Enrolled in "${cls.name}"! You'll receive a confirmation email shortly.`)
+  }
+
+  const FILTER_LABEL = { All: '🛍️ All', Classes: '🏫 Classes', Digital: '💻 Digital', Physical: '📦 Physical' }
 
   return (
     <div className="space-y-6">
@@ -622,10 +707,10 @@ function ShopView({ points, setPoints }) {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h2 className="text-2xl font-black text-nb-dark">🛍️ Neurobix Shop</h2>
-          <p className="text-sm text-gray-400 font-semibold mt-0.5">Spend your hard-earned points on cool rewards!</p>
+          <p className="text-sm text-gray-400 font-semibold mt-0.5">Enrol in classes or spend your points on rewards!</p>
         </div>
         <div className="flex items-center gap-2 bg-white border-2 border-nb-yellow rounded-2xl px-5 py-3 shadow-sm self-start">
-          <span className="text-2xl">⭐</span>
+          <img src={starYellow} alt="" className="w-7 h-7 object-contain" />
           <div>
             <p className="text-xl font-black text-nb-dark leading-none">{points.toLocaleString()}</p>
             <p className="text-[11px] text-gray-400 font-semibold mt-0.5">Points balance</p>
@@ -642,69 +727,156 @@ function ShopView({ points, setPoints }) {
                 ? 'border-nb-green bg-nb-green text-white shadow-sm'
                 : 'border-gray-200 text-gray-500 bg-white hover:border-nb-olive'
             }`}>
-            {c === 'All' ? '🛍️ All' : c === 'Digital' ? '💻 Digital' : '📦 Physical'}
+            {FILTER_LABEL[c]}
           </button>
         ))}
       </div>
 
-      {/* Items grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {visible.map(item => {
-          const alreadyBought = bought.includes(item.id)
-          const canAfford = points >= item.cost
-          return (
-            <div key={item.id}
-              className={`bg-white rounded-2xl border-2 p-5 flex flex-col gap-3 transition-all ${
-                alreadyBought ? 'border-nb-green' : 'border-nb-olive/20 hover:shadow-md hover:-translate-y-0.5'
-              }`}>
-              <div className="flex items-start justify-between">
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0"
-                     style={{ background: (CAT_COLOR[item.category] || '#91BA4F') + '1A' }}>
-                  {item.icon}
-                </div>
-                <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full"
-                      style={{ background: (CAT_COLOR[item.category] || '#91BA4F') + '1A', color: CAT_COLOR[item.category] || '#91BA4F' }}>
-                  {item.category}
-                </span>
-              </div>
-
-              <div className="flex-1">
-                <p className="font-black text-nb-dark text-sm leading-snug">{item.name}</p>
-                <p className="text-xs text-gray-400 mt-1 leading-relaxed">{item.desc}</p>
-              </div>
-
-              {item.category === 'Physical' && item.stock < 20 && (
-                <p className="text-[11px] text-amber-600 font-bold">⚠️ Only {item.stock} left!</p>
-              )}
-
-              <div className="flex items-center justify-between gap-3 mt-auto">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-lg">⭐</span>
-                  <span className="font-black text-nb-dark text-base">{item.cost.toLocaleString()}</span>
-                  <span className="text-xs text-gray-400 font-semibold">pts</span>
-                </div>
-
-                {alreadyBought ? (
-                  <span className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-black text-sm bg-nb-green/10 text-nb-green border-2 border-nb-green/30">
-                    ✓ Purchased
-                  </span>
-                ) : (
-                  <button
-                    onClick={() => canAfford ? setConfirmItem(item) : showToast('Not enough points! Keep learning. ⭐')}
-                    className={`px-4 py-2 rounded-xl font-black text-sm border-2 transition-all ${
-                      canAfford
-                        ? 'text-nb-dark border-transparent shadow hover:shadow-md'
-                        : 'border-gray-200 text-gray-300 cursor-not-allowed'
-                    }`}
-                    style={canAfford ? { background: '#FFEB3C' } : {}}>
-                    {canAfford ? 'Buy Now' : 'Not enough ⭐'}
-                  </button>
-                )}
-              </div>
+      {/* ── Classes section ── */}
+      {showClasses && (
+        <div className="space-y-3">
+          {filter === 'All' && (
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-black text-nb-dark">🏫 Classes</h3>
+              <span className="text-xs text-gray-400 font-semibold">Monthly subscription · Billed via Stripe</span>
             </div>
-          )
-        })}
-      </div>
+          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {SHOP_CLASSES.map(cls => {
+              const isEnrolled = enrolled.includes(cls.id)
+              return (
+                <div key={cls.id}
+                  className={`bg-white rounded-2xl border-2 p-5 flex flex-col gap-3 transition-all relative overflow-hidden ${
+                    isEnrolled ? 'border-nb-green' : 'border-nb-olive/20 hover:shadow-md hover:-translate-y-0.5'
+                  }`}>
+
+                  {cls.badge && (
+                    <div className="absolute top-0 right-0 text-[10px] font-black text-white px-3 py-1 rounded-bl-xl"
+                         style={{ background: '#f59e0b' }}>
+                      {cls.badge}
+                    </div>
+                  )}
+
+                  {/* Subject + teacher */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center p-3 flex-shrink-0"
+                         style={{ background: cls.color + '1A' }}>
+                      <img src={cls.icon} alt="" className="w-full h-full object-contain" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-black text-nb-dark text-sm leading-snug">{cls.name}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">👩‍🏫 {cls.teacher}</p>
+                    </div>
+                  </div>
+
+                  {/* Meta tags */}
+                  <div className="flex flex-wrap gap-1.5">
+                    <span className="text-[10px] font-black px-2 py-1 rounded-full"
+                          style={{ background: cls.color + '1A', color: cls.color }}>
+                      {cls.subject}
+                    </span>
+                    <span className="text-[10px] font-black bg-gray-100 text-gray-500 px-2 py-1 rounded-full">
+                      {cls.level}
+                    </span>
+                    <span className="text-[10px] font-black bg-gray-100 text-gray-500 px-2 py-1 rounded-full">
+                      {cls.sessions}
+                    </span>
+                    <span className="text-[10px] font-black bg-gray-100 text-gray-500 px-2 py-1 rounded-full">
+                      ⏱ {cls.duration}
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-gray-400 leading-relaxed flex-1">{cls.desc}</p>
+
+                  {cls.slots <= 3 && !isEnrolled && (
+                    <p className="text-[11px] text-red-500 font-bold">🔴 Only {cls.slots} slot{cls.slots !== 1 ? 's' : ''} left!</p>
+                  )}
+
+                  {/* Price + CTA */}
+                  <div className="flex items-center justify-between gap-3 mt-auto pt-1 border-t border-gray-100">
+                    <div>
+                      <span className="text-xl font-black text-nb-dark">S${cls.price}</span>
+                      <span className="text-xs text-gray-400 font-semibold">/{cls.billing}</span>
+                    </div>
+                    {isEnrolled ? (
+                      <span className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-black text-sm bg-nb-green/10 text-nb-green border-2 border-nb-green/30">
+                        ✓ Enrolled
+                      </span>
+                    ) : (
+                      <button onClick={() => setConfirmClass(cls)}
+                        className="px-4 py-2 rounded-xl font-black text-nb-dark text-sm shadow hover:shadow-md transition-all border-transparent"
+                        style={{ background: '#FFEB3C' }}>
+                        Enrol Now →
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── Points items section ── */}
+      {showItems && visibleItems.length > 0 && (
+        <div className="space-y-3">
+          {filter === 'All' && <h3 className="text-lg font-black text-nb-dark">🛍️ Points Shop</h3>}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {visibleItems.map(item => {
+              const alreadyBought = bought.includes(item.id)
+              const canAfford = points >= item.cost
+              return (
+                <div key={item.id}
+                  className={`bg-white rounded-2xl border-2 p-5 flex flex-col gap-3 transition-all ${
+                    alreadyBought ? 'border-nb-green' : 'border-nb-olive/20 hover:shadow-md hover:-translate-y-0.5'
+                  }`}>
+                  <div className="flex items-start justify-between">
+                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0"
+                         style={{ background: (CAT_COLOR[item.category] || '#91BA4F') + '1A' }}>
+                      {item.icon}
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full"
+                          style={{ background: (CAT_COLOR[item.category] || '#91BA4F') + '1A', color: CAT_COLOR[item.category] || '#91BA4F' }}>
+                      {item.category}
+                    </span>
+                  </div>
+
+                  <div className="flex-1">
+                    <p className="font-black text-nb-dark text-sm leading-snug">{item.name}</p>
+                    <p className="text-xs text-gray-400 mt-1 leading-relaxed">{item.desc}</p>
+                  </div>
+
+                  {item.category === 'Physical' && item.stock < 20 && (
+                    <p className="text-[11px] text-amber-600 font-bold">⚠️ Only {item.stock} left!</p>
+                  )}
+
+                  <div className="flex items-center justify-between gap-3 mt-auto">
+                    <div className="flex items-center gap-1.5">
+                      <img src={starYellow} alt="" className="w-5 h-5 object-contain" />
+                      <span className="font-black text-nb-dark text-base">{item.cost.toLocaleString()}</span>
+                      <span className="text-xs text-gray-400 font-semibold">pts</span>
+                    </div>
+                    {alreadyBought ? (
+                      <span className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-black text-sm bg-nb-green/10 text-nb-green border-2 border-nb-green/30">
+                        ✓ Purchased
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => canAfford ? setConfirmItem(item) : showToast('Not enough points! Keep learning. ⭐')}
+                        className={`px-4 py-2 rounded-xl font-black text-sm border-2 transition-all ${
+                          canAfford ? 'text-nb-dark border-transparent shadow hover:shadow-md' : 'border-gray-200 text-gray-300 cursor-not-allowed'
+                        }`}
+                        style={canAfford ? { background: '#FFEB3C' } : {}}>
+                        {canAfford ? 'Buy Now' : <span className="flex items-center gap-1">Not enough <img src={starYellow} alt="" className="w-3.5 h-3.5 object-contain" /></span>}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Earn more tip */}
       <div className="rounded-2xl p-4 border-2 border-nb-yellow flex items-start gap-3"
@@ -719,7 +891,66 @@ function ShopView({ points, setPoints }) {
         </div>
       </div>
 
-      {/* Confirm modal */}
+      {/* ── Class enrol modal ── */}
+      {confirmClass && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+             style={{ background: 'rgba(0,0,0,0.55)' }}
+             onClick={e => e.target === e.currentTarget && setConfirmClass(null)}>
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-md p-6 sm:p-8 space-y-5">
+            <div className="text-center">
+              <img src={confirmClass.icon} alt="" className="w-16 h-16 mx-auto mb-3 object-contain" />
+              <h3 className="text-lg font-black text-nb-dark">{confirmClass.name}</h3>
+              <p className="text-sm text-gray-400 mt-1">👩‍🏫 {confirmClass.teacher} · {confirmClass.level}</p>
+            </div>
+
+            <div className="bg-nb-cream rounded-2xl p-4 space-y-2 text-sm">
+              <div className="flex justify-between"><span className="text-gray-500">Sessions</span><span className="font-bold text-nb-dark">{confirmClass.sessions}</span></div>
+              <div className="flex justify-between"><span className="text-gray-500">Duration</span><span className="font-bold text-nb-dark">{confirmClass.duration}</span></div>
+              <div className="flex justify-between"><span className="text-gray-500">Billing</span><span className="font-bold text-nb-dark">Monthly · cancel anytime</span></div>
+              <div className="flex justify-between border-t border-gray-200 pt-2 mt-1">
+                <span className="font-black text-nb-dark">Total today</span>
+                <span className="font-black text-nb-dark text-base">S${confirmClass.price}.00</span>
+              </div>
+            </div>
+
+            {/* Payment method */}
+            <div>
+              <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Payment Method</p>
+              <div className="flex gap-2">
+                {[
+                  { id: 'card', label: '💳 Credit / Debit Card' },
+                  { id: 'paynow', label: '📱 PayNow' },
+                ].map(m => (
+                  <button key={m.id} onClick={() => setPayMethod(m.id)}
+                    className={`flex-1 py-2.5 rounded-xl text-xs font-black border-2 transition-all ${
+                      payMethod === m.id ? 'border-nb-green text-nb-dark' : 'border-gray-200 text-gray-400 hover:border-nb-olive'
+                    }`}
+                    style={payMethod === m.id ? { background: '#6FC91115' } : {}}>
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[10px] text-gray-400 mt-2 text-center">
+                Payments processed securely via Stripe · Auto-renews monthly
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmClass(null)}
+                className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-500 font-bold text-sm">
+                Cancel
+              </button>
+              <button onClick={() => enrol(confirmClass)}
+                className="flex-1 py-3 rounded-xl font-black text-nb-dark text-sm shadow-md transition hover:shadow-lg"
+                style={{ background: '#FFEB3C' }}>
+                Confirm &amp; Pay →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Points item confirm modal ── */}
       {confirmItem && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
              style={{ background: 'rgba(0,0,0,0.5)' }}
@@ -732,11 +963,11 @@ function ShopView({ points, setPoints }) {
             </div>
             <div className="bg-nb-cream rounded-2xl p-4 flex items-center justify-between">
               <span className="font-semibold text-gray-500 text-sm">Cost</span>
-              <span className="font-black text-nb-dark">⭐ {confirmItem.cost.toLocaleString()} pts</span>
+              <span className="font-black text-nb-dark flex items-center gap-1"><img src={starYellow} alt="" className="w-4 h-4 object-contain" /> {confirmItem.cost.toLocaleString()} pts</span>
             </div>
             <div className="bg-nb-cream rounded-2xl p-4 flex items-center justify-between">
               <span className="font-semibold text-gray-500 text-sm">Balance after</span>
-              <span className="font-black text-nb-dark">⭐ {(points - confirmItem.cost).toLocaleString()} pts</span>
+              <span className="font-black text-nb-dark flex items-center gap-1"><img src={starYellow} alt="" className="w-4 h-4 object-contain" /> {(points - confirmItem.cost).toLocaleString()} pts</span>
             </div>
             <div className="flex gap-3">
               <button onClick={() => setConfirmItem(null)}
@@ -846,7 +1077,7 @@ function FlashCardsView() {
   if (showLibrary) return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-black text-nb-dark">⭐ My Saved Cards</h2>
+        <h2 className="text-2xl font-black text-nb-dark flex items-center gap-2"><img src={starYellow} alt="" className="w-6 h-6 object-contain" /> My Saved Cards</h2>
         <button onClick={() => setShowLibrary(false)}
           className="text-sm font-bold text-gray-400 hover:text-nb-dark transition px-3 py-1.5 rounded-lg hover:bg-gray-100">
           ← Back
@@ -973,7 +1204,7 @@ function FlashCardsView() {
           <div className="grid grid-cols-2 gap-3">
             <button onClick={goNext}
               className="py-4 rounded-xl font-black text-red-500 border-2 border-red-200 bg-red-50 hover:bg-red-100 transition text-sm flex items-center justify-center gap-2">
-              🔁 Still Learning
+              <img src={retryIcon} alt="" className="w-4 h-4 object-contain" /> Still Learning
             </button>
             <button onClick={markKnown}
               className="py-4 rounded-xl font-black text-white border-2 border-transparent shadow-md hover:opacity-90 transition text-sm flex items-center justify-center gap-2"
@@ -988,9 +1219,9 @@ function FlashCardsView() {
               ← Prev
             </button>
             <button onClick={toggleSave}
-              className={`py-3.5 rounded-xl font-black text-sm border-2 transition-all ${isSaved ? 'border-nb-yellow text-nb-dark' : 'border-gray-200 text-gray-400 hover:border-nb-yellow'}`}
+              className={`py-3.5 rounded-xl font-black text-sm border-2 transition-all flex items-center justify-center gap-1.5 ${isSaved ? 'border-nb-yellow text-nb-dark' : 'border-gray-200 text-gray-400 hover:border-nb-yellow'}`}
               style={isSaved ? { background: '#FFEB3C' } : {}}>
-              {isSaved ? '⭐ Saved' : '☆ Save'}
+              {isSaved ? <img src={starYellow} alt="" className="w-4 h-4 object-contain" /> : <img src={starOutline} alt="" className="w-4 h-4 object-contain opacity-50" />} {isSaved ? 'Saved' : 'Save'}
             </button>
             <button onClick={goNext}
               className="py-3.5 rounded-xl border-2 border-nb-green font-black text-nb-dark hover:bg-nb-green hover:text-white transition text-sm">
@@ -1030,12 +1261,12 @@ function FlashCardsView() {
       {/* Header */}
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <h2 className="text-2xl font-black text-nb-dark">🃏 Flash Cards</h2>
+          <h2 className="text-2xl font-black text-nb-dark flex items-center gap-2"><img src={flashcardIcon} alt="" className="w-6 h-6 object-contain" /> Flash Cards</h2>
           <p className="text-sm text-gray-400 font-semibold mt-0.5">Learn faster. Remember longer.</p>
         </div>
         <button onClick={() => setShowLibrary(true)}
           className="flex items-center gap-2 px-4 py-2 rounded-xl border-2 border-nb-yellow text-nb-dark text-sm font-black hover:bg-nb-yellow transition flex-shrink-0">
-          ⭐ My Saved Cards
+          <img src={starYellow} alt="" className="w-4 h-4 object-contain" /> My Saved Cards
           {library.length > 0 && <span className="bg-nb-dark text-white text-[10px] px-1.5 py-0.5 rounded-full">{library.length}</span>}
         </button>
       </div>
@@ -1102,40 +1333,81 @@ function FlashCardsView() {
   )
 }
 
+/* Per-quiz question sets, mixing every supported question type as a showcase */
+const QUIZ_QUESTIONS = {
+  1: [
+    { id: 101, type: 'mcq',       text: 'What is 6 × 7?',   options: ['36','42','48','54'], answer: 1 },
+    { id: 102, type: 'mcq',       text: 'What is 9 × 8?',   options: ['63','72','81','90'], answer: 1 },
+    { id: 103, type: 'true_false', text: '7 × 7 = 48',                                       answer: false },
+    { id: 104, type: 'fill_in',   text: '12 × 11 = ___',                                     answer: '132' },
+  ],
+  3: [
+    { id: 301, type: 'mcq',       text: 'What is ½ of 20?', options: ['5','8','10','12'],    answer: 2 },
+    { id: 302, type: 'true_false', text: '¼ is greater than ½',                               answer: false },
+    { id: 303, type: 'fill_in',   text: 'Simplify 2/4 to its simplest form: ___',              answer: '1/2' },
+    { id: 304, type: 'match',     text: 'Match each fraction to its decimal', options: { pairs: [
+        { left: '1/2', right: '0.5' }, { left: '1/4', right: '0.25' }, { left: '3/4', right: '0.75' },
+      ] } },
+    { id: 305, type: 'drag_drop', text: 'Drag each fraction into the correct group', options: {
+        buckets: ['Less than ½', 'Greater than ½'],
+        items: [
+          { label: '1/4', bucket: 'Less than ½' },
+          { label: '3/4', bucket: 'Greater than ½' },
+          { label: '1/8', bucket: 'Less than ½' },
+          { label: '5/6', bucket: 'Greater than ½' },
+        ] } },
+  ],
+  7: [
+    { id: 701, type: 'mcq',       text: 'Which planet is closest to the Sun?', options: ['Venus','Mercury','Earth','Mars'], answer: 1 },
+    { id: 702, type: 'true_false', text: 'Jupiter is the largest planet in our solar system.',  answer: true },
+    { id: 703, type: 'match',     text: 'Match each planet to its nickname', options: { pairs: [
+        { left: 'Mars', right: 'Red Planet' }, { left: 'Saturn', right: 'Ringed Planet' },
+      ] } },
+  ],
+  6: [
+    { id: 601, type: 'mcq',       text: 'Which is the past tense of "run"?', options: ['runned','ran','runs','running'], answer: 1 },
+    { id: 602, type: 'fill_in',   text: 'She ___ (go) to school yesterday.',                    answer: 'went' },
+    { id: 603, type: 'drag_drop', text: 'Sort each word into the correct tense', options: {
+        buckets: ['Past', 'Present'],
+        items: [
+          { label: 'walked', bucket: 'Past' },
+          { label: 'walks',  bucket: 'Present' },
+          { label: 'ate',    bucket: 'Past' },
+          { label: 'eats',   bucket: 'Present' },
+        ] } },
+  ],
+}
+
 /* ─── Quizzes ─── */
 function QuizzesView() {
   const quizzes = [
-    { id: 1, title: 'Times Tables Challenge', subject: 'Mathematics', questions: 10, bestScore: 90,   icon: '🔢', difficulty: 'Easy'   },
-    { id: 3, title: 'Fractions Basics',       subject: 'Mathematics', questions: 8,  bestScore: 75,   icon: '📐', difficulty: 'Medium' },
-    { id: 7, title: 'Solar System Quiz',      subject: 'Science',     questions: 8,  bestScore: null, icon: '🪐', difficulty: 'Easy'   },
-    { id: 6, title: 'Grammar: Tenses',        subject: 'English',     questions: 10, bestScore: null, icon: '✏️', difficulty: 'Medium' },
+    { id: 1, title: 'Times Tables Challenge', subject: 'Mathematics', bestScore: 90,   icon: '🔢', difficulty: 'Easy'   },
+    { id: 3, title: 'Fractions Basics',       subject: 'Mathematics', bestScore: 75,   icon: '📐', difficulty: 'Medium' },
+    { id: 7, title: 'Solar System Quiz',      subject: 'Science',     bestScore: null, icon: '🪐', difficulty: 'Easy'   },
+    { id: 6, title: 'Grammar: Tenses',        subject: 'English',     bestScore: null, icon: '✏️', difficulty: 'Medium' },
   ]
   const DIFF_COLOR = { Easy: 'bg-green-100 text-green-700', Medium: 'bg-yellow-100 text-yellow-700', Hard: 'bg-red-100 text-red-600' }
 
   const [active, setActive]     = useState(null)
   const [current, setCurrent]   = useState(0)
-  const [selected, setSelected] = useState(null)
+  const [value, setValue]       = useState(null)
   const [score, setScore]       = useState(0)
   const [answered, setAnswered] = useState(false)
   const [done, setDone]         = useState(false)
 
-  const QUESTIONS = [
-    { q: 'What is 6 × 7?',   options: ['36','42','48','54'],        answer: 1 },
-    { q: 'What is 9 × 8?',   options: ['63','72','81','90'],        answer: 1 },
-    { q: 'What is 12 × 11?', options: ['121','132','144','122'],    answer: 2 },
-  ]
+  const questions = active ? (QUIZ_QUESTIONS[active.id] || []) : []
 
-  function startQuiz(q) { setActive(q); setCurrent(0); setSelected(null); setScore(0); setAnswered(false); setDone(false) }
-  function submit() { if (selected === QUESTIONS[current].answer) setScore(s => s + 1); setAnswered(true) }
-  function nextQ() { setAnswered(false); setSelected(null); current + 1 < QUESTIONS.length ? setCurrent(c => c + 1) : setDone(true) }
+  function startQuiz(q) { setActive(q); setCurrent(0); setValue(null); setScore(0); setAnswered(false); setDone(false) }
+  function submit() { if (isCorrectAnswer(questions[current], value)) setScore(s => s + 1); setAnswered(true) }
+  function nextQ() { setAnswered(false); setValue(null); current + 1 < questions.length ? setCurrent(c => c + 1) : setDone(true) }
 
   if (active) {
     if (done) return (
       <div className="flex flex-col items-center py-8 gap-4 text-center">
-        <div className="text-6xl">{score === QUESTIONS.length ? '🏆' : '👍'}</div>
+        <div className="flex justify-center">{score === questions.length ? <img src={quizPassIcon} alt="" className="w-20 h-20 object-contain" /> : <span className="text-6xl">👍</span>}</div>
         <h2 className="text-2xl font-black text-nb-dark">Quiz Done!</h2>
-        <p className="text-lg text-gray-500">Score: <span className="font-black text-nb-green">{score}/{QUESTIONS.length}</span></p>
-        {score === QUESTIONS.length && <p className="text-amber-600 font-bold">Perfect! Amazing! ⭐</p>}
+        <p className="text-lg text-gray-500">Score: <span className="font-black text-nb-green">{score}/{questions.length}</span></p>
+        {score === questions.length && <p className="text-amber-600 font-bold">Perfect! Amazing! ⭐</p>}
         <p className="font-bold text-nb-lime">+{score * 30} points!</p>
         <button onClick={() => setActive(null)}
           className="px-8 py-3 rounded-2xl font-black text-nb-dark shadow hover:shadow-md transition"
@@ -1143,42 +1415,29 @@ function QuizzesView() {
       </div>
     )
 
-    const q = QUESTIONS[current]
+    const q = questions[current]
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <button onClick={() => setActive(null)} className="text-gray-400 text-sm font-bold">← Back</button>
-          <span className="text-sm font-bold text-gray-400">{current + 1}/{QUESTIONS.length}</span>
+          <span className="text-sm font-bold text-gray-400">{current + 1}/{questions.length}</span>
         </div>
         <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
           <div className="h-full rounded-full transition-all"
-               style={{ width: `${(current / QUESTIONS.length) * 100}%`, background: 'linear-gradient(90deg,#FFEB3C,#6FC911)' }} />
+               style={{ width: `${(current / questions.length) * 100}%`, background: 'linear-gradient(90deg,#FFEB3C,#6FC911)' }} />
         </div>
         <div className="bg-white rounded-2xl border border-nb-olive/20 p-5 text-center">
-          <p className="text-xl font-black text-nb-dark">{q.q}</p>
+          <p className="text-xl font-black text-nb-dark">{q.text}</p>
         </div>
-        <div className="grid grid-cols-2 gap-2.5">
-          {q.options.map((opt, i) => {
-            let bg = {}, cls = 'border-gray-200 bg-white text-gray-700 hover:border-nb-green'
-            if (answered) {
-              cls = i === q.answer ? 'border-nb-green bg-green-50 text-nb-dark' : i === selected ? 'border-red-300 bg-red-50 text-red-500' : 'border-gray-100 bg-gray-50 text-gray-300'
-            } else if (selected === i) { cls = 'border-nb-yellow text-nb-dark'; bg = { background: '#FFEB3C' } }
-            return (
-              <button key={i} onClick={() => !answered && setSelected(i)}
-                className={`py-3.5 rounded-xl font-black border-2 transition-all ${cls}`} style={bg}>
-                {opt}{answered && i === q.answer && ' ✅'}{answered && i === selected && i !== q.answer && ' ❌'}
-              </button>
-            )
-          })}
-        </div>
+        <QuestionBody q={q} value={value} onChange={setValue} answered={answered} />
         {!answered
-          ? <button onClick={submit} disabled={selected === null}
+          ? <button onClick={submit} disabled={!hasAnswer(q, value)}
               className="w-full py-3.5 rounded-xl font-black text-nb-dark shadow disabled:opacity-40 transition"
               style={{ background: '#FFEB3C' }}>Submit ✅</button>
           : <button onClick={nextQ}
               className="w-full py-3.5 rounded-xl font-black text-white shadow transition hover:opacity-90"
               style={{ background: '#36913F' }}>
-              {current + 1 < QUESTIONS.length ? 'Next →' : 'See Results 🎉'}
+              {current + 1 < questions.length ? 'Next →' : 'See Results 🎉'}
             </button>
         }
       </div>
@@ -1216,7 +1475,7 @@ function QuizzesView() {
             <button onClick={() => startQuiz(quiz)}
               className="flex-shrink-0 px-5 py-3 rounded-2xl font-black text-nb-dark shadow-md transition hover:shadow-lg text-sm"
               style={{ background: '#FFEB3C' }}>
-              {quiz.bestScore !== null ? 'Retry 🔄' : 'Start 🚀'}
+              {quiz.bestScore !== null ? <span className="flex items-center gap-1.5"><img src={retryIcon} alt="" className="w-4 h-4 object-contain" /> Retry</span> : 'Start 🚀'}
             </button>
           </div>
         ))}
@@ -1225,7 +1484,7 @@ function QuizzesView() {
       {/* Quiz Leaderboard */}
       <div className="bg-white rounded-2xl border-2 border-nb-olive/20 p-5">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-black text-nb-dark">🏅 Class Leaderboard — Primary 4A</h3>
+          <h3 className="font-black text-nb-dark flex items-center gap-1.5"><img src={scoreboardIcon} alt="" className="w-5 h-5 object-contain" /> Class Leaderboard — Primary 4A</h3>
           <span className="text-xs text-gray-400 font-semibold">Times Tables Challenge</span>
         </div>
         <div className="space-y-2.5">
@@ -1247,7 +1506,7 @@ function QuizzesView() {
               </div>
               <div className="text-right flex-shrink-0">
                 <p className="font-black text-nb-dark text-sm">{s.score}%</p>
-                <p className="text-[10px] text-gray-400">⭐ {s.points} pts</p>
+                <p className="text-[10px] text-gray-400 flex items-center justify-end gap-0.5"><img src={starYellow} alt="" className="w-2.5 h-2.5 object-contain" /> {s.points} pts</p>
               </div>
             </div>
           ))}

@@ -6,23 +6,30 @@ const uid = () => ++nextId
 
 // ─── Seed data ────────────────────────────────────────────────────────────────
 
+let terms = [
+  { id: 1, name: 'Term 1', startDate: '2026-01-05', endDate: '2026-03-13', status: 'completed' },
+  { id: 2, name: 'Term 2', startDate: '2026-03-30', endDate: '2026-06-05', status: 'completed' },
+  { id: 3, name: 'Term 3', startDate: '2026-06-29', endDate: '2026-09-04', status: 'active' },
+  { id: 4, name: 'Term 4', startDate: '2026-09-21', endDate: '2026-11-27', status: 'upcoming' },
+]
+
 let classes = [
-  { id: 1, name: 'Primary 4A', subject: 'Mathematics', level: 'P4', students: 12, lessons: 5, teacherId: 3 },
-  { id: 2, name: 'Primary 4B', subject: 'English',     level: 'P4', students: 10, lessons: 4, teacherId: 3 },
-  { id: 3, name: 'Primary 5A', subject: 'Science',     level: 'P5', students: 14, lessons: 3, teacherId: 3 },
+  { id: 1, name: 'Primary 4A', subject: 'Mathematics', level: 'P4', students: 12, lessons: 5, teacherId: 3, termId: 3 },
+  { id: 2, name: 'Primary 4B', subject: 'English',     level: 'P4', students: 10, lessons: 4, teacherId: 3, termId: 3 },
+  { id: 3, name: 'Primary 5A', subject: 'Science',     level: 'P5', students: 14, lessons: 3, teacherId: 3, termId: 3 },
 ]
 
 let lessons = [
-  { id: 1,  classId: 1, title: 'Addition & Subtraction',  type: 'video',     status: 'published', subject: 'Mathematics', cardCount: 0,  publishAt: null, deadlineAt: '2026-03-14', notifyEmail: true  },
-  { id: 2,  classId: 1, title: 'Multiplication Tables',   type: 'flashcard', status: 'published', subject: 'Mathematics', cardCount: 3,  publishAt: null, deadlineAt: '2026-03-28', notifyEmail: false },
-  { id: 3,  classId: 1, title: 'Fractions Basics',        type: 'quiz',      status: 'published', subject: 'Mathematics', cardCount: 0,  publishAt: null, deadlineAt: '2026-05-25', notifyEmail: true  },
-  { id: 4,  classId: 1, title: 'Division for Beginners',  type: 'video',     status: 'scheduled', subject: 'Mathematics', cardCount: 0,  publishAt: '2026-06-30T09:00', deadlineAt: '2026-07-15', notifyEmail: true },
-  { id: 5,  classId: 1, title: 'Geometry: Shapes',        type: 'activity',  status: 'draft',     subject: 'Mathematics', cardCount: 0,  publishAt: null, deadlineAt: null, notifyEmail: false },
-  { id: 6,  classId: 2, title: 'Alphabet Flash Cards',    type: 'flashcard', status: 'published', subject: 'English',     cardCount: 6,  publishAt: null, deadlineAt: null, notifyEmail: false },
-  { id: 7,  classId: 2, title: 'Reading Comprehension',   type: 'reading',   status: 'published', subject: 'English',     cardCount: 0,  publishAt: null, deadlineAt: '2026-05-20', notifyEmail: true  },
-  { id: 8,  classId: 2, title: 'Grammar: Tenses',         type: 'quiz',      status: 'draft',     subject: 'English',     cardCount: 0,  publishAt: null, deadlineAt: null, notifyEmail: false },
-  { id: 9,  classId: 3, title: 'The Solar System',        type: 'video',     status: 'published', subject: 'Science',     cardCount: 0,  publishAt: null, deadlineAt: '2026-07-15', notifyEmail: true  },
-  { id: 10, classId: 3, title: 'Plants & Photosynthesis', type: 'reading',   status: 'scheduled', subject: 'Science',     cardCount: 0,  publishAt: '2026-07-01T08:00', deadlineAt: '2026-07-30', notifyEmail: true },
+  { id: 1,  classId: 1, title: 'Addition & Subtraction',  type: 'video',     status: 'published', subject: 'Mathematics', cardCount: 0,  publishAt: null, deadlineAt: '2026-03-14', notifyEmail: true,  weekNumber: 1 },
+  { id: 2,  classId: 1, title: 'Multiplication Tables',   type: 'flashcard', status: 'published', subject: 'Mathematics', cardCount: 3,  publishAt: null, deadlineAt: '2026-03-28', notifyEmail: false, weekNumber: 2 },
+  { id: 3,  classId: 1, title: 'Fractions Basics',        type: 'quiz',      status: 'published', subject: 'Mathematics', cardCount: 0,  publishAt: null, deadlineAt: '2026-05-25', notifyEmail: true,  weekNumber: 3 },
+  { id: 4,  classId: 1, title: 'Division for Beginners',  type: 'video',     status: 'scheduled', subject: 'Mathematics', cardCount: 0,  publishAt: '2026-06-30T09:00', deadlineAt: '2026-07-15', notifyEmail: true, weekNumber: 4 },
+  { id: 5,  classId: 1, title: 'Geometry: Shapes',        type: 'activity',  status: 'draft',     subject: 'Mathematics', cardCount: 0,  publishAt: null, deadlineAt: null, notifyEmail: false, weekNumber: 5 },
+  { id: 6,  classId: 2, title: 'Alphabet Flash Cards',    type: 'flashcard', status: 'published', subject: 'English',     cardCount: 6,  publishAt: null, deadlineAt: null, notifyEmail: false, weekNumber: 1 },
+  { id: 7,  classId: 2, title: 'Reading Comprehension',   type: 'reading',   status: 'published', subject: 'English',     cardCount: 0,  publishAt: null, deadlineAt: '2026-05-20', notifyEmail: true,  weekNumber: 2 },
+  { id: 8,  classId: 2, title: 'Grammar: Tenses',         type: 'quiz',      status: 'draft',     subject: 'English',     cardCount: 0,  publishAt: null, deadlineAt: null, notifyEmail: false, weekNumber: 3 },
+  { id: 9,  classId: 3, title: 'The Solar System',        type: 'video',     status: 'published', subject: 'Science',     cardCount: 0,  publishAt: null, deadlineAt: '2026-07-15', notifyEmail: true,  weekNumber: 1 },
+  { id: 10, classId: 3, title: 'Plants & Photosynthesis', type: 'reading',   status: 'scheduled', subject: 'Science',     cardCount: 0,  publishAt: '2026-07-01T08:00', deadlineAt: '2026-07-30', notifyEmail: true, weekNumber: 2 },
 ]
 
 let flashcards = [
@@ -40,6 +47,7 @@ let flashcards = [
 let quizzes = [
   {
     id: 1, classId: 1, title: 'Times Tables Challenge',
+    className: 'Primary 4A', subject: 'Mathematics', status: 'published', passMark: 70, rewardPoints: 50, leaderboard: true,
     questions: [
       { id: 1, quizId: 1, type: 'mcq',       text: 'What is 6 × 7?',   options: ['36','42','48','54'],        answer: 1, points: 1 },
       { id: 2, quizId: 1, type: 'mcq',       text: 'What is 9 × 8?',   options: ['63','72','81','90'],        answer: 1, points: 1 },
@@ -49,20 +57,62 @@ let quizzes = [
   },
   {
     id: 2, classId: 1, title: 'Fractions Basics Quiz',
+    className: 'Primary 4A', subject: 'Mathematics', status: 'published', passMark: 70, rewardPoints: 50, leaderboard: true,
     questions: [
       { id: 5, quizId: 2, type: 'mcq',       text: 'What is ½ of 20?', options: ['5','8','10','12'],          answer: 2, points: 1 },
       { id: 6, quizId: 2, type: 'true_false', text: '¼ is greater than ½', options: ['True','False'],         answer: false, points: 1 },
+      { id: 9, quizId: 2, type: 'match',     text: 'Match each fraction to its decimal', options: { pairs: [
+          { left: '1/2', right: '0.5' }, { left: '1/4', right: '0.25' }, { left: '3/4', right: '0.75' },
+        ] }, answer: null, points: 2 },
+      { id: 10, quizId: 2, type: 'drag_drop', text: 'Drag each fraction into the correct group', options: {
+          buckets: ['Less than ½', 'Greater than ½'],
+          items: [
+            { label: '1/4', bucket: 'Less than ½' },
+            { label: '3/4', bucket: 'Greater than ½' },
+            { label: '1/8', bucket: 'Less than ½' },
+            { label: '5/6', bucket: 'Greater than ½' },
+          ] }, answer: null, points: 2 },
     ],
   },
   {
     id: 3, classId: 2, title: 'Grammar: Tenses Check',
+    className: 'Primary 4B', subject: 'English', status: 'draft', passMark: 70, rewardPoints: 40, leaderboard: false,
     questions: [
       { id: 7, quizId: 3, type: 'mcq', text: 'Which is past tense: "run"?', options: ['runned','ran','runs','running'], answer: 1, points: 1 },
+    ],
+  },
+  {
+    id: 4, classId: 1, title: 'Question Types Showcase',
+    className: 'Primary 4A', subject: 'Mathematics', status: 'draft', passMark: 60, rewardPoints: 60, leaderboard: false,
+    questions: [
+      { id: 8,  quizId: 4, type: 'mcq',       text: 'What is 5 + 3?', options: ['6','7','8','9'], answer: 2, points: 1 },
+      { id: 11, quizId: 4, type: 'true_false', text: 'A triangle has 3 sides.', options: ['True','False'], answer: true, points: 1 },
+      { id: 12, quizId: 4, type: 'fill_in',   text: 'The capital of Singapore is ___.', options: [], answer: 'Singapore', points: 1 },
+      { id: 13, quizId: 4, type: 'match',     text: 'Match each animal to its baby', options: { pairs: [
+          { left: 'Cat', right: 'Kitten' }, { left: 'Dog', right: 'Puppy' }, { left: 'Cow', right: 'Calf' },
+        ] }, answer: null, points: 2 },
+      { id: 14, quizId: 4, type: 'drag_drop', text: 'Drag each animal into its habitat', options: {
+          buckets: ['Land', 'Water'],
+          items: [
+            { label: 'Lion',    bucket: 'Land' },
+            { label: 'Fish',    bucket: 'Water' },
+            { label: 'Elephant', bucket: 'Land' },
+            { label: 'Shark',   bucket: 'Water' },
+          ] }, answer: null, points: 2 },
     ],
   },
 ]
 
 let schedules = lessons.map(l => ({ ...l }))
+
+let badges = [
+  { id: 1, icon: '⭐', name: 'Star Learner',   description: 'Complete your first lesson',        criteriaType: 'lessons_completed', criteriaValue: 1    },
+  { id: 2, icon: '🏆', name: 'Quiz Champ',     description: 'Score a perfect mark on any quiz',   criteriaType: 'perfect_score',      criteriaValue: 1    },
+  { id: 3, icon: '🔥', name: '7-Day Streak',   description: 'Complete an activity 7 days running', criteriaType: 'streak_days',       criteriaValue: 7    },
+  { id: 4, icon: '🧠', name: 'Memory Master',  description: 'Earn 1,000 total points',            criteriaType: 'points_total',       criteriaValue: 1000 },
+  { id: 5, icon: '📚', name: 'Bookworm',       description: 'Complete 20 lessons',                criteriaType: 'lessons_completed',  criteriaValue: 20   },
+  { id: 6, icon: '🚀', name: 'Fast Finisher',  description: 'Complete 5 quizzes',                 criteriaType: 'quizzes_completed',  criteriaValue: 5    },
+]
 
 let students = [
   { enrollmentId: 1,  studentId: 1,  classId: 1, name: 'Ahmad bin Hassan',   email: 'ahmad@student.neurobix.com'   },
@@ -97,11 +147,34 @@ export async function mockApiRequest(path, { method = 'GET', body } = {}) {
   }
   if (path === '/api/auth/logout') return null
 
+  // ── Terms ─────────────────────────────────────────────────────────────────
+  if (path === '/api/terms') {
+    if (method === 'GET')  return [...terms]
+    if (method === 'POST') {
+      const created = { id: uid(), status: 'upcoming', ...body }
+      terms.push(created)
+      return created
+    }
+  }
+  const termMatch = path.match(/^\/api\/terms\/(\d+)$/)
+  if (termMatch) {
+    const id = Number(termMatch[1])
+    if (method === 'PUT') {
+      terms = terms.map(t => t.id === id ? { ...t, ...body } : t)
+      return terms.find(t => t.id === id)
+    }
+    if (method === 'DELETE') {
+      terms = terms.filter(t => t.id !== id)
+      classes = classes.map(c => c.termId === id ? { ...c, termId: null } : c)
+      return null
+    }
+  }
+
   // ── Classes ───────────────────────────────────────────────────────────────
   if (path === '/api/classes') {
     if (method === 'GET')  return [...classes]
     if (method === 'POST') {
-      const created = { id: uid(), students: 0, lessons: 0, ...body }
+      const created = { id: uid(), students: 0, lessons: 0, termId: null, ...body }
       classes.push(created)
       return created
     }
@@ -242,6 +315,28 @@ export async function mockApiRequest(path, { method = 'GET', body } = {}) {
       schedules = schedules.map(l => l.id === id ? { ...l, publishAt: null, deadlineAt: null, notifyEmail: false, status: 'draft' } : l)
       lessons   = lessons.map(l => l.id === id ? { ...l, publishAt: null, deadlineAt: null, notifyEmail: false, status: 'draft' } : l)
       return schedules.find(l => l.id === id)
+    }
+  }
+
+  // ── Badges ────────────────────────────────────────────────────────────────
+  if (path === '/api/badges') {
+    if (method === 'GET')  return [...badges]
+    if (method === 'POST') {
+      const created = { id: uid(), ...body }
+      badges.push(created)
+      return created
+    }
+  }
+  const badgeMatch = path.match(/^\/api\/badges\/(\d+)$/)
+  if (badgeMatch) {
+    const id = Number(badgeMatch[1])
+    if (method === 'PUT') {
+      badges = badges.map(b => b.id === id ? { ...b, ...body } : b)
+      return badges.find(b => b.id === id)
+    }
+    if (method === 'DELETE') {
+      badges = badges.filter(b => b.id !== id)
+      return null
     }
   }
 

@@ -4,8 +4,9 @@ import LessonBrowser from '../components/LessonBrowser'
 
 const TABS = [
   { id: 'home',       icon: '🏠', label: 'Home'       },
-  { id: 'lessons',    icon: '📚', label: 'Lessons'    },
+  { id: 'lessons',    icon: '📚', label: 'My Courses' },
   { id: 'flashcards', icon: '🃏', label: 'Flash Cards' },
+  { id: 'memory',     icon: '🧠', label: 'Memory Techniques' },
   { id: 'quizzes',    icon: '📝', label: 'Quizzes'    },
   { id: 'shop',       icon: '🛍️', label: 'Shop'       },
   { id: 'rewards',    icon: '🏆', label: 'Rewards'    },

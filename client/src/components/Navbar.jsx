@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import logoHorizontal from '../assets/Asset 1@3x.png'
+import { logo as logoHorizontal, starYellow, signOutIcon } from '../assets/icons'
 import { useAuth } from '../context/AuthContext'
 
 const ROLE_BADGE = {
@@ -44,7 +44,7 @@ export default function Navbar({ role, userName, points, avatar, children, tabs,
           <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             {points != null && (
               <span className="flex items-center gap-1 text-sm font-bold text-nb-dark bg-nb-yellow/20 border-2 border-nb-yellow/60 rounded-full px-3 py-1 whitespace-nowrap">
-                ⭐ {points.toLocaleString()} <span className="text-[10px] font-bold text-nb-dark/50">XP</span>
+                <img src={starYellow} alt="" className="w-4 h-4 object-contain" /> {points.toLocaleString()} <span className="text-[10px] font-bold text-nb-dark/50">XP</span>
               </span>
             )}
 
@@ -61,8 +61,8 @@ export default function Navbar({ role, userName, points, avatar, children, tabs,
                   <div className="absolute right-0 mt-2 w-44 bg-white rounded-2xl shadow-lg border border-nb-olive/15 py-1.5 z-50">
                     {userName && <p className="px-4 py-1.5 text-xs text-gray-400 truncate">{userName}</p>}
                     <button onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 text-sm font-semibold text-red-500 hover:bg-red-50 transition">
-                      Logout
+                      className="w-full flex items-center gap-1.5 text-left px-4 py-2 text-sm font-semibold text-red-500 hover:bg-red-50 transition">
+                      <img src={signOutIcon} alt="" className="w-3.5 h-3.5 object-contain" /> Logout
                     </button>
                   </div>
                 )}
@@ -77,8 +77,8 @@ export default function Navbar({ role, userName, points, avatar, children, tabs,
                   <span className="text-sm font-semibold text-nb-dark hidden sm:block truncate max-w-[120px]">{userName}</span>
                 )}
                 <button onClick={handleLogout}
-                  className="text-xs text-gray-400 hover:text-red-500 transition-colors font-medium whitespace-nowrap">
-                  Logout
+                  className="flex items-center gap-1 text-xs text-gray-400 hover:text-red-500 transition-colors font-medium whitespace-nowrap">
+                  <img src={signOutIcon} alt="" className="w-3 h-3 object-contain" /> Logout
                 </button>
               </>
             )}

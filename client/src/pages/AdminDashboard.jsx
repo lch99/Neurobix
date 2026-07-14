@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Navbar from '../components/Navbar'
+import { teacherIcon, parentIcon, bookIcon, medalIcon, overdueIcon, brainIcon } from '../assets/icons'
 
 function AddUserModal({ onClose, onAdd }) {
   const [form, setForm] = useState({ name: '', email: '', role: 'student', password: '' })
@@ -76,6 +77,109 @@ function AddUserModal({ onClose, onAdd }) {
   )
 }
 
+const CRITERIA_TYPES = {
+  points_total:       { label: 'Total Points',       icon: '⭐', unit: 'pts',     format: v => `${Number(v).toLocaleString()} pts earned` },
+  lessons_completed:  { label: 'Lessons Completed',   icon: '📚', unit: 'lessons', format: v => `${v} lesson${v === 1 ? '' : 's'} completed` },
+  quizzes_completed:  { label: 'Quizzes Completed',   icon: '📝', unit: 'quizzes', format: v => `${v} quiz${v === 1 ? '' : 'zes'} completed` },
+  perfect_score:      { label: 'Perfect Quiz Scores', icon: '💯', unit: 'times',   format: v => `${v}× perfect quiz score` },
+  streak_days:        { label: 'Day Streak',          icon: '🔥', unit: 'days',    format: v => `${v}-day streak` },
+}
+
+const BADGE_ICON_CHOICES = ['⭐','🏆','🔥','🧠','📚','🚀','💯','🎯','🥇','🎖️','🏅','🌟']
+
+function BadgeModal({ badge, onClose, onSave }) {
+  const isEdit = !!badge
+  const [form, setForm] = useState(badge
+    ? { icon: badge.icon, name: badge.name, description: badge.description, criteriaType: badge.criteriaType, criteriaValue: badge.criteriaValue }
+    : { icon: '⭐', name: '', description: '', criteriaType: 'points_total', criteriaValue: 100 })
+  const [error, setError] = useState('')
+
+  function set(k, v) { setForm(f => ({ ...f, [k]: v })); setError('') }
+
+  function submit(e) {
+    e.preventDefault()
+    if (!form.icon.trim() || !form.name.trim() || !form.description.trim() || !form.criteriaValue) {
+      setError('Please fill in all fields.')
+      return
+    }
+    onSave({ ...form, criteriaValue: Number(form.criteriaValue) })
+    onClose()
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+         style={{ background: 'rgba(0,0,0,0.4)' }}
+         onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-md p-5 sm:p-7 max-h-[92vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-lg sm:text-xl font-black text-nb-dark">{isEdit ? 'Edit Badge' : 'Create New Badge'}</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
+        </div>
+
+        {error && <p className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-2">{error}</p>}
+
+        <form onSubmit={submit} className="space-y-4">
+          <div>
+            <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-1.5">Icon</label>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-nb-cream border-2 border-gray-100 flex-shrink-0">{form.icon}</div>
+              <input value={form.icon} onChange={e => set('icon', e.target.value)} maxLength={2}
+                placeholder="Pick or paste an emoji"
+                className="flex-1 px-4 py-2.5 rounded-xl border-2 border-gray-100 focus:outline-none focus:border-nb-green bg-nb-cream text-sm" />
+            </div>
+            <div className="flex gap-1.5 flex-wrap">
+              {BADGE_ICON_CHOICES.map(ic => (
+                <button type="button" key={ic} onClick={() => set('icon', ic)}
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center text-base border-2 transition ${form.icon === ic ? 'border-nb-green bg-nb-cream' : 'border-gray-100 hover:border-gray-200'}`}>
+                  {ic}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-1.5">Badge Name</label>
+            <input value={form.name} onChange={e => set('name', e.target.value)}
+              placeholder="e.g. Memory Master"
+              className="w-full px-4 py-2.5 rounded-xl border-2 border-gray-100 focus:outline-none focus:border-nb-green bg-nb-cream text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-1.5">Description</label>
+            <input value={form.description} onChange={e => set('description', e.target.value)}
+              placeholder="e.g. Earn 1,000 total points"
+              className="w-full px-4 py-2.5 rounded-xl border-2 border-gray-100 focus:outline-none focus:border-nb-green bg-nb-cream text-sm" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-1.5">Criteria</label>
+              <select value={form.criteriaType} onChange={e => set('criteriaType', e.target.value)}
+                className="w-full px-3 py-2.5 rounded-xl border-2 border-gray-100 focus:outline-none focus:border-nb-green bg-nb-cream text-sm">
+                {Object.entries(CRITERIA_TYPES).map(([k, c]) => <option key={k} value={k}>{c.label}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-1.5">Target ({CRITERIA_TYPES[form.criteriaType].unit})</label>
+              <input type="number" min="1" value={form.criteriaValue} onChange={e => set('criteriaValue', e.target.value)}
+                className="w-full px-3 py-2.5 rounded-xl border-2 border-gray-100 focus:outline-none focus:border-nb-green bg-nb-cream text-sm" />
+            </div>
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={onClose}
+              className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-500 font-bold text-sm hover:border-gray-300 transition">
+              Cancel
+            </button>
+            <button type="submit"
+              className="flex-1 py-3 rounded-xl font-black text-nb-dark text-sm shadow-md transition hover:shadow-lg"
+              style={{ background: '#FFEB3C' }}>
+              {isEdit ? 'Save Changes' : 'Create Badge →'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 const USERS = [
   { id: 1, name: 'Ms Sarah Tan',       email: 'teacher@neurobix.com', role: 'teacher', status: 'active',    joined: '2024-08-01' },
   { id: 2, name: 'Ahmad bin Hassan',  email: 'student@neurobix.com', role: 'student', status: 'active',    joined: '2024-09-05' },
@@ -139,7 +243,7 @@ export default function AdminDashboard() {
               {[
                 { label: 'Total Users',    value: 132,  icon: '👥',  bg: 'bg-blue-50',   text: 'text-blue-700' },
                 { label: 'Students',       value: 98,   icon: '🎓',  bg: 'bg-green-50',  text: 'text-nb-green' },
-                { label: 'Teachers',       value: 12,   icon: '👩‍🏫', bg: 'bg-nb-cream',  text: 'text-nb-dark' },
+                { label: 'Teachers',       value: 12,   icon: <img src={teacherIcon} alt="" className="w-7 h-7 object-contain" />, bg: 'bg-nb-cream',  text: 'text-nb-dark' },
                 { label: 'Active Classes', value: 18,   icon: '🏫',  bg: 'bg-amber-50',  text: 'text-amber-700' },
               ].map(s => (
                 <div key={s.label} className={`${s.bg} rounded-2xl p-4 border border-nb-olive/20`}>
@@ -156,9 +260,9 @@ export default function AdminDashboard() {
               <div className="space-y-3">
                 {[
                   { icon: '👤', text: 'New student registered: Ahmad bin Hassan', time: '2 min ago', color: 'text-blue-600' },
-                  { icon: '📚', text: 'Lesson published: Addition & Subtraction', time: '15 min ago', color: 'text-nb-green' },
-                  { icon: '🏆', text: 'Certificate issued to Hafiz Zulkifli', time: '1 hr ago', color: 'text-amber-600' },
-                  { icon: '⚠️', text: 'Student Raj Kumar suspended', time: '3 hrs ago', color: 'text-red-500' },
+                  { icon: <img src={bookIcon} alt="" className="w-5 h-5 object-contain" />, text: 'Lesson published: Addition & Subtraction', time: '15 min ago', color: 'text-nb-green' },
+                  { icon: <img src={medalIcon} alt="" className="w-5 h-5 object-contain" />, text: 'Certificate issued to Hafiz Zulkifli', time: '1 hr ago', color: 'text-amber-600' },
+                  { icon: <img src={overdueIcon} alt="" className="w-5 h-5 object-contain" />, text: 'Student Raj Kumar suspended', time: '3 hrs ago', color: 'text-red-500' },
                   { icon: '📝', text: 'New quiz created: Fractions Basics', time: '5 hrs ago', color: 'text-purple-600' },
                 ].map((item, i) => (
                   <div key={i} className="flex items-start gap-3 text-sm">
@@ -336,7 +440,9 @@ export default function AdminDashboard() {
                     </div>
                     <span className="text-xs font-black px-2.5 py-1 rounded-full text-nb-dark" style={{ background: '#FFEB3C' }}>{c.progress}%</span>
                   </div>
-                  <p className="text-xs text-gray-400 mb-3">👩‍🏫 {c.teacher} · 👩‍🎓 {c.students} students</p>
+                  <p className="text-xs text-gray-400 mb-3 flex items-center gap-1 flex-wrap">
+                    <img src={teacherIcon} alt="" className="w-3.5 h-3.5 object-contain" /> {c.teacher} · 👩‍🎓 {c.students} students
+                  </p>
                   <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
                     <div className="h-full rounded-full" style={{ width:`${c.progress}%`, background:'linear-gradient(90deg,#6FC911,#396336)' }} />
                   </div>
@@ -353,11 +459,11 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
                 { title:'Student Progress Report',   desc:'Overview of all student completion rates and scores',       icon:'📊' },
-                { title:'Lesson Engagement Report',  desc:'Which lessons are most accessed and completed',              icon:'📚' },
+                { title:'Lesson Engagement Report',  desc:'Which lessons are most accessed and completed',              icon: <img src={bookIcon} alt="" className="w-10 h-10 object-contain" /> },
                 { title:'Quiz Performance Report',   desc:'Average scores and pass/fail rates per quiz',               icon:'📝' },
-                { title:'Certificate Report',        desc:'All issued certificates and completion dates',              icon:'🏆' },
-                { title:'Memory Method Analytics',   desc:'How students engage with Neurobix memory techniques',       icon:'🧠' },
-                { title:'Parent Visibility Report',  desc:'Summary reports formatted for parent communication',        icon:'👨‍👩‍👧' },
+                { title:'Certificate Report',        desc:'All issued certificates and completion dates',              icon: <img src={medalIcon} alt="" className="w-10 h-10 object-contain" /> },
+                { title:'Memory Method Analytics',   desc:'How students engage with Neurobix memory techniques',       icon: <img src={brainIcon} alt="" className="w-10 h-10 object-contain" /> },
+                { title:'Parent Visibility Report',  desc:'Summary reports formatted for parent communication',        icon: <div className="w-10 h-10 p-1.5 rounded-xl bg-nb-cream flex items-center justify-center"><img src={parentIcon} alt="" className="w-full h-full object-contain" /></div> },
               ].map((r, i) => (
                 <div key={i} className="bg-white rounded-2xl border border-nb-olive/20 p-5 flex items-start gap-4 hover:shadow-md transition cursor-pointer">
                   <div className="text-4xl">{r.icon}</div>

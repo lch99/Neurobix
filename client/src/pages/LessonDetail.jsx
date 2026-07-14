@@ -3,6 +3,10 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { LOCKED_IDS } from '../data/lessons'
 import Navbar from '../components/Navbar'
 import logoWhite from '../assets/Asset 1@3x 1_White.png'
+import {
+  lockIcon, brainIcon, passIcon, teacherIcon, durationIcon, starYellow,
+  lightBulbIcon, playIcon, retryIcon, quizPassIcon,
+} from '../assets/icons'
 
 const TABS = [
   { id: 'home',       icon: '🏠', label: 'Home'       },
@@ -92,14 +96,14 @@ export default function LessonDetail() {
         </div>
         <div className="flex-1 flex items-center justify-center p-6">
           <div className="bg-white rounded-3xl border-2 border-gray-200 p-10 max-w-sm w-full text-center shadow-lg">
-            <div className="text-7xl mb-4">🔒</div>
+            <img src={lockIcon} alt="" className="w-16 h-16 mx-auto mb-4 object-contain" />
             <h2 className="text-2xl font-black text-nb-dark">Lesson Locked</h2>
             <p className="text-gray-500 mt-2 text-sm leading-relaxed">
               You need to complete the previous lesson before unlocking <strong>{lesson.title}</strong>.
             </p>
-            <div className="mt-4 p-3 rounded-xl text-xs font-semibold text-nb-dark border-2 border-nb-yellow"
+            <div className="mt-4 p-3 rounded-xl text-xs font-semibold text-nb-dark border-2 border-nb-yellow flex items-center gap-2 text-left"
                  style={{ background: '#FFEB3C22' }}>
-              🧠 <strong>Neurobix tip:</strong> Sequential learning helps your brain build knowledge step by step — like building blocks!
+              <img src={brainIcon} alt="" className="w-6 h-6 object-contain flex-shrink-0" /> <span><strong>Neurobix tip:</strong> Sequential learning helps your brain build knowledge step by step — like building blocks!</span>
             </div>
             <button onClick={() => navigate('/lessons')}
               className="mt-6 w-full py-3 rounded-2xl font-black text-nb-dark shadow-md transition hover:shadow-lg"
@@ -134,7 +138,7 @@ export default function LessonDetail() {
             {' '}&gt;{' '}
             <span className="text-white font-semibold">{lesson.title}</span>
             {completed && (
-              <span className="ml-3 bg-green-100 text-green-700 text-xs font-black px-3 py-1.5 rounded-full align-middle">✅ Done!</span>
+              <span className="ml-3 bg-green-100 text-green-700 text-xs font-black px-3 py-1.5 rounded-full align-middle inline-flex items-center gap-1"><img src={passIcon} alt="" className="w-3.5 h-3.5 object-contain" /> Done!</span>
             )}
           </p>
           <div className="flex items-center gap-2 mb-2">
@@ -151,21 +155,21 @@ export default function LessonDetail() {
         {/* Info bar */}
         <div className="bg-white rounded-2xl border border-nb-olive/20 p-4 flex flex-wrap gap-4 sm:gap-8 justify-between sm:justify-start">
           <div className="flex items-center gap-2.5">
-            <span className="w-9 h-9 rounded-full bg-nb-cream flex items-center justify-center text-lg flex-shrink-0">👤</span>
+            <span className="w-9 h-9 rounded-full bg-nb-cream flex items-center justify-center p-2 flex-shrink-0"><img src={teacherIcon} alt="" className="w-full h-full object-contain" /></span>
             <div>
               <p className="text-xs text-gray-400">Teacher</p>
               <p className="text-sm font-bold text-nb-dark">{lesson.teacher}</p>
             </div>
           </div>
           <div className="flex items-center gap-2.5">
-            <span className="w-9 h-9 rounded-full bg-nb-cream flex items-center justify-center text-lg flex-shrink-0">⏱</span>
+            <span className="w-9 h-9 rounded-full bg-nb-cream flex items-center justify-center p-2 flex-shrink-0"><img src={durationIcon} alt="" className="w-full h-full object-contain" /></span>
             <div>
               <p className="text-xs text-gray-400">Duration</p>
               <p className="text-sm font-bold text-nb-dark">{lesson.duration}</p>
             </div>
           </div>
           <div className="flex items-center gap-2.5">
-            <span className="w-9 h-9 rounded-full bg-nb-cream flex items-center justify-center text-lg flex-shrink-0">⭐</span>
+            <span className="w-9 h-9 rounded-full bg-nb-cream flex items-center justify-center p-2 flex-shrink-0"><img src={starYellow} alt="" className="w-full h-full object-contain" /></span>
             <div>
               <p className="text-xs text-gray-400">Points</p>
               <p className="text-sm font-bold text-nb-dark">+{lesson.points} pts</p>
@@ -176,7 +180,7 @@ export default function LessonDetail() {
         {/* Objectives + Memory Tip */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="bg-white rounded-2xl border border-nb-olive/20 p-5">
-            <h2 className="font-black text-nb-dark mb-3">💡 What You'll Learn</h2>
+            <h2 className="font-black text-nb-dark mb-3 flex items-center gap-1.5"><img src={lightBulbIcon} alt="" className="w-5 h-5 object-contain" /> What You'll Learn</h2>
             <ul className="space-y-2">
               {lesson.objectives.map((obj, i) => (
                 <li key={i} className="flex items-start gap-2.5 text-sm text-gray-700">
@@ -188,7 +192,7 @@ export default function LessonDetail() {
           </div>
 
           <div className="rounded-2xl p-5 border-2" style={{ background: '#FFF7E9', borderColor: '#FFEB3C' }}>
-            <h2 className="font-black text-nb-dark mb-3">🧠 Neurobix Memory Tip</h2>
+            <h2 className="font-black text-nb-dark mb-3 flex items-center gap-1.5"><img src={brainIcon} alt="" className="w-5 h-5 object-contain" /> Neurobix Memory Tip</h2>
             <p className="text-gray-600 text-sm leading-relaxed">{lesson.memoryTip}</p>
           </div>
         </div>
@@ -223,9 +227,9 @@ function VideoContent({ lesson, onComplete, completed }) {
       <div className="bg-black rounded-3xl overflow-hidden aspect-video flex items-center justify-center relative shadow-xl">
         {!watching ? (
           <button onClick={startWatch} className="flex flex-col items-center gap-4 text-white hover:scale-105 transition-transform">
-            <div className="w-20 h-20 rounded-full flex items-center justify-center shadow-xl"
+            <div className="w-20 h-20 rounded-full flex items-center justify-center shadow-xl p-4"
                  style={{ background: 'linear-gradient(135deg,#FFEB3C,#6FC911)' }}>
-              <span className="text-4xl text-nb-dark ml-1.5">▶</span>
+              <img src={playIcon} alt="" className="w-full h-full object-contain" />
             </div>
             <span className="text-sm font-semibold opacity-70">Tap to play lesson</span>
           </button>
@@ -317,8 +321,8 @@ function FlashCardContent({ cards, points, onComplete, completed }) {
             🔀 Shuffle{isShuffled ? ' ✓' : ''}
           </button>
           <button onClick={restart}
-            className="px-4 py-2 rounded-xl font-bold text-sm border-2 border-gray-200 text-gray-500 hover:border-nb-olive transition-all">
-            🔁 Restart
+            className="px-4 py-2 rounded-xl font-bold text-sm border-2 border-gray-200 text-gray-500 hover:border-nb-olive transition-all flex items-center gap-1.5">
+            <img src={retryIcon} alt="" className="w-3.5 h-3.5 object-contain" /> Restart
           </button>
         </div>
         <div className="text-sm text-gray-500 font-medium">
@@ -404,7 +408,7 @@ function QuizContent({ questions, points, onComplete }) {
 
   if (done) return (
     <div className="bg-white rounded-3xl border-2 border-nb-olive/20 p-8 text-center space-y-4">
-      <div className="text-7xl">{score === questions.length ? '🏆' : score >= questions.length / 2 ? '👍' : '📖'}</div>
+      <div className="flex justify-center">{score === questions.length ? <img src={quizPassIcon} alt="" className="w-24 h-24 object-contain" /> : <span className="text-7xl">{score >= questions.length / 2 ? '👍' : '📖'}</span>}</div>
       <h2 className="text-3xl font-black text-nb-dark">Quiz Complete!</h2>
       <p className="text-xl text-gray-600">Score: <span className="font-black text-nb-green">{score}/{questions.length}</span></p>
       {score === questions.length && <p className="font-bold text-amber-600">🎉 Perfect Score! You're a superstar!</p>}
@@ -485,7 +489,7 @@ function ReadingContent({ text = [], points, onComplete, completed }) {
           className={`bg-white rounded-2xl border-2 p-5 cursor-pointer transition-all hover:shadow-md ${read.has(i) ? 'border-nb-green' : 'border-nb-olive/20 hover:border-nb-olive/50'}`}>
           <div className="flex items-start justify-between gap-3">
             <h3 className="font-black text-nb-dark text-base">{section.heading}</h3>
-            {read.has(i) && <span className="text-green-600 flex-shrink-0 font-bold">✅</span>}
+            {read.has(i) && <img src={passIcon} alt="" className="w-5 h-5 object-contain flex-shrink-0" />}
           </div>
           <p className="text-gray-600 mt-2 text-sm leading-relaxed">{section.body}</p>
           {!read.has(i) && <p className="text-xs mt-3 font-semibold" style={{ color: '#91BA4F' }}>👆 Tap after reading to mark done</p>}
@@ -503,7 +507,7 @@ function CompletionBanner({ points }) {
          style={{ background: 'linear-gradient(135deg,#FFEB3C22,#6FC91122)' }}>
       <p className="text-4xl mb-2">🎉</p>
       <p className="font-black text-nb-dark text-lg">Lesson Complete!</p>
-      <p className="text-nb-green font-bold mt-1">+{points} points added to your total ⭐</p>
+      <p className="text-nb-green font-bold mt-1 flex items-center justify-center gap-1">+{points} points added to your total <img src={starYellow} alt="" className="w-4 h-4 object-contain" /></p>
       <p className="text-gray-500 text-sm mt-1">Keep going — you're doing amazing!</p>
     </div>
   )

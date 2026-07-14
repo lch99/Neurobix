@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import logoFull from '../assets/Asset 1@3x.png'
+import { logo as logoFull } from '../assets/icons'
 import charStudent from '../assets/char-student.png'
 import charStaff from '../assets/char-staff.png'
 import BrainBackground from '../components/BrainBackground'

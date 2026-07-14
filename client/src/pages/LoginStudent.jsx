@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import logoFull from '../assets/Asset 1@3x.png'
+import { logo as logoFull } from '../assets/icons'
 import BrainBackground from '../components/BrainBackground'
 import { useAuth } from '../context/AuthContext'
 import ServerStatusBadge from '../components/ServerStatusBadge'

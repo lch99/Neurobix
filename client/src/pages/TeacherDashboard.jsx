@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import Navbar from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { apiRequest } from '../lib/api'
+import { previewIcon, bookIcon, flashcardIcon } from '../assets/icons'
 
 const TYPE_ICON = { video:'🎬', flashcard:'🃏', quiz:'📝', reading:'📄', activity:'🎨' }
 const STATUS_STYLE = { published: 'bg-green-100 text-green-700', draft: 'bg-gray-100 text-gray-500', scheduled: 'bg-blue-100 text-blue-700' }
@@ -16,7 +17,7 @@ export default function TeacherDashboard() {
           {[
             { id: 'overview',    label: '📊 Overview'    },
             { id: 'classes',     label: '🏫 Classes'     },
-            { id: 'lessons',     label: '📚 Lessons'     },
+            { id: 'lessons',     label: '📚 My Courses'  },
             { id: 'flashcards',  label: '🃏 Flash Cards'  },
             { id: 'quizbuilder', label: '📝 Quiz Builder' },
             { id: 'schedule',    label: '📅 Schedule'    },
@@ -223,8 +224,8 @@ function FlashCardEditor() {
         </div>
         <div className="flex gap-2">
           <button onClick={() => { setPreviewIdx(0); setPreviewFlipped(false) }}
-            className="px-4 py-2 text-nb-green border-2 border-nb-green text-sm font-black rounded-xl hover:bg-nb-green hover:text-white transition">
-            👁 Preview
+            className="px-4 py-2 text-nb-green border-2 border-nb-green text-sm font-black rounded-xl hover:bg-nb-green hover:text-white transition flex items-center gap-1.5">
+            <img src={previewIcon} alt="" className="w-3.5 h-3.5 object-contain" /> Preview
           </button>
           <button onClick={saveDeck}
             className="px-4 py-2 text-nb-dark text-sm font-black rounded-xl shadow hover:shadow-md transition"
@@ -282,7 +283,7 @@ function FlashCardEditor() {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-black text-nb-dark">🃏 Flash Card Decks</h2>
+        <h2 className="text-xl font-black text-nb-dark flex items-center gap-2"><img src={flashcardIcon} alt="" className="w-6 h-6 object-contain" /> Flash Card Decks</h2>
         <button onClick={() => setIsCreating(true)} disabled={classes.length === 0}
           className="px-4 py-2 text-nb-dark text-sm font-black rounded-xl shadow hover:shadow-md transition disabled:opacity-40"
           style={{ background: '#FFEB3C' }}>+ New Deck</button>
@@ -302,7 +303,7 @@ function FlashCardEditor() {
           <div key={d.id} onClick={() => openDeck(d.id)}
             className="bg-white rounded-2xl border-2 border-nb-olive/20 p-5 hover:shadow-lg hover:border-nb-green/40 hover:-translate-y-0.5 transition-all cursor-pointer">
             <div className="flex items-start justify-between mb-3">
-              <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl" style={{ background:'#FFEB3C' }}>🃏</div>
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center p-2.5" style={{ background:'#FFEB3C' }}><img src={flashcardIcon} alt="" className="w-full h-full object-contain" /></div>
               <span className="text-xs font-bold text-nb-green bg-green-50 px-2.5 py-1 rounded-full">{d.cardCount || 0} cards</span>
             </div>
             <p className="font-black text-nb-dark">{d.title}</p>
@@ -446,7 +447,7 @@ function LessonsTab() {
           <div className="space-y-2 sm:hidden">
             {lessons.length === 0 && (
               <div className="bg-white rounded-2xl border border-nb-olive/20 py-10 flex flex-col items-center gap-2 text-center">
-                <span className="text-4xl">📚</span>
+                <img src={bookIcon} alt="" className="w-10 h-10 object-contain" />
                 <p className="font-black text-nb-dark">No lessons yet</p>
                 <p className="text-sm text-gray-400">Click "+ Add Lesson" to get started</p>
               </div>

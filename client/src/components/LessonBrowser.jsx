@@ -1,11 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import logoWhite from '../assets/Asset 1@3x 1_White.png'
-import iconMathSubject from '../assets/icons/multiply.png'
-import iconEnglishSubject from '../assets/icons/book-az.png'
-import iconScienceSubject from '../assets/icons/human-body.png'
+import { starYellow, lockIcon, durationIcon } from '../assets/icons'
 import {
-  ALL_LESSONS, LOCKED_IDS,
+  ALL_LESSONS, LOCKED_IDS, TERMS, formatTermRange,
   STATUS_STYLE, STATUS_LABEL, DIFF_COLOR, TYPE_COLOR, TYPE_ICON,
   SUBJECT_META, SUBJECT_BADGE,
 } from '../data/lessons'
@@ -13,9 +11,9 @@ import {
 const MILESTONES = [25, 50, 75, 100]
 
 const SUBJECT_ICON = {
-  Mathematics: iconMathSubject,
-  English:     iconEnglishSubject,
-  Science:     iconScienceSubject,
+  Mathematics: SUBJECT_META.Mathematics.icon,
+  English:     SUBJECT_META.English.icon,
+  Science:     SUBJECT_META.Science.icon,
 }
 
 const TERM_TOPIC = {
@@ -39,12 +37,7 @@ const TERM_TOPIC = {
   },
 }
 
-const TERM_DATES = {
-  1: '2 Jan – 14 Mar 2026',
-  2: '30 Mar – 30 May 2026',
-  3: '29 Jun – 5 Sep 2026',
-  4: '21 Sep – 19 Nov 2026',
-}
+const TERM_DATES = Object.fromEntries(TERMS.map(t => [t.id, formatTermRange(t)]))
 
 function termStatus(lessons) {
   if (!lessons.length) return 'locked'
@@ -99,7 +92,7 @@ export default function LessonBrowser() {
             {[
               { bg: 'bg-nb-green', label: '✓', count: done,      text: 'Completed'   },
               { bg: 'bg-nb-yellow text-nb-dark', label: '▶', count: inProg,   text: 'In Progress' },
-              { bg: 'bg-gray-300', label: '🔒', count: remaining, text: 'Remaining'   },
+              { bg: 'bg-gray-300', label: <img src={lockIcon} alt="" className="w-2.5 h-2.5 object-contain invert" />, count: remaining, text: 'Remaining'   },
             ].map(s => (
               <span key={s.text} className="flex items-center gap-2 bg-white rounded-full pl-1.5 pr-3 py-1 text-xs sm:text-sm font-bold text-nb-dark whitespace-nowrap shadow-sm">
                 <span className={`w-5 h-5 rounded-full ${s.bg} text-white flex items-center justify-center text-[10px] flex-shrink-0`}>{s.label}</span>
@@ -111,20 +104,20 @@ export default function LessonBrowser() {
 
         <div className="relative max-w-5xl mx-auto flex justify-center mb-7">
           <span className="bg-white text-nb-dark text-xs sm:text-sm font-bold rounded-full px-4 py-2 shadow-sm flex items-center gap-2">
-            ⭐ {ALL_LESSONS.length - done} lessons left to complete the full curriculum
+            <img src={starYellow} alt="" className="w-4 h-4 object-contain" /> {ALL_LESSONS.length - done} lessons left to complete the full curriculum
           </span>
         </div>
 
         <div className="relative max-w-5xl mx-auto mt-4 mb-5">
           <div className="absolute -top-4 flex flex-col items-center" style={{ left: `${pct}%`, transform: 'translateX(-50%)' }}>
-            <div className="w-7 h-7 rounded-full bg-nb-yellow text-nb-dark flex items-center justify-center text-sm shadow">⭐</div>
+            <div className="w-7 h-7 rounded-full bg-nb-yellow text-nb-dark flex items-center justify-center shadow p-1.5"><img src={starYellow} alt="" className="w-full h-full object-contain" /></div>
           </div>
           <div className="relative h-3 bg-white/30 rounded-full overflow-hidden">
             <div className="h-full bg-white rounded-full transition-all" style={{ width: `${pct}%` }} />
           </div>
           {MILESTONES.map(m => (
             <div key={m} className="absolute top-1.5 flex flex-col items-center" style={{ left: `${m}%`, transform: 'translateX(-50%)' }}>
-              <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${pct >= m ? 'bg-nb-green text-white' : 'bg-white/30 text-white/70'}`}>⭐</div>
+              <div className={`w-5 h-5 rounded-full flex items-center justify-center p-1 ${pct >= m ? 'bg-nb-green text-white' : 'bg-white/30 text-white/70'}`}><img src={starYellow} alt="" className="w-full h-full object-contain" style={pct >= m ? {} : { filter: 'grayscale(1) brightness(1.6)' }} /></div>
               <span className="text-[10px] text-white/80 font-bold mt-1">{m}%</span>
             </div>
           ))}
@@ -276,7 +269,7 @@ function TermsView({ course, meta, expandedTerm, setExpandedTerm, onBack, naviga
           const statusLabel =
             status === 'completed'   ? '✅ Completed'  :
             status === 'in_progress' ? '▶ In Progress' :
-            '🔒 Upcoming'
+            <span className="inline-flex items-center gap-1"><img src={lockIcon} alt="" className="w-2.5 h-2.5 object-contain" /> Upcoming</span>
 
           const statusCls =
             status === 'completed'   ? 'bg-green-100 text-green-700' :
@@ -348,7 +341,7 @@ function LessonRow({ lesson, locked, onClick }) {
       <div className={`w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm p-2 ${locked ? 'grayscale' : ''}`}
            style={{ background: '#FFF7E9' }}>
         {locked
-          ? <span className="text-2xl">🔒</span>
+          ? <img src={lockIcon} alt="" className="w-6 h-6 object-contain opacity-60" />
           : <img src={lesson.icon} alt="" className="w-full h-full object-contain" />}
       </div>
 
@@ -374,13 +367,13 @@ function LessonRow({ lesson, locked, onClick }) {
               {TYPE_ICON[lesson.type]} {lesson.type}
             </span>
           )}
-          <span className="text-[10px] text-gray-300">⏱ {lesson.duration}</span>
+          <span className="text-[10px] text-gray-300 flex items-center gap-0.5"><img src={durationIcon} alt="" className="w-2.5 h-2.5 object-contain opacity-60" /> {lesson.duration}</span>
         </div>
       </div>
 
       <div className="flex items-center gap-1.5 flex-shrink-0">
-        <span className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap ${locked ? 'bg-gray-100 text-gray-400' : STATUS_STYLE[lesson.status]}`}>
-          {locked ? '🔒 Locked' : STATUS_LABEL[lesson.status]}
+        <span className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap flex items-center gap-1 ${locked ? 'bg-gray-100 text-gray-400' : STATUS_STYLE[lesson.status]}`}>
+          {locked ? <><img src={lockIcon} alt="" className="w-2.5 h-2.5 object-contain" /> Locked</> : STATUS_LABEL[lesson.status]}
         </span>
         {!locked && <span className="text-gray-300 text-lg group-hover:text-nb-green transition-colors">›</span>}
       </div>
