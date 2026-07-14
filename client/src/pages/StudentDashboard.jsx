@@ -82,10 +82,12 @@ const BADGES = [
 
 const TABS = [
   { id: 'home',       icon: '🏠', label: 'Home'       },
-  { id: 'lessons',    icon: '📚', label: 'My Courses' },
+  { id: 'lessons',    icon: '📚', label: 'My Courses', dropdown: [
+      { id: 'lessons', icon: '📚', label: 'Subjects' },
+      { id: 'memory',  icon: '🧠', label: 'Memory Techniques' },
+    ] },
   { id: 'schedule',   icon: '🗓️', label: 'Schedule'   },
   { id: 'flashcards', icon: '🃏', label: 'Flash Cards' },
-  { id: 'memory',     icon: '🧠', label: 'Memory Techniques' },
   { id: 'quizzes',    icon: '📝', label: 'Quizzes'    },
   { id: 'shop',       icon: '🛍️', label: 'Shop'       },
   { id: 'rewards',    icon: '🏆', label: 'Rewards'    },

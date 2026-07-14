@@ -30,12 +30,16 @@ export default function Navbar({ role, userName, points, avatar, children, tabs,
           {tabs && (
             <div className="hidden md:flex items-center gap-5 lg:gap-8">
               {tabs.map(t => (
-                <button key={t.id} onClick={() => onTabChange(t.id)}
-                  className={`text-sm font-semibold transition-colors ${
-                    activeTab === t.id ? 'text-nb-green' : 'text-nb-dark/55 hover:text-nb-dark'
-                  }`}>
-                  {t.label}
-                </button>
+                t.dropdown ? (
+                  <NavDropdown key={t.id} tab={t} activeTab={activeTab} onTabChange={onTabChange} />
+                ) : (
+                  <button key={t.id} onClick={() => onTabChange(t.id)}
+                    className={`text-sm font-semibold transition-colors ${
+                      activeTab === t.id ? 'text-nb-green' : 'text-nb-dark/55 hover:text-nb-dark'
+                    }`}>
+                    {t.label}
+                  </button>
+                )
               ))}
             </div>
           )}
@@ -86,10 +90,10 @@ export default function Navbar({ role, userName, points, avatar, children, tabs,
         </div>
       </div>
 
-      {/* Mobile nav tabs (scrollable) */}
+      {/* Mobile nav tabs (scrollable) — dropdown groups flatten into individual tabs */}
       {tabs && (
         <div className="md:hidden border-t border-gray-100 flex overflow-x-auto scrollbar-hide">
-          {tabs.map(t => (
+          {tabs.flatMap(t => t.dropdown || [t]).map(t => (
             <button key={t.id} onClick={() => onTabChange(t.id)}
               className={`flex-shrink-0 px-4 py-2.5 text-xs font-bold border-b-2 transition-colors ${
                 activeTab === t.id ? 'border-nb-green text-nb-green' : 'border-transparent text-gray-400 hover:text-nb-dark'
@@ -103,5 +107,37 @@ export default function Navbar({ role, userName, points, avatar, children, tabs,
       {/* Legacy tab-bar slot */}
       {children && <div className="border-t border-gray-100">{children}</div>}
     </nav>
+  )
+}
+
+function NavDropdown({ tab, activeTab, onTabChange }) {
+  const [open, setOpen] = useState(false)
+  const isActive = tab.dropdown.some(d => d.id === activeTab)
+
+  return (
+    <div className="relative">
+      <button onClick={() => setOpen(o => !o)}
+        className={`flex items-center gap-1 text-sm font-semibold transition-colors ${
+          isActive ? 'text-nb-green' : 'text-nb-dark/55 hover:text-nb-dark'
+        }`}>
+        {tab.label}
+        <span className={`text-[10px] transition-transform ${open ? 'rotate-180' : ''}`}>▾</span>
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute left-0 top-full mt-2 w-52 bg-white rounded-2xl shadow-lg border border-nb-olive/15 py-1.5 z-50">
+            {tab.dropdown.map(d => (
+              <button key={d.id} onClick={() => { onTabChange(d.id); setOpen(false) }}
+                className={`w-full flex items-center gap-2 text-left px-4 py-2 text-sm font-semibold transition ${
+                  activeTab === d.id ? 'text-nb-green bg-nb-green/5' : 'text-nb-dark/70 hover:bg-nb-cream'
+                }`}>
+                <span>{d.icon}</span>{d.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
   )
 }
