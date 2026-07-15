@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import LessonBrowser from '../components/LessonBrowser'
 import WeeklySchedule from '../components/WeeklySchedule'
+import ComingSoon from '../components/ComingSoon'
 import { brainWatermark } from '../components/BrainBackground'
 import QuestionBody, { hasAnswer, isCorrectAnswer } from '../components/QuizQuestion'
 import {
@@ -86,11 +87,11 @@ const TABS = [
       { id: 'lessons', icon: '📚', label: 'Subjects' },
       { id: 'memory',  icon: '🧠', label: 'Memory Techniques' },
     ] },
-  { id: 'schedule',   icon: '🗓️', label: 'Schedule'   },
   { id: 'flashcards', icon: '🃏', label: 'Flash Cards' },
   { id: 'quizzes',    icon: '📝', label: 'Quizzes'    },
   { id: 'shop',       icon: '🛍️', label: 'Shop'       },
   { id: 'rewards',    icon: '🏆', label: 'Rewards'    },
+  { id: 'memportal',  icon: '🧠', label: 'Mem Portal' },
 ]
 
 const OPEN_CLASSES = [
@@ -154,7 +155,7 @@ export default function StudentDashboard() {
               {[
                 { icon: <img src={bookIcon} alt="" className="w-6 h-6 object-contain" />, value: '10',    label: 'Lessons', sub: '10/14 completed' },
                 { icon: <FlameIcon className="w-6 h-6" />, value: '7',     label: 'Streak',  sub: 'Days in a total' },
-                { icon: <img src={badgeIcon} alt="" className="w-6 h-6 object-contain" />, value: '3',     label: 'Badges',  sub: 'Keep collecting!' },
+                { icon: <img src={badgeIcon} alt="" className="w-8 h-8 object-contain" />, value: '3',     label: 'Badges',  sub: 'Keep collecting!' },
                 { icon: <img src={starYellow} alt="" className="w-6 h-6 object-contain" />, value: studentPoints.toLocaleString(), label: 'Points', sub: 'Keep growing!' },
               ].map(s => (
                 <div key={s.label} className="bg-white rounded-2xl p-3 shadow-sm">
@@ -287,6 +288,9 @@ export default function StudentDashboard() {
               </div>
             </div>
 
+            {/* Weekly Schedule */}
+            <WeeklySchedule />
+
           </div>
         )}
 
@@ -329,28 +333,13 @@ export default function StudentDashboard() {
           </div>
         )}
 
-        {/* ── SCHEDULE ── */}
-        {tab === 'schedule' && <div className="tab-panel"><WeeklySchedule /></div>}
-
         {/* ── FLASH CARDS ── */}
         {tab === 'flashcards' && <div className="tab-panel"><FlashCardsView /></div>}
 
         {/* ── MEMORY TECHNIQUES (coming soon) ── */}
         {tab === 'memory' && (
-          <div className="tab-panel flex items-center justify-center py-10 sm:py-16">
-            <div className="bg-white rounded-3xl border-2 border-nb-olive/20 p-8 sm:p-12 text-center max-w-lg">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl mx-auto mb-4 flex items-center justify-center p-3.5"
-                   style={{ background: '#FFEB3C1A' }}>
-                <img src={brainIcon} alt="" className="w-full h-full object-contain" />
-              </div>
-              <span className="inline-block text-[11px] font-black uppercase tracking-widest text-nb-dark px-3 py-1 rounded-full mb-3"
-                    style={{ background: '#FFEB3C' }}>🚧 Coming Soon</span>
-              <h2 className="text-xl sm:text-2xl font-black text-nb-dark">Memory Techniques</h2>
-              <p className="text-sm text-gray-400 mt-2 leading-relaxed">
-                A dedicated space to learn the Story Method, Memory Palace, mnemonics and other memory
-                techniques that power every lesson. We're building it now — check back soon!
-              </p>
-            </div>
+          <div className="tab-panel">
+            <ComingSoon description="A dedicated space to learn the Story Method, Memory Palace, mnemonics and other memory techniques that power every lesson. We're building it now — check back soon!" />
           </div>
         )}
 
@@ -358,7 +347,7 @@ export default function StudentDashboard() {
         {tab === 'quizzes' && <div className="tab-panel"><QuizzesView /></div>}
 
         {/* ── SHOP ── */}
-        {tab === 'shop' && <div className="tab-panel"><ShopView points={studentPoints} setPoints={setStudentPoints} /></div>}
+        {tab === 'shop' && <div className="tab-panel"><ShopView /></div>}
 
         {/* ── REWARDS ── */}
         {tab === 'rewards' && (() => {
@@ -446,6 +435,19 @@ export default function StudentDashboard() {
               </p>
             </div>
 
+            {/* Earn more points tip */}
+            <div className="rounded-2xl p-4 border-2 border-nb-yellow flex items-start gap-3"
+                 style={{ background: '#FFEB3C10' }}>
+              <span className="text-xl flex-shrink-0">💡</span>
+              <div>
+                <p className="font-black text-nb-dark text-sm">How to earn more points?</p>
+                <p className="text-xs text-gray-600 mt-0.5 leading-relaxed">
+                  Complete lessons (+50 pts), pass quizzes (+30 pts per question), maintain your daily streak (+20 pts/day),
+                  and earn badges (+100 pts each). Points can only be redeemed above, not spent in the Shop.
+                </p>
+              </div>
+            </div>
+
             {/* Certificates of Completion */}
             <div className="bg-white rounded-2xl border-2 border-nb-olive/20 p-4 sm:p-5">
               <h3 className="text-base sm:text-lg font-black text-nb-dark mb-4">🎓 Certificates of Completion</h3>
@@ -492,7 +494,7 @@ export default function StudentDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Badges */}
               <div>
-                <h3 className="text-base sm:text-lg font-black text-nb-dark mb-3 flex items-center gap-1.5"><img src={badgeIcon} alt="" className="w-5 h-5 object-contain" /> Badges</h3>
+                <h3 className="text-base sm:text-lg font-black text-nb-dark mb-3 flex items-center gap-1.5"><img src={badgeIcon} alt="" className="w-6 h-6 object-contain" /> Badges</h3>
                 <div className="grid grid-cols-3 gap-2 sm:gap-3">
                   {BADGES.map(b => (
                     <div key={b.label}
@@ -528,6 +530,13 @@ export default function StudentDashboard() {
           </div>
           )
         })()}
+
+        {/* ── MEM PORTAL (coming soon) ── */}
+        {tab === 'memportal' && (
+          <div className="tab-panel">
+            <ComingSoon title="Mem Portal" description="A dedicated space for memory training tools and exercises. We're building it now — check back soon!" />
+          </div>
+        )}
       </main>
 
       {/* ── Redeem Confirm Modal ── */}
@@ -622,16 +631,16 @@ export default function StudentDashboard() {
 }
 
 /* ─── Shop ─── */
-function ShopView({ points, setPoints }) {
+function ShopView() {
   const SHOP_ITEMS = [
-    { id: 1,  name: 'Brain Booster Sticker Pack',  category: 'Physical',  icon: '🎨', cost: 200,  desc: 'A set of 20 fun Neurobix memory-themed stickers.',      stock: 50  },
-    { id: 2,  name: 'Neurobix Notebook',           category: 'Physical',  icon: '📓', cost: 500,  desc: 'Branded A5 notebook for memory maps and notes.',        stock: 30  },
-    { id: 3,  name: 'Pencil & Ruler Set',          category: 'Physical',  icon: '✏️', cost: 350,  desc: 'Colour pencil set (12 colours) + a Neurobix ruler.',    stock: 20  },
-    { id: 4,  name: 'Extra Flash Card Deck',       category: 'Digital',   icon: '🃏', cost: 150,  desc: 'Unlock a premium flash card deck for any subject.',     stock: 999 },
-    { id: 5,  name: 'Custom Profile Badge',        category: 'Digital',   icon: '🏅', cost: 300,  desc: 'Choose a special badge to display on your profile.',    stock: 999 },
-    { id: 6,  name: 'Double XP Pass (1 week)',     category: 'Digital',   icon: '⚡', cost: 400,  desc: 'Earn 2× points on all lessons for 7 days.',             stock: 999 },
-    { id: 7,  name: 'Neurobix Water Bottle',       category: 'Physical',  icon: '🥤', cost: 800,  desc: 'Stainless steel water bottle with Neurobix logo.',      stock: 15  },
-    { id: 8,  name: 'Mystery Reward Box',          category: 'Physical',  icon: '🎁', cost: 1000, desc: 'A surprise box of goodies — collected at the centre.',   stock: 10  },
+    { id: 1,  name: 'Brain Booster Sticker Pack',  category: 'Physical',     icon: '🎨', price: 8,   desc: 'A set of 20 fun Neurobix memory-themed stickers.',            stock: 50  },
+    { id: 2,  name: 'Neurobix Notebook',           category: 'Physical',     icon: '📓', price: 12,  desc: 'Branded A5 notebook for memory maps and notes.',              stock: 30  },
+    { id: 3,  name: 'Pencil & Ruler Set',          category: 'Physical',     icon: '✏️', price: 10,  desc: 'Colour pencil set (12 colours) + a Neurobix ruler.',          stock: 20  },
+    { id: 4,  name: 'Extra Flash Card Deck',       category: 'Digital',      icon: '🃏', price: 6,   desc: 'Unlock a premium flash card deck for any subject.',           stock: 999 },
+    { id: 5,  name: 'Custom Profile Badge Pack',   category: 'Digital',      icon: '🏅', price: 5,   desc: 'Choose a special badge to display on your profile.',          stock: 999 },
+    { id: 6,  name: 'Double XP Pass — 1 Month',    category: 'Subscription', icon: '⚡', price: 15,  desc: 'Earn 2× points on all lessons for 30 days. Auto-renews.',     stock: 999, billing: 'month' },
+    { id: 7,  name: 'Neurobix Water Bottle',       category: 'Physical',     icon: '🥤', price: 18,  desc: 'Stainless steel water bottle with Neurobix logo.',            stock: 15  },
+    { id: 8,  name: 'Mystery Reward Box',          category: 'Physical',     icon: '🎁', price: 20,  desc: 'A surprise box of goodies — collected at the centre.',        stock: 10  },
   ]
 
   const SHOP_CLASSES = [
@@ -670,8 +679,8 @@ function ShopView({ points, setPoints }) {
     },
   ]
 
-  const CATEGORIES = ['All', 'Classes', 'Digital', 'Physical']
-  const CAT_COLOR   = { Digital: '#3b82f6', Physical: '#36913F' }
+  const CATEGORIES = ['All', 'Classes', 'Subscription', 'Digital', 'Physical']
+  const CAT_COLOR   = { Subscription: '#f59e0b', Digital: '#3b82f6', Physical: '#36913F' }
 
   const [filter, setFilter]           = useState('All')
   const [bought, setBought]           = useState([])
@@ -681,14 +690,13 @@ function ShopView({ points, setPoints }) {
   const [confirmClass, setConfirmClass] = useState(null)
   const [payMethod, setPayMethod]     = useState('card')
 
-  const showItems   = filter === 'All' || filter === 'Digital' || filter === 'Physical'
+  const showItems   = filter === 'All' || filter === 'Subscription' || filter === 'Digital' || filter === 'Physical'
   const showClasses = filter === 'All' || filter === 'Classes'
   const visibleItems = filter === 'All' ? SHOP_ITEMS : SHOP_ITEMS.filter(i => i.category === filter)
 
   function showToast(msg) { setToast(msg); setTimeout(() => setToast(null), 3000) }
 
   function purchase(item) {
-    setPoints(p => p - item.cost)
     setBought(b => [...b, item.id])
     setConfirmItem(null)
     showToast(`🎉 ${item.name} purchased! Check with your teacher for physical items.`)
@@ -700,24 +708,15 @@ function ShopView({ points, setPoints }) {
     showToast(`🎓 Enrolled in "${cls.name}"! You'll receive a confirmation email shortly.`)
   }
 
-  const FILTER_LABEL = { All: '🛍️ All', Classes: '🏫 Classes', Digital: '💻 Digital', Physical: '📦 Physical' }
+  const FILTER_LABEL = { All: '🛍️ All', Classes: '🏫 Classes', Subscription: '⚡ Subscriptions', Digital: '💻 Digital', Physical: '📦 Physical' }
 
   return (
     <div className="space-y-6">
 
-      {/* Header + balance */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h2 className="text-2xl font-black text-nb-dark">🛍️ Neurobix Shop</h2>
-          <p className="text-sm text-gray-400 font-semibold mt-0.5">Enrol in classes or spend your points on rewards!</p>
-        </div>
-        <div className="flex items-center gap-2 bg-white border-2 border-nb-yellow rounded-2xl px-5 py-3 shadow-sm self-start">
-          <img src={starYellow} alt="" className="w-7 h-7 object-contain" />
-          <div>
-            <p className="text-xl font-black text-nb-dark leading-none">{points.toLocaleString()}</p>
-            <p className="text-[11px] text-gray-400 font-semibold mt-0.5">Points balance</p>
-          </div>
-        </div>
+      {/* Header */}
+      <div>
+        <h2 className="text-2xl font-black text-nb-dark">🛍️ Neurobix Shop</h2>
+        <p className="text-sm text-gray-400 font-semibold mt-0.5">Enrol in classes or purchase products & subscriptions with real money.</p>
       </div>
 
       {/* Category filter */}
@@ -819,14 +818,13 @@ function ShopView({ points, setPoints }) {
         </div>
       )}
 
-      {/* ── Points items section ── */}
+      {/* ── Products & subscriptions section ── */}
       {showItems && visibleItems.length > 0 && (
         <div className="space-y-3">
-          {filter === 'All' && <h3 className="text-lg font-black text-nb-dark">🛍️ Points Shop</h3>}
+          {filter === 'All' && <h3 className="text-lg font-black text-nb-dark">🛒 Products & Subscriptions</h3>}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {visibleItems.map(item => {
               const alreadyBought = bought.includes(item.id)
-              const canAfford = points >= item.cost
               return (
                 <div key={item.id}
                   className={`bg-white rounded-2xl border-2 p-5 flex flex-col gap-3 transition-all ${
@@ -853,10 +851,9 @@ function ShopView({ points, setPoints }) {
                   )}
 
                   <div className="flex items-center justify-between gap-3 mt-auto">
-                    <div className="flex items-center gap-1.5">
-                      <img src={starYellow} alt="" className="w-5 h-5 object-contain" />
-                      <span className="font-black text-nb-dark text-base">{item.cost.toLocaleString()}</span>
-                      <span className="text-xs text-gray-400 font-semibold">pts</span>
+                    <div>
+                      <span className="font-black text-nb-dark text-base">S${item.price}</span>
+                      {item.billing && <span className="text-xs text-gray-400 font-semibold">/{item.billing}</span>}
                     </div>
                     {alreadyBought ? (
                       <span className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-black text-sm bg-nb-green/10 text-nb-green border-2 border-nb-green/30">
@@ -864,12 +861,10 @@ function ShopView({ points, setPoints }) {
                       </span>
                     ) : (
                       <button
-                        onClick={() => canAfford ? setConfirmItem(item) : showToast('Not enough points! Keep learning. ⭐')}
-                        className={`px-4 py-2 rounded-xl font-black text-sm border-2 transition-all ${
-                          canAfford ? 'text-nb-dark border-transparent shadow hover:shadow-md' : 'border-gray-200 text-gray-300 cursor-not-allowed'
-                        }`}
-                        style={canAfford ? { background: '#FFEB3C' } : {}}>
-                        {canAfford ? 'Buy Now' : <span className="flex items-center gap-1">Not enough <img src={starYellow} alt="" className="w-3.5 h-3.5 object-contain" /></span>}
+                        onClick={() => setConfirmItem(item)}
+                        className="px-4 py-2 rounded-xl font-black text-sm border-2 border-transparent text-nb-dark shadow hover:shadow-md transition-all"
+                        style={{ background: '#FFEB3C' }}>
+                        Buy Now
                       </button>
                     )}
                   </div>
@@ -879,19 +874,6 @@ function ShopView({ points, setPoints }) {
           </div>
         </div>
       )}
-
-      {/* Earn more tip */}
-      <div className="rounded-2xl p-4 border-2 border-nb-yellow flex items-start gap-3"
-           style={{ background: '#FFEB3C10' }}>
-        <span className="text-xl flex-shrink-0">💡</span>
-        <div>
-          <p className="font-black text-nb-dark text-sm">How to earn more points?</p>
-          <p className="text-xs text-gray-600 mt-0.5 leading-relaxed">
-            Complete lessons (+50 pts), pass quizzes (+30 pts per question), maintain your daily streak (+20 pts/day),
-            and earn badges (+100 pts each). Physical items can be collected at the Neurobix centre — ask your teacher!
-          </p>
-        </div>
-      </div>
 
       {/* ── Class enrol modal ── */}
       {confirmClass && (
@@ -952,7 +934,7 @@ function ShopView({ points, setPoints }) {
         </div>
       )}
 
-      {/* ── Points item confirm modal ── */}
+      {/* ── Product/subscription purchase confirm modal ── */}
       {confirmItem && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
              style={{ background: 'rgba(0,0,0,0.5)' }}
@@ -964,13 +946,32 @@ function ShopView({ points, setPoints }) {
               <p className="text-sm text-gray-400 mt-1">{confirmItem.desc}</p>
             </div>
             <div className="bg-nb-cream rounded-2xl p-4 flex items-center justify-between">
-              <span className="font-semibold text-gray-500 text-sm">Cost</span>
-              <span className="font-black text-nb-dark flex items-center gap-1"><img src={starYellow} alt="" className="w-4 h-4 object-contain" /> {confirmItem.cost.toLocaleString()} pts</span>
+              <span className="font-semibold text-gray-500 text-sm">{confirmItem.billing ? 'Billed' : 'Price'}</span>
+              <span className="font-black text-nb-dark">S${confirmItem.price}{confirmItem.billing ? `/${confirmItem.billing}` : ''}</span>
             </div>
-            <div className="bg-nb-cream rounded-2xl p-4 flex items-center justify-between">
-              <span className="font-semibold text-gray-500 text-sm">Balance after</span>
-              <span className="font-black text-nb-dark flex items-center gap-1"><img src={starYellow} alt="" className="w-4 h-4 object-contain" /> {(points - confirmItem.cost).toLocaleString()} pts</span>
+
+            {/* Payment method */}
+            <div>
+              <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Payment Method</p>
+              <div className="flex gap-2">
+                {[
+                  { id: 'card', label: '💳 Credit / Debit Card' },
+                  { id: 'paynow', label: '📱 PayNow' },
+                ].map(m => (
+                  <button key={m.id} onClick={() => setPayMethod(m.id)}
+                    className={`flex-1 py-2.5 rounded-xl text-xs font-black border-2 transition-all ${
+                      payMethod === m.id ? 'border-nb-green text-nb-dark' : 'border-gray-200 text-gray-400 hover:border-nb-olive'
+                    }`}
+                    style={payMethod === m.id ? { background: '#6FC91115' } : {}}>
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[10px] text-gray-400 mt-2 text-center">
+                Payments processed securely via Stripe{confirmItem.billing ? ' · Auto-renews' : ''}
+              </p>
             </div>
+
             <div className="flex gap-3">
               <button onClick={() => setConfirmItem(null)}
                 className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-500 font-bold text-sm">
@@ -979,7 +980,7 @@ function ShopView({ points, setPoints }) {
               <button onClick={() => purchase(confirmItem)}
                 className="flex-1 py-3 rounded-xl font-black text-nb-dark text-sm shadow-md"
                 style={{ background: '#FFEB3C' }}>
-                Confirm Purchase
+                Confirm &amp; Pay →
               </button>
             </div>
           </div>

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Navbar from '../components/Navbar'
+import ComingSoon from '../components/ComingSoon'
 import { teacherIcon, parentIcon, bookIcon, medalIcon, overdueIcon, brainIcon } from '../assets/icons'
 
 function AddUserModal({ onClose, onAdd }) {
@@ -219,6 +220,7 @@ export default function AdminDashboard() {
             { id: 'overview', label: '📊 Overview' },
             { id: 'users',    label: '👥 Users' },
             { id: 'classes',  label: '🏫 Classes' },
+            { id: 'memory',   label: '🧠 Memory Techniques' },
             { id: 'reports',  label: '📈 Reports' },
           ].map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
@@ -453,6 +455,13 @@ export default function AdminDashboard() {
         )}
 
         {/* REPORTS */}
+        {/* MEMORY TECHNIQUES (coming soon) */}
+        {tab === 'memory' && (
+          <div className="tab-panel">
+            <ComingSoon description="A dedicated space to manage and monitor memory-technique content and analytics across all classes. We're building it now — check back soon!" />
+          </div>
+        )}
+
         {tab === 'reports' && (
           <div className="tab-panel space-y-4">
             <h2 className="text-lg sm:text-xl font-black text-nb-dark">Reports</h2>

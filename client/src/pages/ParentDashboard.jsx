@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Navbar from '../components/Navbar'
+import ComingSoon from '../components/ComingSoon'
 import {
   subjectNumbers, subjectBook, subjectMicroscope,
   starYellow, streakIcon, badgeIcon, medalIcon, bookIcon, passIcon, retryIcon,
@@ -94,6 +95,7 @@ export default function ParentDashboard() {
     { id: 'overview',   label: '📊 Overview' },
     { id: 'progress',   label: '📚 Progress' },
     { id: 'quizzes',    label: '📝 Quizzes' },
+    { id: 'memory',     label: '🧠 Memory Techniques' },
     { id: 'rewards',    label: '🏆 Rewards' },
     { id: 'messages',   label: '💬 Messages' },
     { id: 'deadlines',  label: '📅 Deadlines' },
@@ -164,7 +166,7 @@ export default function ParentDashboard() {
                     ].map(([v, l, c, icon]) => (
                       <div key={l} className="bg-white rounded-xl px-1.5 sm:px-4 py-2 text-center shadow-sm border border-nb-olive/10">
                         <p className="text-sm sm:text-lg font-black leading-tight flex items-center justify-center gap-1" style={{ color: c }}>
-                          {icon && <img src={icon} alt="" className="w-3.5 h-3.5 sm:w-4 sm:h-4 object-contain" />}{v}
+                          {icon && <img src={icon} alt="" className={`object-contain ${icon === badgeIcon ? 'w-5 h-5 sm:w-6 sm:h-6' : 'w-3.5 h-3.5 sm:w-4 sm:h-4'}`} />}{v}
                         </p>
                         <p className="text-[9px] sm:text-[11px] text-gray-400 mt-0.5">{l}</p>
                       </div>
@@ -368,6 +370,13 @@ export default function ParentDashboard() {
           </div>
         )}
 
+        {/* ── MEMORY TECHNIQUES (coming soon) ── */}
+        {tab === 'memory' && (
+          <div className="tab-panel">
+            <ComingSoon description="A dedicated space to see the memory techniques your child is learning — Story Method, Memory Palace, mnemonics and more. We're building it now — check back soon!" />
+          </div>
+        )}
+
         {/* ── REWARDS ── */}
         {tab === 'rewards' && (
           <div className="tab-panel space-y-5">
@@ -381,7 +390,7 @@ export default function ParentDashboard() {
             </div>
 
             <div className="bg-white rounded-2xl border border-nb-olive/20 p-5">
-              <h3 className="font-black text-nb-dark mb-4 flex items-center gap-1.5"><img src={badgeIcon} alt="" className="w-5 h-5 object-contain" /> Badges Earned</h3>
+              <h3 className="font-black text-nb-dark mb-4 flex items-center gap-1.5"><img src={badgeIcon} alt="" className="w-6 h-6 object-contain" /> Badges Earned</h3>
               <div className="flex flex-wrap gap-3">
                 {child.badges.map((b, i) => (
                   <div key={i} className="flex items-center gap-2 bg-nb-cream border-2 border-nb-yellow rounded-2xl px-4 py-2.5 shadow-sm">

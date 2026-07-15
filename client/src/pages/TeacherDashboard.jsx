@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import Navbar from '../components/Navbar'
+import ComingSoon from '../components/ComingSoon'
 import { useAuth } from '../context/AuthContext'
 import { apiRequest } from '../lib/api'
 import { previewIcon, bookIcon, flashcardIcon } from '../assets/icons'
@@ -20,6 +21,7 @@ export default function TeacherDashboard() {
             { id: 'lessons',     label: '📚 My Courses'  },
             { id: 'flashcards',  label: '🃏 Flash Cards'  },
             { id: 'quizbuilder', label: '📝 Quiz Builder' },
+            { id: 'memory',      label: '🧠 Memory Techniques' },
             { id: 'schedule',    label: '📅 Schedule'    },
             { id: 'students',    label: '👩‍🎓 Students'   },
           ].map(t => (
@@ -50,6 +52,13 @@ export default function TeacherDashboard() {
 
         {/* QUIZ BUILDER */}
         {tab === 'quizbuilder' && <div className="tab-panel"><QuizBuilder /></div>}
+
+        {/* MEMORY TECHNIQUES (coming soon) */}
+        {tab === 'memory' && (
+          <div className="tab-panel">
+            <ComingSoon description="A dedicated space to create and assign memory-method content — mnemonics, memory palace exercises and story-method templates for your classes. We're building it now — check back soon!" />
+          </div>
+        )}
 
         {/* SCHEDULE */}
         {tab === 'schedule' && <div className="tab-panel"><ScheduleView /></div>}
