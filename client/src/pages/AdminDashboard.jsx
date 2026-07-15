@@ -1,21 +1,40 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Navbar from '../components/Navbar'
 import ComingSoon from '../components/ComingSoon'
+import PinInput from '../components/PinInput'
+import { resetCredential, setMustChangeCredential, registerUser } from '../data/mockDb'
+import { apiRequest } from '../lib/api'
+import { TERMS } from '../data/lessons'
 import { teacherIcon, parentIcon, bookIcon, medalIcon, overdueIcon, brainIcon } from '../assets/icons'
 
 function AddUserModal({ onClose, onAdd }) {
-  const [form, setForm] = useState({ name: '', email: '', role: 'student', password: '' })
+  const [form, setForm] = useState({ name: '', email: '', username: '', pin: '', role: 'student', password: '' })
   const [error, setError] = useState('')
+  const isStudent = form.role === 'student'
 
   function set(k, v) { setForm(f => ({ ...f, [k]: v })); setError('') }
 
   function submit(e) {
     e.preventDefault()
-    if (!form.name.trim() || !form.email.trim() || !form.password.trim()) {
-      setError('Please fill in all fields.')
-      return
+    if (!form.name.trim()) { setError('Please enter a full name.'); return }
+    if (isStudent) {
+      if (!form.username.trim()) { setError('Please set a username.'); return }
+      if (form.pin.length !== 4) { setError('PIN needs to be 4 digits.'); return }
+    } else {
+      if (!form.email.trim() || !form.password.trim()) { setError('Please fill in all fields.'); return }
     }
-    onAdd({ ...form, id: Date.now(), status: 'active', joined: new Date().toISOString().slice(0, 10) })
+
+    const identifier = isStudent ? form.username : form.email
+    const registered = registerUser(identifier, isStudent ? form.pin : form.password, {
+      name: form.name, role: form.role,
+      ...(isStudent ? { username: form.username } : { email: form.email }),
+    })
+
+    onAdd({
+      id: Date.now(), name: form.name, role: form.role, status: 'active',
+      email: isStudent ? null : form.email, username: isStudent ? form.username : null,
+      joined: new Date().toISOString().slice(0, 10), mustChangeCredential: registered.mustChangeCredential,
+    })
     onClose()
   }
 
@@ -39,12 +58,6 @@ function AddUserModal({ onClose, onAdd }) {
               className="w-full px-4 py-2.5 rounded-xl border-2 border-gray-100 focus:outline-none focus:border-nb-green bg-nb-cream text-sm" />
           </div>
           <div>
-            <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-1.5">Email Address</label>
-            <input type="email" value={form.email} onChange={e => set('email', e.target.value)}
-              placeholder="user@neurobix.com"
-              className="w-full px-4 py-2.5 rounded-xl border-2 border-gray-100 focus:outline-none focus:border-nb-green bg-nb-cream text-sm" />
-          </div>
-          <div>
             <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-1.5">Role</label>
             <select value={form.role} onChange={e => set('role', e.target.value)}
               className="w-full px-4 py-2.5 rounded-xl border-2 border-gray-100 focus:outline-none focus:border-nb-green bg-nb-cream text-sm">
@@ -54,12 +67,38 @@ function AddUserModal({ onClose, onAdd }) {
               <option value="admin">🔐 Admin</option>
             </select>
           </div>
-          <div>
-            <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-1.5">Temporary Password</label>
-            <input type="password" value={form.password} onChange={e => set('password', e.target.value)}
-              placeholder="Set a temporary password"
-              className="w-full px-4 py-2.5 rounded-xl border-2 border-gray-100 focus:outline-none focus:border-nb-green bg-nb-cream text-sm" />
-          </div>
+
+          {isStudent ? (
+            <>
+              <div>
+                <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-1.5">Username</label>
+                <input value={form.username} onChange={e => set('username', e.target.value)}
+                  placeholder="e.g. ahmad2026"
+                  className="w-full px-4 py-2.5 rounded-xl border-2 border-gray-100 focus:outline-none focus:border-nb-green bg-nb-cream text-sm" />
+              </div>
+              <div>
+                <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-1.5 text-center">Temporary 4-digit PIN</label>
+                <PinInput length={4} value={form.pin} onChange={v => set('pin', v)} />
+              </div>
+              <p className="text-xs text-gray-400 text-center">Student will be asked to set a new PIN on first login.</p>
+            </>
+          ) : (
+            <>
+              <div>
+                <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-1.5">Email Address</label>
+                <input type="email" value={form.email} onChange={e => set('email', e.target.value)}
+                  placeholder="user@neurobix.com"
+                  className="w-full px-4 py-2.5 rounded-xl border-2 border-gray-100 focus:outline-none focus:border-nb-green bg-nb-cream text-sm" />
+              </div>
+              <div>
+                <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-1.5">Temporary Password</label>
+                <input type="password" value={form.password} onChange={e => set('password', e.target.value)}
+                  placeholder="Set a temporary password"
+                  className="w-full px-4 py-2.5 rounded-xl border-2 border-gray-100 focus:outline-none focus:border-nb-green bg-nb-cream text-sm" />
+              </div>
+              <p className="text-xs text-gray-400">User will be asked to set a new password on first login.</p>
+            </>
+          )}
 
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose}
@@ -81,8 +120,8 @@ function AddUserModal({ onClose, onAdd }) {
 const CRITERIA_TYPES = {
   points_total:       { label: 'Total Points',       icon: '⭐', unit: 'pts',     format: v => `${Number(v).toLocaleString()} pts earned` },
   lessons_completed:  { label: 'Lessons Completed',   icon: '📚', unit: 'lessons', format: v => `${v} lesson${v === 1 ? '' : 's'} completed` },
-  quizzes_completed:  { label: 'Quizzes Completed',   icon: '📝', unit: 'quizzes', format: v => `${v} quiz${v === 1 ? '' : 'zes'} completed` },
-  perfect_score:      { label: 'Perfect Quiz Scores', icon: '💯', unit: 'times',   format: v => `${v}× perfect quiz score` },
+  assessments_completed: { label: 'Assessments Completed', icon: '📝', unit: 'assessments', format: v => `${v} assessment${v === 1 ? '' : 's'} completed` },
+  perfect_score:      { label: 'Perfect Assessment Scores', icon: '💯', unit: 'times',   format: v => `${v}× perfect assessment score` },
   streak_days:        { label: 'Day Streak',          icon: '🔥', unit: 'days',    format: v => `${v}-day streak` },
 }
 
@@ -182,12 +221,185 @@ function BadgeModal({ badge, onClose, onSave }) {
 }
 
 const USERS = [
-  { id: 1, name: 'Ms Sarah Tan',       email: 'teacher@neurobix.com', role: 'teacher', status: 'active',    joined: '2024-08-01' },
-  { id: 2, name: 'Ahmad bin Hassan',  email: 'student@neurobix.com', role: 'student', status: 'active',    joined: '2024-09-05' },
-  { id: 3, name: 'Siti Nur Aisyah',  email: 'siti@neurobix.com',    role: 'student', status: 'active',    joined: '2024-09-05' },
-  { id: 4, name: 'Raj Kumar',         email: 'raj@neurobix.com',     role: 'student', status: 'suspended', joined: '2024-09-10' },
-  { id: 5, name: 'Mr Alif Ibrahim',        email: 'alif@neurobix.com',    role: 'teacher', status: 'active',    joined: '2024-08-01' },
+  { id: 1, name: 'Ms Sarah Tan',       email: 'teacher@neurobix.com',  role: 'teacher', status: 'active',    joined: '2024-08-01' },
+  { id: 2, name: 'Ahmad bin Hassan',   email: 'student@neurobix.com',  role: 'student', status: 'active',    joined: '2024-09-05' },
+  { id: 3, name: 'Siti Nur Aisyah',    email: 'siti@neurobix.com',     role: 'student', status: 'active',    joined: '2024-09-05' },
+  { id: 4, name: 'Raj Kumar',          email: 'raj@neurobix.com',      role: 'student', status: 'suspended', joined: '2024-09-10' },
+  { id: 5, name: 'Mr Alif Ibrahim',    email: 'alif@neurobix.com',     role: 'teacher', status: 'active',    joined: '2024-08-01' },
+  { id: 6, name: 'Hassan bin Idris',   email: 'parent1@neurobix.com',  role: 'parent',  status: 'active',    joined: '2024-08-15' },
 ]
+
+function genTempPassword() {
+  return Math.random().toString(36).slice(-4) + Math.floor(10 + Math.random() * 90)
+}
+
+/* ── Force-open a specific term on an archived class ── */
+function ForceOpenTermModal({ cls, onClose, onConfirm }) {
+  const [termId, setTermId] = useState(cls.terms?.[0] || TERMS[0].id)
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+         style={{ background: 'rgba(0,0,0,0.4)' }}
+         onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-sm p-6 sm:p-8">
+        <div className="text-center mb-5">
+          <div className="text-4xl mb-2">🔓</div>
+          <h2 className="text-lg font-black text-nb-dark">Force-Open a Term</h2>
+          <p className="text-sm text-gray-400 mt-1">{cls.name} is archived. Pick a term to keep open for students to finish work or receive certificates.</p>
+        </div>
+        <div className="flex flex-wrap gap-1.5 justify-center mb-5">
+          {TERMS.map(t => (
+            <button type="button" key={t.id} onClick={() => setTermId(t.id)}
+              className={`px-3 py-1.5 rounded-full text-xs font-bold border-2 transition-all ${
+                termId === t.id ? 'border-nb-green text-white' : 'border-gray-100 text-gray-500 hover:border-nb-olive'
+              }`}
+              style={termId === t.id ? { background: '#36913F' } : {}}>
+              {t.name}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-3">
+          <button onClick={onClose}
+            className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-500 font-bold text-sm hover:border-gray-300 transition">Cancel</button>
+          <button onClick={() => onConfirm(termId)}
+            className="flex-1 py-3 rounded-xl font-black text-nb-dark text-sm shadow-md transition hover:shadow-lg"
+            style={{ background: '#FFEB3C' }}>Force Open</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ── All Classes (Admin view — shared class data, force-open-term action) ── */
+function AdminClassesTab() {
+  const [classes, setClasses] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [forceOpenTarget, setForceOpenTarget] = useState(null)
+
+  useEffect(() => { load() }, [])
+
+  async function load() {
+    setLoading(true)
+    setError('')
+    try {
+      setClasses(await apiRequest('/api/classes'))
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleForceOpen(termId) {
+    const updated = await apiRequest(`/api/classes/${forceOpenTarget.id}`, { method: 'PUT', body: { forcedOpenTerm: termId } })
+    setClasses(cs => cs.map(c => c.id === updated.id ? updated : c))
+    setForceOpenTarget(null)
+  }
+
+  return (
+    <div className="space-y-4">
+      {forceOpenTarget && (
+        <ForceOpenTermModal cls={forceOpenTarget} onClose={() => setForceOpenTarget(null)} onConfirm={handleForceOpen} />
+      )}
+
+      <div>
+        <h2 className="text-lg sm:text-xl font-black text-nb-dark">All Classes</h2>
+        <p className="text-xs text-gray-400 mt-0.5">Created and managed by teachers · Admin can force-open a term on an archived class</p>
+      </div>
+
+      {error && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-2">{error}</p>}
+
+      {loading ? (
+        <p className="text-sm text-gray-400 py-8 text-center">Loading classes…</p>
+      ) : classes.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-nb-olive/20 py-10 flex flex-col items-center gap-2 text-center">
+          <span className="text-4xl">🏫</span>
+          <p className="font-black text-nb-dark">No classes yet</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {classes.map(c => (
+            <div key={c.id} className={`bg-white rounded-2xl border border-nb-olive/20 p-5 hover:shadow-md transition ${c.status === 'archived' ? 'opacity-60' : ''}`}>
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <h3 className="font-black text-nb-dark">{c.name}</h3>
+                  <p className="text-sm text-gray-500">{c.subject}{c.level ? ` · ${c.level}` : ''}</p>
+                </div>
+                {c.status === 'archived' && <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-500 flex-shrink-0">Archived</span>}
+              </div>
+              <p className="text-xs text-gray-400 mb-1 flex items-center gap-1 flex-wrap">
+                <img src={teacherIcon} alt="" className="w-3.5 h-3.5 object-contain" /> 👩‍🎓 {c.students || 0} students
+              </p>
+              {c.coTeachers?.length > 0 && (
+                <p className="text-xs text-gray-400 mb-1">👩‍🏫 Co-taught with {c.coTeachers.join(', ')}</p>
+              )}
+              {c.terms?.length > 0 && (
+                <p className="text-xs text-gray-400 mb-1">🗓️ {c.terms.map(id => TERMS.find(t => t.id === id)?.name || `Term ${id}`).join(', ')}</p>
+              )}
+              {c.forcedOpenTerm && (
+                <p className="text-xs font-bold mt-1" style={{ color: '#b45309' }}>🔓 {TERMS.find(t => t.id === c.forcedOpenTerm)?.name} force-opened by Admin</p>
+              )}
+              {c.status === 'archived' && (
+                <button onClick={() => setForceOpenTarget(c)}
+                  className="w-full mt-3 py-2 rounded-xl text-xs font-black border-2 border-amber-300 text-amber-700 hover:bg-amber-50 transition">
+                  🔓 Force-Open a Term
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ── Reset Password (Admin → Parent) ── */
+function ResetPasswordModal({ user, onClose }) {
+  const [tempPassword] = useState(genTempPassword)
+  const [done, setDone] = useState(false)
+
+  function confirmReset() {
+    resetCredential(user.email, tempPassword)
+    setMustChangeCredential(user.email, true)
+    setDone(true)
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+         style={{ background: 'rgba(0,0,0,0.4)' }}
+         onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-md p-6 sm:p-8 text-center">
+        {!done ? (
+          <>
+            <div className="text-4xl mb-3">🔑</div>
+            <h2 className="text-lg sm:text-xl font-black text-nb-dark">Reset password for {user.name}?</h2>
+            <p className="text-sm text-gray-400 mt-2">
+              A new temporary password will be generated. {user.name} will be required to set a new password on next login.
+            </p>
+            <div className="flex gap-3 pt-5">
+              <button onClick={onClose}
+                className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-500 font-bold text-sm hover:border-gray-300 transition">Cancel</button>
+              <button onClick={confirmReset}
+                className="flex-1 py-3 rounded-xl font-black text-nb-dark text-sm shadow-md transition hover:shadow-lg"
+                style={{ background: '#FFEB3C' }}>Reset Password</button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="text-4xl mb-3">✅</div>
+            <h2 className="text-lg sm:text-xl font-black text-nb-dark">Password reset</h2>
+            <p className="text-sm text-gray-400 mt-2">Share this temporary password with {user.name} — they'll be asked to set a new one on next login.</p>
+            <p className="mt-4 text-2xl font-black tracking-widest bg-nb-cream rounded-xl py-3" style={{ color: '#396336' }}>{tempPassword}</p>
+            <button onClick={onClose}
+              className="w-full mt-5 py-3 rounded-xl font-black text-nb-dark text-sm shadow-md"
+              style={{ background: '#FFEB3C' }}>Done</button>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
 
 const ROLE_BADGE = {
   admin:   'bg-nb-dark text-white',
@@ -201,6 +413,7 @@ export default function AdminDashboard() {
   const [search, setSearch] = useState('')
   const [users, setUsers]   = useState(USERS)
   const [showModal, setShowModal] = useState(false)
+  const [resetTarget, setResetTarget] = useState(null)
 
   function handleAddUser(newUser) {
     setUsers(u => [newUser, ...u])
@@ -208,12 +421,13 @@ export default function AdminDashboard() {
 
   const filtered = users.filter(u =>
     u.name.toLowerCase().includes(search.toLowerCase()) ||
-    u.email.toLowerCase().includes(search.toLowerCase())
+    (u.email || u.username || '').toLowerCase().includes(search.toLowerCase())
   )
 
   return (
     <div className="min-h-screen bg-nb-cream">
       {showModal && <AddUserModal onClose={() => setShowModal(false)} onAdd={handleAddUser} />}
+      {resetTarget && <ResetPasswordModal user={resetTarget} onClose={() => setResetTarget(null)} />}
       <Navbar role="admin" userName="Admin">
         <div className="max-w-7xl mx-auto px-2 flex gap-1 overflow-x-auto py-2 scrollbar-hide">
           {[
@@ -265,7 +479,7 @@ export default function AdminDashboard() {
                   { icon: <img src={bookIcon} alt="" className="w-5 h-5 object-contain" />, text: 'Lesson published: Addition & Subtraction', time: '15 min ago', color: 'text-nb-green' },
                   { icon: <img src={medalIcon} alt="" className="w-5 h-5 object-contain" />, text: 'Certificate issued to Hafiz Zulkifli', time: '1 hr ago', color: 'text-amber-600' },
                   { icon: <img src={overdueIcon} alt="" className="w-5 h-5 object-contain" />, text: 'Student Raj Kumar suspended', time: '3 hrs ago', color: 'text-red-500' },
-                  { icon: '📝', text: 'New quiz created: Fractions Basics', time: '5 hrs ago', color: 'text-purple-600' },
+                  { icon: '📝', text: 'New assessment created: Fractions Basics', time: '5 hrs ago', color: 'text-purple-600' },
                 ].map((item, i) => (
                   <div key={i} className="flex items-start gap-3 text-sm">
                     <span className={`text-lg flex-shrink-0 ${item.color}`}>{item.icon}</span>
@@ -283,7 +497,7 @@ export default function AdminDashboard() {
                 {[
                   { label: 'Video',       count: 24, color: '#3b82f6',  icon: '🎬' },
                   { label: 'Flash Cards', count: 18, color: '#36913F',  icon: '🃏' },
-                  { label: 'Quiz',        count: 15, color: '#FFEB3C',  icon: '📝' },
+                  { label: 'Assessment', count: 15, color: '#FFEB3C',  icon: '📝' },
                   { label: 'Reading',     count: 10, color: '#91BA4F',  icon: '📄' },
                   { label: 'Activity',    count: 5,  color: '#ec4899',  icon: '🎨' },
                 ].map(item => (
@@ -342,14 +556,14 @@ export default function AdminDashboard() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-nb-dark text-sm truncate">{u.name}</p>
-                      <p className="text-xs text-gray-400 truncate">{u.email}</p>
+                      <p className="text-xs text-gray-400 truncate">{u.email || u.username}</p>
                     </div>
                     <div className="flex gap-2 flex-shrink-0">
                       <button className="text-xs font-bold" style={{ color: '#36913F' }}>Edit</button>
                       <button className="text-xs font-bold text-red-400">Del</button>
                     </div>
                   </div>
-                  <div className="flex gap-2 flex-wrap">
+                  <div className="flex gap-2 flex-wrap items-center">
                     <span className={`px-2 py-0.5 rounded-full text-xs font-black capitalize ${ROLE_BADGE[u.role]}`}
                           style={u.role === 'student' ? { background: '#FFEB3C' } : {}}>
                       {u.role}
@@ -358,6 +572,10 @@ export default function AdminDashboard() {
                       {u.status}
                     </span>
                     <span className="text-xs text-gray-400">{u.joined}</span>
+                    {u.role === 'parent' && (
+                      <button onClick={() => setResetTarget(u)}
+                        className="ml-auto text-xs font-bold text-nb-green hover:text-nb-dark transition">🔑 Reset Password</button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -391,7 +609,7 @@ export default function AdminDashboard() {
                           <span className="font-bold text-nb-dark">{u.name}</span>
                         </div>
                       </td>
-                      <td className="px-5 py-3 text-gray-500">{u.email}</td>
+                      <td className="px-5 py-3 text-gray-500">{u.email || u.username}</td>
                       <td className="px-5 py-3">
                         <span className={`px-2.5 py-1 rounded-full text-xs font-black capitalize ${ROLE_BADGE[u.role]}`}
                               style={u.role === 'student' ? { background: '#FFEB3C' } : {}}>
@@ -405,7 +623,11 @@ export default function AdminDashboard() {
                       </td>
                       <td className="px-5 py-3 text-gray-400 text-xs">{u.joined}</td>
                       <td className="px-5 py-3">
-                        <div className="flex gap-3 justify-end">
+                        <div className="flex gap-3 justify-end items-center">
+                          {u.role === 'parent' && (
+                            <button onClick={() => setResetTarget(u)}
+                              className="text-xs font-bold text-nb-green hover:text-nb-dark transition whitespace-nowrap">🔑 Reset Password</button>
+                          )}
                           <button className="text-xs font-bold hover:text-nb-dark" style={{ color: '#36913F' }}>Edit</button>
                           <button className="text-xs font-bold text-red-400 hover:text-red-600">Delete</button>
                         </div>
@@ -419,42 +641,8 @@ export default function AdminDashboard() {
         )}
 
         {/* CLASSES */}
-        {tab === 'classes' && (
-          <div className="tab-panel space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg sm:text-xl font-black text-nb-dark">All Classes</h2>
-              <button className="px-3 sm:px-4 py-2 text-white text-xs sm:text-sm font-black rounded-xl shadow hover:opacity-90 transition"
-                      style={{ background: '#396336' }}>+ New Class</button>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {[
-                { name:'Primary 4A', subject:'Mathematics', teacher:'Ms Sarah Tan', students:28, progress:67 },
-                { name:'Primary 4B', subject:'Mathematics', teacher:'Ms Sarah Tan', students:25, progress:50 },
-                { name:'Primary 5A', subject:'Science',     teacher:'Mr Alif Ibrahim',  students:30, progress:80 },
-                { name:'Primary 5B', subject:'Science',     teacher:'Mr Alif Ibrahim',  students:27, progress:35 },
-                { name:'Primary 6A', subject:'English',     teacher:'Ms Maria Wong', students:22, progress:90 },
-              ].map((c, i) => (
-                <div key={i} className="bg-white rounded-2xl border border-nb-olive/20 p-5 hover:shadow-md transition">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h3 className="font-black text-nb-dark">{c.name}</h3>
-                      <p className="text-sm text-gray-500">{c.subject}</p>
-                    </div>
-                    <span className="text-xs font-black px-2.5 py-1 rounded-full text-nb-dark" style={{ background: '#FFEB3C' }}>{c.progress}%</span>
-                  </div>
-                  <p className="text-xs text-gray-400 mb-3 flex items-center gap-1 flex-wrap">
-                    <img src={teacherIcon} alt="" className="w-3.5 h-3.5 object-contain" /> {c.teacher} · 👩‍🎓 {c.students} students
-                  </p>
-                  <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div className="h-full rounded-full" style={{ width:`${c.progress}%`, background:'linear-gradient(90deg,#6FC911,#396336)' }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {tab === 'classes' && <div className="tab-panel"><AdminClassesTab /></div>}
 
-        {/* REPORTS */}
         {/* MEMORY TECHNIQUES (coming soon) */}
         {tab === 'memory' && (
           <div className="tab-panel">
@@ -469,7 +657,7 @@ export default function AdminDashboard() {
               {[
                 { title:'Student Progress Report',   desc:'Overview of all student completion rates and scores',       icon:'📊' },
                 { title:'Lesson Engagement Report',  desc:'Which lessons are most accessed and completed',              icon: <img src={bookIcon} alt="" className="w-10 h-10 object-contain" /> },
-                { title:'Quiz Performance Report',   desc:'Average scores and pass/fail rates per quiz',               icon:'📝' },
+                { title:'Assessment Performance Report', desc:'Average scores and pass/fail rates per assessment',      icon:'📝' },
                 { title:'Certificate Report',        desc:'All issued certificates and completion dates',              icon: <img src={medalIcon} alt="" className="w-10 h-10 object-contain" /> },
                 { title:'Memory Method Analytics',   desc:'How students engage with Neurobix memory techniques',       icon: <img src={brainIcon} alt="" className="w-10 h-10 object-contain" /> },
                 { title:'Parent Visibility Report',  desc:'Summary reports formatted for parent communication',        icon: <div className="w-10 h-10 p-1.5 rounded-xl bg-nb-cream flex items-center justify-center"><img src={parentIcon} alt="" className="w-full h-full object-contain" /></div> },

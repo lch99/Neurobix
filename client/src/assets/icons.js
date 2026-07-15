@@ -22,9 +22,7 @@ export { default as mascotTeach }   from './new_assets/teach mascot.png'
 export { default as notebookFemale } from './new_assets/f notebook 1.png'
 export { default as notebookMale }   from './new_assets/m notebook 1.png'
 
-// ── Subject icons (Mathematics / English / Science) — optimized, were 2.8MB each ──
-export { default as subjectNumbers }    from './new_assets_optimized/Icon 1 (Numbers).webp'
-export { default as subjectBook }       from './new_assets_optimized/Icon 2 (Book).webp'
+// ── Subject icons — optimized, were 2.8MB each ──
 export { default as subjectMicroscope } from './new_assets_optimized/Icon 3 (Microscope).webp'
 
 // ── Points / achievements ──
@@ -47,9 +45,7 @@ export { default as scoreIcon }     from './new_assets_optimized/score icon.webp
 
 // ── Certificates ──
 export { default as certDesign }      from './new_assets/cert design.svg'
-export { default as certMath }        from './new_assets_optimized/math cert icon.webp'
 export { default as certScience }     from './new_assets_optimized/science cert icon.webp'
-export { default as certEnglish }     from './new_assets_optimized/english cert icon.webp'
 
 // ── Content / feature icons ──
 export { default as flashcardIcon }  from './new_assets_optimized/flashcard icon.webp'
@@ -62,7 +58,7 @@ export { default as inProgressIcon }  from './new_assets/in progress icon.svg'
 export { default as overdueIcon }     from './new_assets/overdue icon.svg'
 export { default as noDeadlineIcon }  from './new_assets_optimized/no deadline icon.webp'
 export { default as passIcon }        from './new_assets_optimized/pass icon.webp'
-export { default as quizPassIcon }    from './new_assets_optimized/quiz pass icon.webp'
+export { default as assessmentPassIcon } from './new_assets_optimized/quiz pass icon.webp'
 export { default as retryIcon }       from './new_assets_optimized/retry icon.webp'
 export { default as retryFlatIcon }   from './new_assets/retry flat icon.svg'
 export { default as durationIcon }    from './new_assets/duration icon.svg'

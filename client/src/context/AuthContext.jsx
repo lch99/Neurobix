@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react'
-import { DEMO_USERS } from '../data/mockDb'
+import { findAuthRecord, resetCredential, setMustChangeCredential } from '../data/mockDb'
 
 const AuthContext = createContext(null)
 
@@ -12,14 +12,25 @@ export function AuthProvider({ children }) {
 
   async function login(identifier, password) {
     await new Promise(r => setTimeout(r, 300))
-    const match = DEMO_USERS[identifier.toLowerCase()]
-    if (!match || match.password !== password) throw new Error('Invalid email or password.')
+    const match = findAuthRecord(identifier)
+    if (!match || match.password !== password) throw new Error('Invalid username/email or password.')
     const fakeToken = 'demo_' + match.user.role + '_token'
     localStorage.setItem('nb_token', fakeToken)
     localStorage.setItem('nb_user', JSON.stringify(match.user))
     setToken(fakeToken)
     setUser(match.user)
     return match.user
+  }
+
+  // Called from the forced first-login screen once the user picks a new password/PIN.
+  function completeCredentialChange(newCredential) {
+    const identifier = user?.username || user?.email
+    if (!identifier) return
+    resetCredential(identifier, newCredential)
+    setMustChangeCredential(identifier, false)
+    const updated = { ...user, mustChangeCredential: false }
+    localStorage.setItem('nb_user', JSON.stringify(updated))
+    setUser(updated)
   }
 
   async function logout() {
@@ -42,7 +53,7 @@ export function AuthProvider({ children }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout }}>
+    <AuthContext.Provider value={{ user, token, login, logout, completeCredentialChange }}>
       {children}
     </AuthContext.Provider>
   )

@@ -3,7 +3,7 @@ import { DndContext, PointerSensor, TouchSensor, useDraggable, useDroppable, use
 
 const EMPTY = {}
 
-/* ── Grading helpers (shared across quiz builder preview, lesson quizzes, standalone quizzes) ── */
+/* ── Grading helpers (shared across the assessment builder preview and in-lesson assessments) ── */
 
 export function isCorrectAnswer(q, value) {
   switch (q.type) {

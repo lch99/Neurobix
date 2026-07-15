@@ -1,6 +1,6 @@
 'use strict';
 
-const { Lesson, Class, Flashcard } = require('../db/models');
+const { Lesson, Class, Flashcard, Assessment } = require('../db/models');
 
 function serializeLesson(lesson) {
   return {
@@ -76,6 +76,16 @@ async function createLesson(req, res) {
     description: description || null,
     status: status === 'published' ? 'published' : 'draft',
   });
+
+  if (lesson.type === 'assessment') {
+    await Assessment.create({
+      lesson_id: lesson.id,
+      title: lesson.title,
+      pass_mark: 70,
+      leaderboard_enabled: false,
+      reward_points: 10,
+    });
+  }
 
   const created = await Lesson.findByPk(lesson.id, { include: LESSON_INCLUDE });
   return res.status(201).json(serializeLesson(created));

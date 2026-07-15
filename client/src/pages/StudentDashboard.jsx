@@ -5,26 +5,15 @@ import LessonBrowser from '../components/LessonBrowser'
 import WeeklySchedule from '../components/WeeklySchedule'
 import ComingSoon from '../components/ComingSoon'
 import { brainWatermark } from '../components/BrainBackground'
-import QuestionBody, { hasAnswer, isCorrectAnswer } from '../components/QuizQuestion'
 import {
   mascotFemale, mascotMale, mascotRocket,
-  subjectNumbers, subjectBook, subjectMicroscope,
+  subjectMicroscope,
   starYellow, starOutline, badgeIcon, badgeLockIcon, medalIcon, brainIcon, bookIcon, streakIcon,
   lightBulbIcon, lockIcon, flashcardIcon,
-  passIcon, overdueIcon, inProgressIcon, retryIcon, quizPassIcon, scoreboardIcon,
-  certMath, certEnglish, certScience, certDesign,
+  passIcon, overdueIcon, inProgressIcon, retryIcon,
+  certScience, certDesign,
   previewIcon, downloadIcon,
 } from '../assets/icons'
-import rankBadge1 from '../assets/badges/rank-1.png'
-import rankBadge2 from '../assets/badges/rank-2.png'
-import rankBadge3 from '../assets/badges/rank-3.png'
-import rankBadge4 from '../assets/badges/rank-4.png'
-import rankBadge5 from '../assets/badges/rank-5.png'
-import rankBadge6 from '../assets/badges/rank-6.png'
-import rankBadge7 from '../assets/badges/rank-7.png'
-import rankBadge8 from '../assets/badges/rank-8.png'
-import rankBadge9 from '../assets/badges/rank-9.png'
-import rankBadge10 from '../assets/badges/rank-10.png'
 
 const FlameIcon = ({ className }) => (
   <svg viewBox="0 0 36 36" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -45,23 +34,18 @@ const FlameIcon = ({ className }) => (
 )
 
 const SUBJECTS = [
-  { id: 1, name: 'Mathematics', icon: subjectNumbers,    color: '#3b82f6', progress: 72, lessons: 14, completed: 10 },
-  { id: 2, name: 'English',     icon: subjectBook,       color: '#9333ea', progress: 55, lessons: 12, completed: 6  },
   { id: 3, name: 'Science',     icon: subjectMicroscope, color: '#36913F', progress: 40, lessons: 10, completed: 4  },
 ]
 
 const SUBJECT_COLOR = {
-  Mathematics: '#3b82f6',
-  English:     '#9333ea',
   Science:     '#36913F',
 }
 
 const RECENT_LESSONS = [
-  { id: 1, title: 'Addition & Subtraction', subject: 'Mathematics', tag: 'Maths',   desc: 'Use story method to remember key facts.',      progress: 100, status: 'completed',   icon: '➕' },
-  { id: 3, title: 'Fraction Basics',        subject: 'Mathematics', tag: 'Maths',   desc: 'Understand fractions using stories & visuals.', progress: 60,  status: 'in_progress', icon: '🍕' },
-  { id: 4, title: 'Alphabet Flash Cards',   subject: 'English',     tag: 'English', desc: 'Learn letters with picture associations.',      progress: 30,  status: 'in_progress', icon: '🔤' },
-  { id: 7, title: 'The Solar System',       subject: 'Science',     tag: 'Science', desc: 'Explore planets with memory palace.',           progress: 25,  status: 'in_progress', icon: '🪐' },
-  { id: 2, title: 'Reading Comprehension',  subject: 'English',     tag: 'English', desc: 'Improve reading with story-based techniques.',  progress: 0,   status: 'overdue',     icon: '📖' },
+  { id: 7,  title: 'The Solar System',        subject: 'Science', tag: 'Science', desc: 'Explore planets with memory palace.',              progress: 100, status: 'completed',   icon: '🪐' },
+  { id: 8,  title: 'Plants & Photosynthesis', subject: 'Science', tag: 'Science', desc: "Discover how plants turn sunlight into food.",     progress: 60,  status: 'in_progress', icon: '🌱' },
+  { id: 18, title: 'The Human Body',          subject: 'Science', tag: 'Science', desc: 'Learn the major organs with labelled flash cards.', progress: 30,  status: 'in_progress', icon: '🫀' },
+  { id: 19, title: 'Forces & Motion',         subject: 'Science', tag: 'Science', desc: 'Push, pull, gravity — forces through experiments!', progress: 0,   status: 'overdue',     icon: '🧲' },
 ]
 
 function StatusPill({ status }) {
@@ -74,7 +58,7 @@ function StatusPill({ status }) {
 
 const BADGES = [
   { icon: starYellow,   label: 'Star Learner',  earned: true  },
-  { icon: medalIcon,    label: 'Quiz Champ',    earned: true  },
+  { icon: medalIcon,    label: 'Assessment Champ', earned: true  },
   { icon: streakIcon,   label: '7-Day Streak',  earned: true  },
   { icon: brainIcon,    label: 'Memory Master', earned: false },
   { icon: bookIcon,     label: 'Bookworm',      earned: false },
@@ -88,16 +72,14 @@ const TABS = [
       { id: 'memory',  icon: '🧠', label: 'Memory Techniques' },
     ] },
   { id: 'flashcards', icon: '🃏', label: 'Flash Cards' },
-  { id: 'quizzes',    icon: '📝', label: 'Quizzes'    },
   { id: 'shop',       icon: '🛍️', label: 'Shop'       },
   { id: 'rewards',    icon: '🏆', label: 'Rewards'    },
   { id: 'memportal',  icon: '🧠', label: 'Mem Portal' },
 ]
 
 const OPEN_CLASSES = [
-  { id: 10, name: 'Extra Maths Practice',  subject: 'Mathematics', level: 'Primary 4', slots: 12, enrolled: false },
-  { id: 11, name: 'English Writing Club',  subject: 'English',     level: 'Primary 3–5', slots: 8, enrolled: false },
-  { id: 12, name: 'Science Explorers',     subject: 'Science',     level: 'Primary 4–6', slots: 15, enrolled: true  },
+  { id: 12, name: 'Science Explorers',     subject: 'Science', level: 'Primary 4–6', slots: 16, status: 'enrolled'  },
+  { id: 13, name: 'Young Scientists Lab',  subject: 'Science', level: 'Primary 3–5', slots: 16, status: 'available' },
 ]
 
 const BADGE_THRESHOLDS = [500, 1000, 1500, 2000, 3000, 5000]
@@ -307,24 +289,29 @@ export default function StudentDashboard() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {openClasses.map(c => (
-                  <div key={c.id} className={`bg-white rounded-2xl border-2 p-5 ${c.enrolled ? 'border-nb-green' : 'border-nb-olive/20'}`}>
+                  <div key={c.id} className={`bg-white rounded-2xl border-2 p-5 ${
+                    c.status === 'enrolled' ? 'border-nb-green' : c.status === 'left' ? 'border-amber-300' : 'border-nb-olive/20'
+                  }`}>
                     <div className="flex items-start justify-between mb-2">
                       <div className="w-10 h-10 rounded-xl flex items-center justify-center p-2"
                            style={{ background: '#FFF7E9' }}><img src={bookIcon} alt="" className="w-full h-full object-contain" /></div>
-                      {c.enrolled && <span className="text-[10px] font-black bg-nb-green text-white px-2 py-1 rounded-full">✓ Enrolled</span>}
+                      {c.status === 'enrolled' && <span className="text-[10px] font-black bg-nb-green text-white px-2 py-1 rounded-full">✓ Enrolled</span>}
+                      {c.status === 'left' && <span className="text-[10px] font-black bg-amber-100 text-amber-700 px-2 py-1 rounded-full">Left · progress saved</span>}
                     </div>
                     <p className="font-black text-nb-dark text-sm mt-2">{c.name}</p>
                     <p className="text-xs text-gray-400 mt-0.5">{c.subject} · {c.level}</p>
                     <p className="text-xs text-gray-400 mt-0.5">{c.slots} slots available</p>
                     <button
-                      onClick={() => setOpenClasses(prev => prev.map(x => x.id === c.id ? { ...x, enrolled: !x.enrolled } : x))}
+                      onClick={() => setOpenClasses(prev => prev.map(x => x.id === c.id
+                        ? { ...x, status: x.status === 'enrolled' ? 'left' : 'enrolled' }
+                        : x))}
                       className={`w-full mt-3 py-2.5 rounded-xl font-black text-sm transition ${
-                        c.enrolled
+                        c.status === 'enrolled'
                           ? 'border-2 border-red-200 text-red-500 hover:bg-red-50'
                           : 'text-nb-dark shadow hover:shadow-md'
                       }`}
-                      style={c.enrolled ? {} : { background: '#FFEB3C' }}>
-                      {c.enrolled ? 'Leave Class' : 'Join Class →'}
+                      style={c.status === 'enrolled' ? {} : { background: '#FFEB3C' }}>
+                      {c.status === 'enrolled' ? 'Leave Class' : c.status === 'left' ? 'Rejoin Class ↻' : 'Join Class →'}
                     </button>
                   </div>
                 ))}
@@ -342,9 +329,6 @@ export default function StudentDashboard() {
             <ComingSoon description="A dedicated space to learn the Story Method, Memory Palace, mnemonics and other memory techniques that power every lesson. We're building it now — check back soon!" />
           </div>
         )}
-
-        {/* ── QUIZZES ── */}
-        {tab === 'quizzes' && <div className="tab-panel"><QuizzesView /></div>}
 
         {/* ── SHOP ── */}
         {tab === 'shop' && <div className="tab-panel"><ShopView /></div>}
@@ -442,7 +426,7 @@ export default function StudentDashboard() {
               <div>
                 <p className="font-black text-nb-dark text-sm">How to earn more points?</p>
                 <p className="text-xs text-gray-600 mt-0.5 leading-relaxed">
-                  Complete lessons (+50 pts), pass quizzes (+30 pts per question), maintain your daily streak (+20 pts/day),
+                  Complete lessons (+50 pts), pass assessments (+30 pts per question), maintain your daily streak (+20 pts/day),
                   and earn badges (+100 pts each). Points can only be redeemed above, not spent in the Shop.
                 </p>
               </div>
@@ -455,14 +439,14 @@ export default function StudentDashboard() {
                 <div className="bg-nb-cream rounded-2xl p-4 border-2 border-nb-yellow">
                   <div className="flex items-start gap-3 mb-3">
                     <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center p-2 flex-shrink-0"
-                         style={{ background: '#FFEB3C' }}><img src={certMath} alt="" className="w-full h-full object-contain" /></div>
+                         style={{ background: '#FFEB3C' }}><img src={certScience} alt="" className="w-full h-full object-contain" /></div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-black text-nb-dark text-sm">Mathematics — Primary 4</p>
-                      <p className="text-xs text-gray-400 mt-0.5">All 14 lessons · All quizzes passed · Issued 2025-05-10</p>
+                      <p className="font-black text-nb-dark text-sm">Science — Primary 4</p>
+                      <p className="text-xs text-gray-400 mt-0.5">All 10 lessons · All assessments passed · Issued 2025-05-10</p>
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={() => setCertModal('Mathematics')}
+                    <button onClick={() => setCertModal('Science')}
                       className="flex-1 py-2 rounded-xl font-bold text-nb-green border-2 border-nb-green/30 text-xs hover:bg-nb-green hover:text-white transition flex items-center justify-center gap-1.5">
                       <img src={previewIcon} alt="" className="w-3.5 h-3.5 object-contain" /> Preview
                     </button>
@@ -470,24 +454,6 @@ export default function StudentDashboard() {
                             style={{ background: '#FFEB3C' }}><img src={downloadIcon} alt="" className="w-3.5 h-3.5 object-contain" /> PDF</button>
                   </div>
                 </div>
-                {[{name:'English', pct:55, done:6, total:12, icon: certEnglish}, {name:'Science', pct:40, done:4, total:10, icon: certScience}].map(s => (
-                  <div key={s.name} className="bg-gray-50 rounded-2xl p-4 border-2 border-gray-200 opacity-60">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="relative w-10 h-10 rounded-xl bg-gray-200 flex items-center justify-center p-2 flex-shrink-0 grayscale">
-                        <img src={s.icon} alt="" className="w-full h-full object-contain" />
-                        <img src={lockIcon} alt="" className="absolute -bottom-1 -right-1 w-4 h-4 object-contain bg-white rounded-full p-0.5 shadow" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-black text-gray-500 text-sm">{s.name} Certificate</p>
-                        <p className="text-xs text-gray-400 mt-0.5">{s.done}/{s.total} lessons · {s.pct}% complete</p>
-                      </div>
-                      <span className="text-xs font-bold text-gray-400 flex-shrink-0">In progress…</span>
-                    </div>
-                    <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                      <div className="h-full rounded-full bg-gray-400" style={{ width: `${s.pct}%` }} />
-                    </div>
-                  </div>
-                ))}
               </div>
             </div>
 
@@ -605,7 +571,7 @@ export default function StudentDashboard() {
                 <p className="text-2xl sm:text-4xl font-black text-white mb-2">Ahmad bin Hassan</p>
                 <p className="text-white/80 text-xs sm:text-sm mb-1">has successfully completed</p>
                 <p className="text-lg sm:text-2xl font-black text-nb-yellow mb-1">{certModal}</p>
-                <p className="text-white/70 text-xs sm:text-sm mb-4">Primary 4 · All lessons completed · All quizzes passed</p>
+                <p className="text-white/70 text-xs sm:text-sm mb-4">Primary 4 · All lessons completed · All assessments passed</p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-6 text-xs text-white/60">
                   <span>📅 Issued: 2025-05-10</span>
                   <span>🏫 Neurobix Method</span>
@@ -645,36 +611,12 @@ function ShopView() {
 
   const SHOP_CLASSES = [
     {
-      id: 'cls1', subject: 'Mathematics', level: 'P4', icon: subjectNumbers, color: '#3b82f6',
-      name: 'Primary 4 Mathematics Intensive',
-      teacher: 'Ms Sarah Tan', sessions: '2 sessions / week', duration: '1.5 hrs each',
-      price: 49, billing: 'month',
-      slots: 4,
-      desc: 'Master P4 Maths using the Neurobix memory method. Covers all MOE topics with weekly quizzes and flashcard drills.',
-    },
-    {
-      id: 'cls2', subject: 'English', level: 'P4', icon: subjectBook, color: '#9333ea',
-      name: 'Primary 4 English Excellence',
-      teacher: 'Ms Sarah Tan', sessions: '2 sessions / week', duration: '1 hr each',
-      price: 45, billing: 'month',
-      slots: 6,
-      desc: 'Build strong comprehension and writing skills with story-based memory techniques for vocabulary and grammar.',
-    },
-    {
       id: 'cls3', subject: 'Science', level: 'P5', icon: subjectMicroscope, color: '#36913F',
       name: 'Primary 5 Science Explorer',
       teacher: 'Ms Sarah Tan', sessions: '1 session / week', duration: '2 hrs each',
       price: 52, billing: 'month',
       slots: 3,
       desc: 'Deep-dive into P5 Science using visual memory maps, concept linking and hands-on experiment recall.',
-    },
-    {
-      id: 'cls4', subject: 'All Subjects', level: 'P4–P6', icon: brainIcon, color: '#f59e0b',
-      name: 'Memory Booster — All Subjects',
-      teacher: 'Ms Sarah Tan', sessions: '3 sessions / week', duration: '1 hr each',
-      price: 99, billing: 'month',
-      slots: 2,
-      desc: 'The complete Neurobix experience — Maths, English and Science bundled together at a special rate.',
       badge: 'Best Value',
     },
   ]
@@ -998,31 +940,10 @@ function ShopView() {
 }
 
 /* ─── Flash Cards ─── */
+const LIBRARY_CAP = 1000
+
 function FlashCardsView() {
   const ALL_DECKS = [
-    { id: 1, subject: 'Mathematics', title: 'Multiplication Tables', icon: '🔢', cards: [
-      { front: 'What is 7 × 8?',    back: '56',     hint: 'Think: 7 × 7 = 49, then +7'     },
-      { front: 'What is 12 × 12?',  back: '144',    hint: 'A dozen dozens!'                  },
-      { front: 'What is 9 × 6?',    back: '54',     hint: '9 × 5 = 45, then +9'             },
-      { front: 'What is 4 × 7?',    back: '28',     hint: 'Imagine 4 weeks = 28 days'        },
-      { front: 'What is √49?',      back: '7',      hint: '7 × 7 = 49'                       },
-    ]},
-    { id: 2, subject: 'Mathematics', title: 'Fractions', icon: '📐', cards: [
-      { front: '1/2 + 1/4 = ?',      back: '3/4',      hint: 'Convert to same denominator' },
-      { front: 'What is 3/4 of 20?', back: '15',        hint: '20 ÷ 4 × 3 = 15'            },
-      { front: '1/3 as a decimal?',  back: '0.333…',    hint: 'Repeating decimal'           },
-    ]},
-    { id: 3, subject: 'English', title: 'Spelling & Vocabulary', icon: '📖', cards: [
-      { front: 'Spell: Beautiful',   back: 'B-E-A-U-T-I-F-U-L', hint: '"Big Elephants Are Ugly"' },
-      { front: 'Opposite of: Happy', back: 'Sad / Unhappy',       hint: 'Prefix un- = opposite'   },
-      { front: 'Plural of: Mouse',   back: 'Mice',                hint: 'Irregular plural!'        },
-      { front: 'Synonym of: Big',    back: 'Large / Huge / Vast', hint: 'All mean the same!'       },
-    ]},
-    { id: 4, subject: 'English', title: 'Grammar: Tenses', icon: '✏️', cards: [
-      { front: 'Past tense of "run"', back: 'Ran',        hint: 'Irregular verb'     },
-      { front: 'Past tense of "eat"', back: 'Ate',        hint: 'Irregular verb'     },
-      { front: 'Future of "I go"',    back: 'I will go',  hint: 'Add "will" before'  },
-    ]},
     { id: 5, subject: 'Science', title: 'The Solar System', icon: '🪐', cards: [
       { front: 'Closest planet to the Sun?', back: 'Mercury',   hint: 'My Very Educated Mother…' },
       { front: 'The Red Planet?',            back: 'Mars',      hint: '4th planet from the Sun'   },
@@ -1037,8 +958,6 @@ function FlashCardsView() {
   ]
 
   const SUBJECT_CFG = {
-    Mathematics: { color: '#3b82f6', bg: '#EFF6FF', badge: 'bg-blue-100 text-blue-700',    icon: '🔢' },
-    English:     { color: '#9333ea', bg: '#FAF5FF', badge: 'bg-purple-100 text-purple-700', icon: '📖' },
     Science:     { color: '#36913F', bg: '#F0FDF4', badge: 'bg-green-100 text-green-700',  icon: '🔬' },
   }
 
@@ -1073,14 +992,19 @@ function FlashCardsView() {
   function toggleSave() {
     if (!activeDeck || !card) return
     if (isSaved) setLibrary(l => l.filter(c => c.key !== cardKey))
-    else setLibrary(l => [...l, { key: cardKey, subject: activeDeck.subject, front: card.front, back: card.back, hint: card.hint }])
+    else if (library.length < LIBRARY_CAP) setLibrary(l => [...l, { key: cardKey, subject: activeDeck.subject, front: card.front, back: card.back, hint: card.hint }])
   }
 
   /* ── Saved library view ── */
   if (showLibrary) return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-black text-nb-dark flex items-center gap-2"><img src={starYellow} alt="" className="w-6 h-6 object-contain" /> My Saved Cards</h2>
+        <div>
+          <h2 className="text-2xl font-black text-nb-dark flex items-center gap-2"><img src={starYellow} alt="" className="w-6 h-6 object-contain" /> My Saved Cards</h2>
+          <p className={`text-xs font-semibold mt-1 ${library.length >= LIBRARY_CAP ? 'text-amber-600' : 'text-gray-400'}`}>
+            {library.length.toLocaleString()} / {LIBRARY_CAP.toLocaleString()} cards {library.length >= LIBRARY_CAP && '· Library full, remove some to save more'}
+          </p>
+        </div>
         <button onClick={() => setShowLibrary(false)}
           className="text-sm font-bold text-gray-400 hover:text-nb-dark transition px-3 py-1.5 rounded-lg hover:bg-gray-100">
           ← Back
@@ -1221,10 +1145,13 @@ function FlashCardsView() {
               className="py-3.5 rounded-xl border-2 border-gray-200 text-gray-500 font-black hover:border-nb-olive transition text-sm">
               ← Prev
             </button>
-            <button onClick={toggleSave}
-              className={`py-3.5 rounded-xl font-black text-sm border-2 transition-all flex items-center justify-center gap-1.5 ${isSaved ? 'border-nb-yellow text-nb-dark' : 'border-gray-200 text-gray-400 hover:border-nb-yellow'}`}
+            <button onClick={toggleSave} disabled={!isSaved && library.length >= LIBRARY_CAP}
+              className={`py-3.5 rounded-xl font-black text-sm border-2 transition-all flex items-center justify-center gap-1.5 ${
+                isSaved ? 'border-nb-yellow text-nb-dark' : library.length >= LIBRARY_CAP ? 'border-gray-100 text-gray-300 cursor-not-allowed' : 'border-gray-200 text-gray-400 hover:border-nb-yellow'
+              }`}
               style={isSaved ? { background: '#FFEB3C' } : {}}>
-              {isSaved ? <img src={starYellow} alt="" className="w-4 h-4 object-contain" /> : <img src={starOutline} alt="" className="w-4 h-4 object-contain opacity-50" />} {isSaved ? 'Saved' : 'Save'}
+              {isSaved ? <img src={starYellow} alt="" className="w-4 h-4 object-contain" /> : <img src={starOutline} alt="" className="w-4 h-4 object-contain opacity-50" />}
+              {isSaved ? 'Saved' : library.length >= LIBRARY_CAP ? 'Library Full' : 'Save'}
             </button>
             <button onClick={goNext}
               className="py-3.5 rounded-xl border-2 border-nb-green font-black text-nb-dark hover:bg-nb-green hover:text-white transition text-sm">
@@ -1276,7 +1203,7 @@ function FlashCardsView() {
 
       {/* Subject filter pills */}
       <div className="flex gap-2 overflow-x-auto pb-1">
-        {['All', 'Mathematics', 'English', 'Science'].map(s => {
+        {['All', 'Science'].map(s => {
           const active = subjectFilter === s
           const cfg    = SUBJECT_CFG[s]
           return (
@@ -1331,190 +1258,6 @@ function FlashCardsView() {
             </div>
           )
         })}
-      </div>
-    </div>
-  )
-}
-
-/* Per-quiz question sets, mixing every supported question type as a showcase */
-const QUIZ_QUESTIONS = {
-  1: [
-    { id: 101, type: 'mcq',       text: 'What is 6 × 7?',   options: ['36','42','48','54'], answer: 1 },
-    { id: 102, type: 'mcq',       text: 'What is 9 × 8?',   options: ['63','72','81','90'], answer: 1 },
-    { id: 103, type: 'true_false', text: '7 × 7 = 48',                                       answer: false },
-    { id: 104, type: 'fill_in',   text: '12 × 11 = ___',                                     answer: '132' },
-  ],
-  3: [
-    { id: 301, type: 'mcq',       text: 'What is ½ of 20?', options: ['5','8','10','12'],    answer: 2 },
-    { id: 302, type: 'true_false', text: '¼ is greater than ½',                               answer: false },
-    { id: 303, type: 'fill_in',   text: 'Simplify 2/4 to its simplest form: ___',              answer: '1/2' },
-    { id: 304, type: 'match',     text: 'Match each fraction to its decimal', options: { pairs: [
-        { left: '1/2', right: '0.5' }, { left: '1/4', right: '0.25' }, { left: '3/4', right: '0.75' },
-      ] } },
-    { id: 305, type: 'drag_drop', text: 'Drag each fraction into the correct group', options: {
-        buckets: ['Less than ½', 'Greater than ½'],
-        items: [
-          { label: '1/4', bucket: 'Less than ½' },
-          { label: '3/4', bucket: 'Greater than ½' },
-          { label: '1/8', bucket: 'Less than ½' },
-          { label: '5/6', bucket: 'Greater than ½' },
-        ] } },
-  ],
-  7: [
-    { id: 701, type: 'mcq',       text: 'Which planet is closest to the Sun?', options: ['Venus','Mercury','Earth','Mars'], answer: 1 },
-    { id: 702, type: 'true_false', text: 'Jupiter is the largest planet in our solar system.',  answer: true },
-    { id: 703, type: 'match',     text: 'Match each planet to its nickname', options: { pairs: [
-        { left: 'Mars', right: 'Red Planet' }, { left: 'Saturn', right: 'Ringed Planet' },
-      ] } },
-  ],
-  6: [
-    { id: 601, type: 'mcq',       text: 'Which is the past tense of "run"?', options: ['runned','ran','runs','running'], answer: 1 },
-    { id: 602, type: 'fill_in',   text: 'She ___ (go) to school yesterday.',                    answer: 'went' },
-    { id: 603, type: 'drag_drop', text: 'Sort each word into the correct tense', options: {
-        buckets: ['Past', 'Present'],
-        items: [
-          { label: 'walked', bucket: 'Past' },
-          { label: 'walks',  bucket: 'Present' },
-          { label: 'ate',    bucket: 'Past' },
-          { label: 'eats',   bucket: 'Present' },
-        ] } },
-  ],
-}
-
-/* ─── Quizzes ─── */
-function QuizzesView() {
-  const quizzes = [
-    { id: 1, title: 'Times Tables Challenge', subject: 'Mathematics', bestScore: 90,   icon: '🔢', difficulty: 'Easy'   },
-    { id: 3, title: 'Fractions Basics',       subject: 'Mathematics', bestScore: 75,   icon: '📐', difficulty: 'Medium' },
-    { id: 7, title: 'Solar System Quiz',      subject: 'Science',     bestScore: null, icon: '🪐', difficulty: 'Easy'   },
-    { id: 6, title: 'Grammar: Tenses',        subject: 'English',     bestScore: null, icon: '✏️', difficulty: 'Medium' },
-  ]
-  const DIFF_COLOR = { Easy: 'bg-green-100 text-green-700', Medium: 'bg-yellow-100 text-yellow-700', Hard: 'bg-red-100 text-red-600' }
-
-  const [active, setActive]     = useState(null)
-  const [current, setCurrent]   = useState(0)
-  const [value, setValue]       = useState(null)
-  const [score, setScore]       = useState(0)
-  const [answered, setAnswered] = useState(false)
-  const [done, setDone]         = useState(false)
-
-  const questions = active ? (QUIZ_QUESTIONS[active.id] || []) : []
-
-  function startQuiz(q) { setActive(q); setCurrent(0); setValue(null); setScore(0); setAnswered(false); setDone(false) }
-  function submit() { if (isCorrectAnswer(questions[current], value)) setScore(s => s + 1); setAnswered(true) }
-  function nextQ() { setAnswered(false); setValue(null); current + 1 < questions.length ? setCurrent(c => c + 1) : setDone(true) }
-
-  if (active) {
-    if (done) return (
-      <div className="flex flex-col items-center py-8 gap-4 text-center">
-        <div className="flex justify-center">{score === questions.length ? <img src={quizPassIcon} alt="" className="w-20 h-20 object-contain" /> : <span className="text-6xl">👍</span>}</div>
-        <h2 className="text-2xl font-black text-nb-dark">Quiz Done!</h2>
-        <p className="text-lg text-gray-500">Score: <span className="font-black text-nb-green">{score}/{questions.length}</span></p>
-        {score === questions.length && <p className="text-amber-600 font-bold">Perfect! Amazing! ⭐</p>}
-        <p className="font-bold text-nb-lime">+{score * 30} points!</p>
-        <button onClick={() => setActive(null)}
-          className="px-8 py-3 rounded-2xl font-black text-nb-dark shadow hover:shadow-md transition"
-          style={{ background: '#FFEB3C' }}>← Back to Quizzes</button>
-      </div>
-    )
-
-    const q = questions[current]
-    return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <button onClick={() => setActive(null)} className="text-gray-400 text-sm font-bold">← Back</button>
-          <span className="text-sm font-bold text-gray-400">{current + 1}/{questions.length}</span>
-        </div>
-        <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
-          <div className="h-full rounded-full transition-all"
-               style={{ width: `${(current / questions.length) * 100}%`, background: 'linear-gradient(90deg,#FFEB3C,#6FC911)' }} />
-        </div>
-        <div className="bg-white rounded-2xl border border-nb-olive/20 p-5 text-center">
-          <p className="text-xl font-black text-nb-dark">{q.text}</p>
-        </div>
-        <QuestionBody q={q} value={value} onChange={setValue} answered={answered} />
-        {!answered
-          ? <button onClick={submit} disabled={!hasAnswer(q, value)}
-              className="w-full py-3.5 rounded-xl font-black text-nb-dark shadow disabled:opacity-40 transition"
-              style={{ background: '#FFEB3C' }}>Submit ✅</button>
-          : <button onClick={nextQ}
-              className="w-full py-3.5 rounded-xl font-black text-white shadow transition hover:opacity-90"
-              style={{ background: '#36913F' }}>
-              {current + 1 < questions.length ? 'Next →' : 'See Results 🎉'}
-            </button>
-        }
-      </div>
-    )
-  }
-
-  const LEADERBOARD = [
-    { rank: 1, name: 'Nadia Putri',         score: 96, points: 1380, isMe: false },
-    { rank: 2, name: 'Ahmad bin Hassan',    score: 90, points: 1240, isMe: true  },
-    { rank: 3, name: 'Farid bin Ismail',    score: 85, points: 1020, isMe: false },
-    { rank: 4, name: 'Siti Nur Aisyah',     score: 80, points: 980,  isMe: false },
-    { rank: 5, name: 'Justin Ng',           score: 72, points: 790,  isMe: false },
-  ]
-  const RANK_BADGES = {
-    1: rankBadge1, 2: rankBadge2, 3: rankBadge3, 4: rankBadge4, 5: rankBadge5,
-    6: rankBadge6, 7: rankBadge7, 8: rankBadge8, 9: rankBadge9, 10: rankBadge10,
-  }
-
-  return (
-    <div className="space-y-4">
-      <h2 className="text-2xl font-black text-nb-dark">📝 Quizzes</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {quizzes.map(quiz => (
-          <div key={quiz.id} className="bg-white rounded-2xl border-2 border-nb-olive/20 p-5 flex items-center gap-4 hover:shadow-lg hover:-translate-y-0.5 transition-all">
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0 shadow"
-                 style={{ background: '#FFF7E9' }}>{quiz.icon}</div>
-            <div className="flex-1 min-w-0">
-              <p className="font-black text-nb-dark truncate">{quiz.title}</p>
-              <div className="flex items-center gap-2 mt-1 flex-wrap">
-                <span className="text-xs text-gray-400">{quiz.subject}</span>
-                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${DIFF_COLOR[quiz.difficulty]}`}>{quiz.difficulty}</span>
-              </div>
-              {quiz.bestScore !== null && <p className="text-sm font-black mt-1" style={{ color: '#36913F' }}>Best: {quiz.bestScore}%</p>}
-            </div>
-            <button onClick={() => startQuiz(quiz)}
-              className="flex-shrink-0 px-5 py-3 rounded-2xl font-black text-nb-dark shadow-md transition hover:shadow-lg text-sm"
-              style={{ background: '#FFEB3C' }}>
-              {quiz.bestScore !== null ? <span className="flex items-center gap-1.5"><img src={retryIcon} alt="" className="w-4 h-4 object-contain" /> Retry</span> : 'Start 🚀'}
-            </button>
-          </div>
-        ))}
-      </div>
-
-      {/* Quiz Leaderboard */}
-      <div className="bg-white rounded-2xl border-2 border-nb-olive/20 p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-black text-nb-dark flex items-center gap-1.5"><img src={scoreboardIcon} alt="" className="w-5 h-5 object-contain" /> Class Leaderboard — Primary 4A</h3>
-          <span className="text-xs text-gray-400 font-semibold">Times Tables Challenge</span>
-        </div>
-        <div className="space-y-2.5">
-          {LEADERBOARD.map(s => (
-            <div key={s.rank}
-              className={`flex items-center gap-3 px-4 py-3 rounded-2xl border-2 transition ${
-                s.isMe ? 'border-nb-yellow shadow-md' : 'border-transparent bg-nb-cream/50'
-              }`}
-              style={s.isMe ? { background: '#FFEB3C20' } : {}}>
-              <span className="w-9 h-9 flex items-center justify-center flex-shrink-0">
-                {RANK_BADGES[s.rank]
-                  ? <img src={RANK_BADGES[s.rank]} alt={`Rank ${s.rank}`} className="w-9 h-9 object-contain" />
-                  : <span className="text-sm font-black text-gray-400">#{s.rank}</span>}
-              </span>
-              <div className="flex-1 min-w-0">
-                <p className={`font-black text-sm truncate ${s.isMe ? 'text-nb-dark' : 'text-gray-600'}`}>
-                  {s.name} {s.isMe && <span className="text-xs font-bold text-nb-green">(You)</span>}
-                </p>
-              </div>
-              <div className="text-right flex-shrink-0">
-                <p className="font-black text-nb-dark text-sm">{s.score}%</p>
-                <p className="text-[10px] text-gray-400 flex items-center justify-end gap-0.5"><img src={starYellow} alt="" className="w-2.5 h-2.5 object-contain" /> {s.points} pts</p>
-              </div>
-            </div>
-          ))}
-        </div>
-        <p className="text-xs text-gray-400 text-center mt-3">Leaderboard updates after each quiz attempt · Visible to all class members</p>
       </div>
     </div>
   )

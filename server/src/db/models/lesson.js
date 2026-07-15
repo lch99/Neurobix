@@ -13,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
       type: {
-        type: DataTypes.ENUM('video', 'flashcard', 'quiz', 'reading', 'activity'),
+        type: DataTypes.ENUM('video', 'flashcard', 'assessment', 'reading', 'activity'),
         allowNull: false,
       },
       sequence_order: {
@@ -67,7 +67,7 @@ module.exports = (sequelize, DataTypes) => {
   Lesson.associate = (models) => {
     Lesson.belongsTo(models.Class, { foreignKey: 'class_id', as: 'class' });
     Lesson.hasMany(models.Flashcard, { foreignKey: 'lesson_id', as: 'flashcards' });
-    Lesson.hasOne(models.Quiz, { foreignKey: 'lesson_id', as: 'quiz' });
+    Lesson.hasOne(models.Assessment, { foreignKey: 'lesson_id', as: 'assessment' });
     Lesson.hasOne(models.Schedule, { foreignKey: 'lesson_id', as: 'schedule' });
   };
 

@@ -3,9 +3,12 @@ import Navbar from '../components/Navbar'
 import ComingSoon from '../components/ComingSoon'
 import { useAuth } from '../context/AuthContext'
 import { apiRequest } from '../lib/api'
+import { TERMS } from '../data/lessons'
 import { previewIcon, bookIcon, flashcardIcon } from '../assets/icons'
 
-const TYPE_ICON = { video:'🎬', flashcard:'🃏', quiz:'📝', reading:'📄', activity:'🎨' }
+const CO_TEACHER_OPTIONS = ['Ms Sarah Tan', 'Mr Alif Ibrahim', 'Ms Maria Wong']
+
+const TYPE_ICON = { video:'🎬', flashcard:'🃏', assessment:'📝', reading:'📄', activity:'🎨' }
 const STATUS_STYLE = { published: 'bg-green-100 text-green-700', draft: 'bg-gray-100 text-gray-500', scheduled: 'bg-blue-100 text-blue-700' }
 
 export default function TeacherDashboard() {
@@ -20,7 +23,6 @@ export default function TeacherDashboard() {
             { id: 'classes',     label: '🏫 Classes'     },
             { id: 'lessons',     label: '📚 My Courses'  },
             { id: 'flashcards',  label: '🃏 Flash Cards'  },
-            { id: 'quizbuilder', label: '📝 Quiz Builder' },
             { id: 'memory',      label: '🧠 Memory Techniques' },
             { id: 'schedule',    label: '📅 Schedule'    },
             { id: 'students',    label: '👩‍🎓 Students'   },
@@ -49,9 +51,6 @@ export default function TeacherDashboard() {
 
         {/* FLASH CARDS */}
         {tab === 'flashcards' && <div className="tab-panel"><FlashCardEditor /></div>}
-
-        {/* QUIZ BUILDER */}
-        {tab === 'quizbuilder' && <div className="tab-panel"><QuizBuilder /></div>}
 
         {/* MEMORY TECHNIQUES (coming soon) */}
         {tab === 'memory' && (
@@ -379,6 +378,7 @@ function LessonsTab() {
   const [error, setError] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [editingLesson, setEditingLesson] = useState(null)
+  const [editingAssessmentLesson, setEditingAssessmentLesson] = useState(null)
 
   useEffect(() => {
     load()
@@ -417,6 +417,16 @@ function LessonsTab() {
     if (!window.confirm(`Delete "${lesson.title}"? This cannot be undone.`)) return
     await apiRequest(`/api/lessons/${lesson.id}`, { method: 'DELETE', token })
     setLessons(ls => ls.filter(l => l.id !== lesson.id))
+  }
+
+  if (editingAssessmentLesson) {
+    return (
+      <AssessmentEditor
+        lesson={editingAssessmentLesson}
+        onClose={() => setEditingAssessmentLesson(null)}
+        onLessonUpdate={updated => setLessons(ls => ls.map(l => l.id === updated.id ? updated : l))}
+      />
+    )
   }
 
   return (
@@ -472,6 +482,9 @@ function LessonsTab() {
                   <span className="text-xs text-gray-400">{l.className}</span>
                   <span className="text-xs text-gray-400 capitalize">{l.type}</span>
                   <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${STATUS_STYLE[l.status]}`}>{l.status}</span>
+                  {l.type === 'assessment' && (
+                    <button onClick={() => setEditingAssessmentLesson(l)} className="text-xs font-bold" style={{ color: '#396336' }}>Questions →</button>
+                  )}
                   <button onClick={() => handleDelete(l)} className="text-xs font-bold text-red-400 ml-auto">Delete</button>
                 </div>
               </div>
@@ -505,6 +518,10 @@ function LessonsTab() {
                       <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${STATUS_STYLE[l.status]}`}>{l.status}</span>
                     </td>
                     <td className="px-5 py-3 text-right space-x-3">
+                      {l.type === 'assessment' && (
+                        <button onClick={() => setEditingAssessmentLesson(l)}
+                          className="text-xs font-bold hover:opacity-80 transition" style={{ color: '#396336' }}>Questions →</button>
+                      )}
                       <button onClick={() => { setEditingLesson(l); setShowModal(true) }}
                         className="text-xs font-bold hover:text-nb-dark transition" style={{ color: '#36913F' }}>Edit</button>
                       <button onClick={() => handleDelete(l)} className="text-xs font-bold text-red-400 hover:text-red-600 transition">Delete</button>
@@ -542,7 +559,7 @@ function LessonModal({ initial, classes, onClose, onSave }) {
   const MATERIAL_TYPES = [
     { value: 'video',     icon: '🎬', label: 'Video',       desc: 'MP4 lesson recording' },
     { value: 'flashcard', icon: '🃏', label: 'Flash Cards', desc: 'Front/back memory cards' },
-    { value: 'quiz',      icon: '📝', label: 'Quiz',        desc: 'Auto-graded questions' },
+    { value: 'assessment', icon: '📝', label: 'Assessment', desc: 'Auto-graded questions' },
     { value: 'reading',   icon: '📄', label: 'Reading',     desc: 'PDF or text material' },
     { value: 'activity',  icon: '🎨', label: 'Activity',    desc: 'Hands-on task' },
   ]
@@ -688,51 +705,29 @@ function LessonModal({ initial, classes, onClose, onSave }) {
   )
 }
 
-/* ── Quiz Builder ── */
-function QuizBuilder() {
+/* ── Assessment Editor — scoped to a single lesson (type === 'assessment') ── */
+function AssessmentEditor({ lesson, onClose, onLessonUpdate }) {
   const { token } = useAuth()
-  const [quizzes, setQuizzes]       = useState([])
-  const [classes, setClasses]       = useState([])
+  const [assessment, setAssessment] = useState(null)
   const [loading, setLoading]       = useState(true)
   const [error, setError]           = useState('')
-  const [activeId, setActiveId]     = useState(null)
-  const [quiz, setQuiz]             = useState(null)
-  const [quizLoading, setQuizLoading] = useState(false)
-  const [isCreating, setIsCreating] = useState(false)
-  const [newForm, setNewForm]       = useState({ title: '', classId: '' })
   const [saved, setSaved]           = useState(false)
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { load() }, [lesson.id])
 
   async function load() {
     setLoading(true)
     setError('')
     try {
-      const [quizzesData, classesData] = await Promise.all([
-        apiRequest('/api/quizzes', { token }),
-        apiRequest('/api/classes', { token }),
-      ])
-      setQuizzes(quizzesData)
-      setClasses(classesData)
-      setNewForm(f => ({ ...f, classId: f.classId || classesData[0]?.id || '' }))
+      let data = await apiRequest(`/api/assessments/by-lesson/${lesson.id}`, { token })
+      if (!data) {
+        data = await apiRequest('/api/assessments', { method: 'POST', body: { lessonId: lesson.id }, token })
+      }
+      setAssessment(data)
     } catch (err) {
       setError(err.message)
     } finally {
       setLoading(false)
-    }
-  }
-
-  async function openQuiz(id) {
-    setActiveId(id)
-    setQuizLoading(true)
-    setError('')
-    try {
-      const data = await apiRequest(`/api/quizzes/${id}`, { token })
-      setQuiz(data)
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setQuizLoading(false)
     }
   }
 
@@ -751,28 +746,26 @@ function QuizBuilder() {
 
   async function addQuestion() {
     try {
-      const q = await apiRequest(`/api/quizzes/${activeId}/questions`, {
+      const q = await apiRequest(`/api/assessments/${assessment.id}/questions`, {
         method: 'POST',
         body: { type: 'mcq', text: '', options: ['', '', '', ''], answer: 0, points: 1 },
         token,
       })
-      setQuiz(prev => ({ ...prev, questions: [...prev.questions, q] }))
-      setQuizzes(prev => prev.map(x => x.id === activeId ? { ...x, questions: [...x.questions, q] } : x))
+      setAssessment(prev => ({ ...prev, questions: [...prev.questions, q] }))
     } catch (err) {
       setError(err.message)
     }
   }
   async function removeQuestion(qid) {
     try {
-      await apiRequest(`/api/quiz-questions/${qid}`, { method: 'DELETE', token })
-      setQuiz(prev => ({ ...prev, questions: prev.questions.filter(x => x.id !== qid) }))
-      setQuizzes(prev => prev.map(x => x.id === activeId ? { ...x, questions: x.questions.filter(q => q.id !== qid) } : x))
+      await apiRequest(`/api/assessment-questions/${qid}`, { method: 'DELETE', token })
+      setAssessment(prev => ({ ...prev, questions: prev.questions.filter(x => x.id !== qid) }))
     } catch (err) {
       setError(err.message)
     }
   }
   function updateQuestion(qid, field, value) {
-    setQuiz(prev => ({
+    setAssessment(prev => ({
       ...prev,
       questions: prev.questions.map(x => {
         if (x.id !== qid) return x
@@ -784,7 +777,7 @@ function QuizBuilder() {
     }))
   }
   function updateOption(qid, optIdx, value) {
-    setQuiz(prev => ({
+    setAssessment(prev => ({
       ...prev,
       questions: prev.questions.map(x => {
         if (x.id !== qid) return x
@@ -794,50 +787,29 @@ function QuizBuilder() {
       }),
     }))
   }
-  async function createQuiz() {
-    if (!newForm.title.trim() || !newForm.classId) return
+  async function saveAssessment() {
     try {
-      const created = await apiRequest('/api/quizzes', {
-        method: 'POST',
-        body: { classId: Number(newForm.classId), title: newForm.title },
-        token,
-      })
-      setQuizzes(p => [created, ...p])
-      setIsCreating(false)
-      setNewForm({ title: '', classId: classes[0]?.id || '' })
-      openQuiz(created.id)
-    } catch (err) {
-      setError(err.message)
-    }
-  }
-  async function saveQuiz() {
-    try {
-      await apiRequest(`/api/quizzes/${activeId}`, {
+      await apiRequest(`/api/assessments/${assessment.id}`, {
         method: 'PUT',
-        body: { title: quiz.title, passMark: quiz.passMark, leaderboard: quiz.leaderboard },
+        body: { passMark: assessment.passMark, leaderboard: assessment.leaderboard },
         token,
       })
-      await Promise.all(quiz.questions.map(q => apiRequest(`/api/quiz-questions/${q.id}`, {
+      await Promise.all(assessment.questions.map(q => apiRequest(`/api/assessment-questions/${q.id}`, {
         method: 'PUT',
         body: { type: q.type, text: q.text, imageUrl: q.imageUrl, options: q.options, answer: q.answer, points: q.points },
         token,
       })))
-      setQuizzes(prev => prev.map(x => x.id === activeId ? { ...quiz } : x))
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
     } catch (err) {
       setError(err.message)
     }
   }
-  async function publishQuiz() {
+  async function publishLesson() {
     try {
-      const updated = await apiRequest(`/api/quizzes/${activeId}`, {
-        method: 'PUT',
-        body: { status: 'published' },
-        token,
-      })
-      setQuiz(prev => ({ ...prev, status: updated.status }))
-      setQuizzes(prev => prev.map(x => x.id === activeId ? { ...x, status: updated.status } : x))
+      const updated = await apiRequest(`/api/lessons/${lesson.id}`, { method: 'PUT', body: { status: 'published' }, token })
+      setAssessment(prev => ({ ...prev, status: updated.status }))
+      onLessonUpdate?.(updated)
     } catch (err) {
       setError(err.message)
     }
@@ -845,27 +817,33 @@ function QuizBuilder() {
 
   const STATUS_STYLE = { published: 'bg-green-100 text-green-700', draft: 'bg-gray-100 text-gray-500', scheduled: 'bg-blue-100 text-blue-700' }
 
-  /* ── Quiz detail editor ── */
-  if (activeId && quiz) return (
+  if (loading || !assessment) return (
+    <div className="space-y-4">
+      <button onClick={onClose} className="text-sm font-bold text-gray-400 hover:text-nb-dark">← Back to Lessons</button>
+      {error ? <p className="text-sm text-red-500">{error}</p> : <p className="text-sm text-gray-400">Loading assessment...</p>}
+    </div>
+  )
+
+  return (
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <button onClick={() => { setActiveId(null); setQuiz(null) }} className="text-sm font-bold text-gray-400 hover:text-nb-dark">← All Quizzes</button>
+          <button onClick={onClose} className="text-sm font-bold text-gray-400 hover:text-nb-dark">← Back to Lessons</button>
           <div>
-            <h2 className="text-xl font-black text-nb-dark">{quiz.title}</h2>
-            <p className="text-xs text-gray-400">{quiz.className} · {quiz.subject} · {quiz.questions.length} questions · Pass: {quiz.passMark}%</p>
+            <h2 className="text-xl font-black text-nb-dark">{assessment.title}</h2>
+            <p className="text-xs text-gray-400">{assessment.className} · {assessment.subject} · {assessment.questions.length} questions · Pass: {assessment.passMark}%</p>
           </div>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <span className={`px-3 py-1 rounded-full text-xs font-bold ${STATUS_STYLE[quiz.status]}`}>{quiz.status}</span>
-          {quiz.status === 'draft' && (
-            <button onClick={publishQuiz}
+          <span className={`px-3 py-1 rounded-full text-xs font-bold ${STATUS_STYLE[assessment.status]}`}>{assessment.status}</span>
+          {assessment.status === 'draft' && (
+            <button onClick={publishLesson}
               className="px-4 py-2 text-white text-sm font-black rounded-xl shadow hover:opacity-90 transition"
               style={{ background: '#36913F' }}>
               ✅ Publish
             </button>
           )}
-          <button onClick={saveQuiz}
+          <button onClick={saveAssessment}
             className="px-4 py-2 text-sm font-black rounded-xl shadow hover:shadow-md transition"
             style={{ background: saved ? '#6FC911' : '#FFEB3C', color: saved ? 'white' : '#396336' }}>
             {saved ? '✓ Saved!' : '💾 Save'}
@@ -875,32 +853,31 @@ function QuizBuilder() {
 
       {error && <p className="text-sm text-red-500">{error}</p>}
 
-      {/* Quiz settings bar */}
+      {/* Assessment settings bar */}
       <div className="bg-white rounded-2xl border border-nb-olive/20 p-4 flex flex-wrap gap-4 items-center">
         <div className="flex items-center gap-2">
           <label className="text-xs font-black text-gray-500 uppercase tracking-wide">Pass Mark</label>
           <input type="number" min="1" max="100"
-            value={quiz.passMark}
-            onChange={e => setQuiz(prev => ({ ...prev, passMark: Number(e.target.value) }))}
+            value={assessment.passMark}
+            onChange={e => setAssessment(prev => ({ ...prev, passMark: Number(e.target.value) }))}
             className="w-16 px-2 py-1.5 rounded-lg border-2 border-nb-olive/20 text-sm font-black focus:outline-none focus:border-nb-green" />
           <span className="text-sm text-gray-400">%</span>
         </div>
         <div className="flex items-center gap-2">
           <label className="text-xs font-black text-gray-500 uppercase tracking-wide">Leaderboard</label>
-          <button onClick={() => setQuiz(prev => ({ ...prev, leaderboard: !prev.leaderboard }))}
-            className={`w-11 h-6 rounded-full transition-all relative flex-shrink-0 ${quiz.leaderboard ? '' : 'bg-gray-200'}`}
-            style={quiz.leaderboard ? { background: '#36913F' } : {}}>
-            <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${quiz.leaderboard ? 'left-5' : 'left-0.5'}`} />
+          <button onClick={() => setAssessment(prev => ({ ...prev, leaderboard: !prev.leaderboard }))}
+            className={`w-11 h-6 rounded-full transition-all relative flex-shrink-0 ${assessment.leaderboard ? '' : 'bg-gray-200'}`}
+            style={assessment.leaderboard ? { background: '#36913F' } : {}}>
+            <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${assessment.leaderboard ? 'left-5' : 'left-0.5'}`} />
           </button>
-          <span className="text-xs text-gray-400">{quiz.leaderboard ? 'Enabled' : 'Disabled'}</span>
+          <span className="text-xs text-gray-400">{assessment.leaderboard ? 'Enabled' : 'Disabled'}</span>
         </div>
         <p className="text-xs text-gray-400 ml-auto hidden sm:block">Results visible to student, teacher &amp; parent · Auto-graded on submit</p>
       </div>
 
       {/* Questions */}
-      {quizLoading && <p className="text-sm text-gray-400">Loading questions...</p>}
       <div className="space-y-4">
-        {quiz.questions.map((q, idx) => (
+        {assessment.questions.map((q, idx) => (
           <div key={q.id} className="bg-white rounded-2xl border-2 border-nb-olive/20 p-5">
             <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
               <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Q{idx + 1}</span>
@@ -979,84 +956,6 @@ function QuizBuilder() {
         className="w-full py-4 rounded-2xl border-2 border-dashed border-nb-olive/40 text-nb-green font-bold hover:border-nb-green hover:bg-white transition">
         + Add Question
       </button>
-    </div>
-  )
-
-  /* ── Quiz list ── */
-  return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-black text-nb-dark">📝 Quiz Builder</h2>
-        <button onClick={() => setIsCreating(true)} disabled={classes.length === 0}
-          className="px-4 py-2 text-nb-dark text-sm font-black rounded-xl shadow hover:shadow-md transition disabled:opacity-40"
-          style={{ background: '#FFEB3C' }}>+ New Quiz</button>
-      </div>
-
-      {error && <p className="text-sm text-red-500">{error}</p>}
-      {loading && <p className="text-sm text-gray-400">Loading quizzes...</p>}
-      {!loading && classes.length === 0 && (
-        <p className="text-sm text-gray-400 bg-nb-cream rounded-xl p-4">Create a class first before adding quizzes.</p>
-      )}
-      {!loading && quizzes.length === 0 && classes.length > 0 && (
-        <p className="text-sm text-gray-400 bg-nb-cream rounded-xl p-4">No quizzes yet. Click "+ New Quiz" to create one.</p>
-      )}
-
-      <div className="grid sm:grid-cols-2 gap-4">
-        {quizzes.map(q => (
-          <div key={q.id} onClick={() => openQuiz(q.id)}
-            className="bg-white rounded-2xl border-2 border-nb-olive/20 p-5 hover:shadow-lg hover:border-nb-green/40 hover:-translate-y-0.5 transition-all cursor-pointer">
-            <div className="flex items-start justify-between mb-3">
-              <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0" style={{ background: '#FFF7E9' }}>📝</div>
-              <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${STATUS_STYLE[q.status]}`}>{q.status}</span>
-            </div>
-            <p className="font-black text-nb-dark">{q.title}</p>
-            <p className="text-xs text-gray-400 mt-0.5">{q.className} · {q.subject}</p>
-            <div className="flex gap-3 mt-3 text-xs text-gray-400">
-              <span>❓ {q.questions.length} questions</span>
-              <span>🎯 Pass: {q.passMark}%</span>
-              {q.leaderboard && <span>🏅 Leaderboard</span>}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Create quiz modal */}
-      {isCreating && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-             style={{ background: 'rgba(0,0,0,0.45)' }}
-             onClick={e => e.target === e.currentTarget && setIsCreating(false)}>
-          <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-md p-5 sm:p-7">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg sm:text-xl font-black text-nb-dark">New Quiz</h2>
-              <button onClick={() => setIsCreating(false)} className="text-gray-400 text-2xl">×</button>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-1.5">Quiz Title *</label>
-                <input value={newForm.title} onChange={e => setNewForm(f => ({ ...f, title: e.target.value }))}
-                  placeholder="e.g. Fractions Quiz"
-                  className="w-full px-4 py-2.5 rounded-xl border-2 border-gray-100 focus:outline-none focus:border-nb-green bg-nb-cream text-sm" />
-              </div>
-              <div>
-                <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-1.5">Class</label>
-                <select value={newForm.classId} onChange={e => setNewForm(f => ({ ...f, classId: e.target.value }))}
-                  className="w-full px-4 py-2.5 rounded-xl border-2 border-gray-100 focus:outline-none focus:border-nb-green bg-nb-cream text-sm">
-                  {classes.map(c => (
-                    <option key={c.id} value={c.id}>{c.name} · {c.subject}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex gap-3 pt-2">
-                <button onClick={() => setIsCreating(false)}
-                  className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-500 font-bold text-sm">Cancel</button>
-                <button onClick={createQuiz} disabled={!newForm.title.trim() || !newForm.classId}
-                  className="flex-1 py-3 rounded-xl font-black text-nb-dark text-sm shadow-md disabled:opacity-40 transition"
-                  style={{ background: '#FFEB3C' }}>Create Quiz →</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
@@ -1369,6 +1268,12 @@ function ScheduleModal({ lesson, onClose, onSave, onClear }) {
   )
 }
 
+const ADMIN_ANNOUNCEMENTS = [
+  { id: 1, message: 'Term 3 report cards are due by Friday, 24 Jul 2026. Please finalise grades before then.', time: '2 days ago' },
+  { id: 2, message: 'A new Flash Card icon set has been uploaded — refresh your browser to see it in the editor.', time: '5 days ago' },
+  { id: 3, message: 'Reminder: Parent-Teacher meeting sign-up closes this Sunday. Add your available slots on the Schedule tab.', time: '1 week ago' },
+]
+
 /* ── Overview Tab ── */
 function OverviewTab() {
   const { token } = useAuth()
@@ -1420,6 +1325,28 @@ function OverviewTab() {
             <div className="text-xs sm:text-sm text-gray-500 mt-0.5">{s.label}</div>
           </div>
         ))}
+      </div>
+
+      {/* Admin Announcements (memo board) */}
+      <div className="bg-white rounded-2xl border border-nb-olive/20 p-4 sm:p-5">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-black text-nb-dark flex items-center gap-1.5">📢 Announcements</h3>
+          <span className="text-xs text-gray-400 font-semibold">From Admin</span>
+        </div>
+        <div className="space-y-3">
+          {ADMIN_ANNOUNCEMENTS.map(a => (
+            <div key={a.id} className="flex gap-3 pb-3 border-b border-gray-100 last:border-0 last:pb-0">
+              <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-black text-white flex-shrink-0 bg-nb-dark">A</div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <p className="text-sm font-black text-nb-dark">Admin</p>
+                  <span className="text-xs text-gray-400">· {a.time}</span>
+                </div>
+                <p className="text-sm text-gray-600 mt-0.5 leading-relaxed">{a.message}</p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Your Classes */}
@@ -1739,9 +1666,15 @@ function ClassesTab() {
               <h3 className="font-black text-nb-dark">{c.name}</h3>
               <p className="text-sm text-gray-500">{c.subject}{c.level ? ` · ${c.level}` : ''} · <span className="capitalize">{c.type}</span></p>
               <div className="mt-3 flex gap-4 text-sm text-gray-400">
-                <span>👩‍🎓 {c.students}</span>
+                <span>👩‍🎓 {c.students}{c.type === 'extra' && c.slots ? `/${c.slots}` : ''}</span>
                 <span>📖 {c.lessons} lessons</span>
               </div>
+              {c.terms?.length > 0 && (
+                <p className="text-xs text-gray-400 mt-1.5">🗓️ {c.terms.map(id => TERMS.find(t => t.id === id)?.name || `Term ${id}`).join(', ')}</p>
+              )}
+              {c.coTeachers?.length > 0 && (
+                <p className="text-xs text-gray-400 mt-1">👩‍🏫 Co-taught with {c.coTeachers.join(', ')}</p>
+              )}
               <div className="mt-4 flex gap-2 flex-wrap">
                 <button onClick={() => { setEditingClass(c); setShowModal(true) }}
                   className="px-3 py-1.5 text-xs font-black rounded-lg border-2 border-nb-olive/30 text-nb-dark hover:border-nb-green transition">Edit</button>
@@ -1769,6 +1702,9 @@ function ClassModal({ initial, onClose, onSave }) {
     type: initial?.type || 'regular',
     description: initial?.description || '',
     leaderboardEnabled: initial?.leaderboardEnabled ?? false,
+    slots: initial?.slots ?? 16,
+    coTeachers: initial?.coTeachers || [],
+    terms: initial?.terms || [3],
   })
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -1778,9 +1714,18 @@ function ClassModal({ initial, onClose, onSave }) {
     setForm(f => ({ ...f, [k]: v }))
   }
 
+  function toggleInList(k, value) {
+    setError('')
+    setForm(f => ({
+      ...f,
+      [k]: f[k].includes(value) ? f[k].filter(v => v !== value) : [...f[k], value],
+    }))
+  }
+
   async function submit(e) {
     e.preventDefault()
     if (!form.name.trim()) { setError('Please enter a class name.'); return }
+    if (form.terms.length === 0) { setError('Select at least one term.'); return }
     setSaving(true)
     try {
       await onSave(form)
@@ -1849,6 +1794,47 @@ function ClassModal({ initial, onClose, onSave }) {
                 </button>
               ))}
             </div>
+          </div>
+
+          {form.type === 'extra' && (
+            <div>
+              <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-1.5">Slot Cap</label>
+              <input type="number" min="1" value={form.slots} onChange={e => set('slots', Number(e.target.value))}
+                className="w-full px-4 py-2.5 rounded-xl border-2 border-gray-100 focus:outline-none focus:border-nb-green bg-nb-cream text-sm" />
+              <p className="text-[10px] text-gray-400 mt-1">Max students who can self-enrol · default 16</p>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-1.5">Co-Teachers</label>
+            <div className="flex flex-wrap gap-1.5">
+              {CO_TEACHER_OPTIONS.map(name => (
+                <button type="button" key={name} onClick={() => toggleInList('coTeachers', name)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-bold border-2 transition-all ${
+                    form.coTeachers.includes(name) ? 'border-nb-green text-white' : 'border-gray-100 text-gray-500 hover:border-nb-olive'
+                  }`}
+                  style={form.coTeachers.includes(name) ? { background: '#36913F' } : {}}>
+                  {name}
+                </button>
+              ))}
+            </div>
+            <p className="text-[10px] text-gray-400 mt-1">Optional — a class can have more than one teacher</p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-1.5">Terms *</label>
+            <div className="flex flex-wrap gap-1.5">
+              {TERMS.map(t => (
+                <button type="button" key={t.id} onClick={() => toggleInList('terms', t.id)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-bold border-2 transition-all ${
+                    form.terms.includes(t.id) ? 'border-nb-green text-white' : 'border-gray-100 text-gray-500 hover:border-nb-olive'
+                  }`}
+                  style={form.terms.includes(t.id) ? { background: '#36913F' } : {}}>
+                  {t.name}
+                </button>
+              ))}
+            </div>
+            <p className="text-[10px] text-gray-400 mt-1">A class can span more than one term</p>
           </div>
 
           <div>

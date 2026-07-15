@@ -1,10 +1,10 @@
 'use strict';
 
 module.exports = (sequelize, DataTypes) => {
-  const QuizQuestion = sequelize.define(
-    'QuizQuestion',
+  const AssessmentQuestion = sequelize.define(
+    'AssessmentQuestion',
     {
-      quiz_id: {
+      assessment_id: {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
@@ -40,7 +40,7 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
-      tableName: 'quiz_questions',
+      tableName: 'assessment_questions',
       underscored: true,
       timestamps: true,
       createdAt: 'created_at',
@@ -48,9 +48,9 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
 
-  QuizQuestion.associate = (models) => {
-    QuizQuestion.belongsTo(models.Quiz, { foreignKey: 'quiz_id', as: 'quiz' });
+  AssessmentQuestion.associate = (models) => {
+    AssessmentQuestion.belongsTo(models.Assessment, { foreignKey: 'assessment_id', as: 'assessment' });
   };
 
-  return QuizQuestion;
+  return AssessmentQuestion;
 };

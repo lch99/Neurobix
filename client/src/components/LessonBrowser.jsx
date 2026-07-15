@@ -11,24 +11,10 @@ import {
 const MILESTONES = [25, 50, 75, 100]
 
 const SUBJECT_ICON = {
-  Mathematics: SUBJECT_META.Mathematics.icon,
-  English:     SUBJECT_META.English.icon,
-  Science:     SUBJECT_META.Science.icon,
+  Science: SUBJECT_META.Science.icon,
 }
 
 const TERM_TOPIC = {
-  Mathematics: {
-    1: 'Whole Numbers & Operations',
-    2: 'Fractions & Division',
-    3: 'Measurement & Geometry',
-    4: 'Data Analysis & Problem Solving',
-  },
-  English: {
-    1: 'Phonics & Reading',
-    2: 'Grammar & Spelling',
-    3: 'Vocabulary',
-    4: 'Creative Writing',
-  },
   Science: {
     1: 'Space',
     2: 'Life Science',

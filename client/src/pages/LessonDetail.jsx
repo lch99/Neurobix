@@ -2,63 +2,60 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { LOCKED_IDS } from '../data/lessons'
 import Navbar from '../components/Navbar'
+import QuestionBody, { hasAnswer, isCorrectAnswer } from '../components/AssessmentQuestion'
 import logoWhite from '../assets/Asset 1@3x 1_White.png'
 import {
   lockIcon, brainIcon, passIcon, teacherIcon, durationIcon, starYellow,
-  lightBulbIcon, playIcon, retryIcon, quizPassIcon,
+  lightBulbIcon, playIcon, retryIcon, assessmentPassIcon,
 } from '../assets/icons'
 
 const TABS = [
   { id: 'home',       icon: '🏠', label: 'Home'       },
   { id: 'lessons',    icon: '📚', label: 'Lessons'    },
   { id: 'flashcards', icon: '🃏', label: 'Flash Cards' },
-  { id: 'quizzes',    icon: '📝', label: 'Quizzes'    },
   { id: 'schedule',   icon: '📅', label: 'Schedule'   },
   { id: 'rewards',    icon: '🏆', label: 'Rewards'    },
 ]
 
-const TYPE_LABEL = { video: 'Video', flashcard: 'Flash Cards', quiz: 'Quiz', reading: 'Reading' }
+const TYPE_LABEL = { video: 'Video', flashcard: 'Flash Cards', assessment: 'Assessment', reading: 'Reading' }
 
 const LESSON_DATA = {
-  1: {
-    title: 'Addition & Subtraction',
-    subject: 'Mathematics', type: 'video', duration: '12 min', difficulty: 'Easy', icon: '🎬',
-    teacher: 'Ms Sarah Tan', points: 50,
-    desc: 'Master adding and subtracting numbers up to 100 using fun memory tricks from the Neurobix Method!',
-    objectives: ['Add two numbers up to 100', 'Subtract without borrowing', 'Solve simple word problems'],
-    memoryTip: 'Use your fingers for small numbers. For bigger ones, draw a number line and hop along it — your brain remembers movement!',
-    content: 'video',
-  },
-  2: {
-    title: 'Multiplication Tables',
-    subject: 'Mathematics', type: 'flashcard', duration: '10 min', difficulty: 'Easy', icon: '🃏',
-    teacher: 'Ms Sarah Tan', points: 40,
-    desc: 'Flip your way through times tables 1–12 with visual memory cards and cheeky hints!',
-    objectives: ['Memorise tables 1–12', 'Recall answers in under 5 seconds'],
-    memoryTip: 'Rhyme it! "6 × 8 is 48, knock it on the door, don\'t be late!" Making silly rhymes helps your brain store numbers.',
+  18: {
+    title: 'The Human Body',
+    subject: 'Science', type: 'flashcard', duration: '16 min', difficulty: 'Medium', icon: '🃏',
+    teacher: 'Mr Alif Ibrahim', points: 40,
+    desc: 'Learn the major organs and their functions with labelled flash cards.',
+    objectives: ['Name the major organs', 'Describe what each organ does', 'Recall organ facts in under 5 seconds'],
+    memoryTip: 'Picture a "factory" inside your body — the heart is the pump room, the lungs are the air vents, the brain is the control room!',
     content: 'flashcard',
     cards: [
-      { front: '2 × 3 = ?',   back: '6 🎉',   hint: 'Double 3!' },
-      { front: '4 × 5 = ?',   back: '20 ⭐',  hint: '4 hands with 5 fingers each!' },
-      { front: '6 × 7 = ?',   back: '42 🔥',  hint: 'The answer to life, the universe… and 6×7!' },
-      { front: '7 × 8 = ?',   back: '56 💪',  hint: '5, 6, 7, 8 — 56 = 7 × 8!' },
-      { front: '9 × 9 = ?',   back: '81 🚀',  hint: 'Digits always add up to 9: 8+1=9!' },
-      { front: '12 × 12 = ?', back: '144 🏆', hint: 'A dozen dozens — remember 144!' },
+      { front: 'What pumps blood around your body?', back: 'Heart 🫀',  hint: 'It beats about 100,000 times a day!' },
+      { front: 'What organ helps you breathe?',       back: 'Lungs',    hint: 'You have two of them!' },
+      { front: 'What organ is your body\'s control room?', back: 'Brain', hint: 'It sends signals through your nerves.' },
+      { front: 'What organ filters your blood?',      back: 'Kidneys',  hint: 'You have a pair of these too.' },
+      { front: 'What organ digests your food?',       back: 'Stomach',  hint: 'It uses acid to break down food.' },
     ],
   },
-  3: {
-    title: 'Fractions Basics',
-    subject: 'Mathematics', type: 'quiz', duration: '15 min', difficulty: 'Medium', icon: '📝',
-    teacher: 'Ms Sarah Tan', points: 60,
-    desc: 'Test what you know about fractions! Pizza slices make fractions easy.',
-    objectives: ['Understand numerator and denominator', 'Compare simple fractions', 'Simplify basic fractions'],
-    memoryTip: 'Think of a pizza! The denominator = how many slices total. The numerator = how many slices you eat. So 3/8 means you ate 3 out of 8 slices! 🍕',
-    content: 'quiz',
+  20: {
+    title: 'States of Matter',
+    subject: 'Science', type: 'assessment', duration: '12 min', difficulty: 'Easy', icon: '📝',
+    teacher: 'Mr Alif Ibrahim', points: 40,
+    desc: 'Solid, liquid, gas — test yourself on how matter changes state.',
+    objectives: ['Identify the three states of matter', 'Explain melting, freezing and boiling', 'Give real-life examples of each state'],
+    memoryTip: 'Solid = "stuck together and still". Liquid = "loose and flowing". Gas = "gone and spread out"! Say it out loud to lock it in.',
+    content: 'assessment',
     questions: [
-      { q: 'What is the TOP number in a fraction called?', options: ['Denominator', 'Numerator', 'Divisor', 'Factor'], answer: 1 },
-      { q: 'Which fraction is bigger: 1/2 or 1/4?', options: ['1/4', '1/2', 'They are equal', 'Impossible to tell'], answer: 1 },
-      { q: 'What is 2/4 simplified?', options: ['1/4', '2/3', '1/2', '3/4'], answer: 2 },
-      { q: 'If a pizza has 8 slices and you eat 3, what fraction is left?', options: ['3/8', '5/8', '3/5', '8/3'], answer: 1 },
+      { id: 2001, type: 'mcq',       text: 'What state of matter is ice?', options: ['Solid','Liquid','Gas','Plasma'], answer: 0 },
+      { id: 2002, type: 'true_false', text: 'Water turns into steam when it freezes.', answer: false },
+      { id: 2003, type: 'fill_in',   text: 'Solid → Liquid is called ___.', answer: 'melting' },
+      { id: 2004, type: 'drag_drop', text: 'Sort each example into its state of matter', options: {
+          buckets: ['Solid', 'Liquid', 'Gas'],
+          items: [
+            { label: 'Ice cube', bucket: 'Solid' },
+            { label: 'Steam',    bucket: 'Gas' },
+            { label: 'Juice',    bucket: 'Liquid' },
+            { label: 'Rock',     bucket: 'Solid' },
+          ] } },
     ],
   },
   7: {
@@ -200,7 +197,7 @@ export default function LessonDetail() {
         {/* Main Content */}
         {lesson.content === 'video'     && <VideoContent    lesson={lesson} onComplete={() => setCompleted(true)} completed={completed} />}
         {lesson.content === 'flashcard' && <FlashCardContent cards={lesson.cards} points={lesson.points} onComplete={() => setCompleted(true)} completed={completed} />}
-        {lesson.content === 'quiz'      && <QuizContent     questions={lesson.questions} points={lesson.points} onComplete={() => setCompleted(true)} completed={completed} />}
+        {lesson.content === 'assessment' && <AssessmentContent questions={lesson.questions} points={lesson.points} onComplete={() => setCompleted(true)} completed={completed} />}
         {lesson.content === 'reading'   && <ReadingContent  text={lesson.text} points={lesson.points} onComplete={() => setCompleted(true)} completed={completed} />}
       </div>
     </div>
@@ -388,28 +385,28 @@ function FlashCardContent({ cards, points, onComplete, completed }) {
   )
 }
 
-/* ─── Quiz ─── */
-function QuizContent({ questions, points, onComplete }) {
+/* ─── Assessment ─── */
+function AssessmentContent({ questions, points, onComplete }) {
   const [current, setCurrent] = useState(0)
-  const [selected, setSelected] = useState(null)
+  const [value, setValue] = useState(null)
   const [score, setScore] = useState(0)
   const [answered, setAnswered] = useState(false)
   const [done, setDone] = useState(false)
 
   function submit() {
-    if (selected === questions[current].answer) setScore(s => s + 1)
+    if (isCorrectAnswer(questions[current], value)) setScore(s => s + 1)
     setAnswered(true)
   }
   function next() {
-    setAnswered(false); setSelected(null)
+    setAnswered(false); setValue(null)
     if (current + 1 < questions.length) setCurrent(c => c + 1)
     else { setDone(true); onComplete() }
   }
 
   if (done) return (
     <div className="bg-white rounded-3xl border-2 border-nb-olive/20 p-8 text-center space-y-4">
-      <div className="flex justify-center">{score === questions.length ? <img src={quizPassIcon} alt="" className="w-24 h-24 object-contain" /> : <span className="text-7xl">{score >= questions.length / 2 ? '👍' : '📖'}</span>}</div>
-      <h2 className="text-3xl font-black text-nb-dark">Quiz Complete!</h2>
+      <div className="flex justify-center">{score === questions.length ? <img src={assessmentPassIcon} alt="" className="w-24 h-24 object-contain" /> : <span className="text-7xl">{score >= questions.length / 2 ? '👍' : '📖'}</span>}</div>
+      <h2 className="text-3xl font-black text-nb-dark">Assessment Complete!</h2>
       <p className="text-xl text-gray-600">Score: <span className="font-black text-nb-green">{score}/{questions.length}</span></p>
       {score === questions.length && <p className="font-bold text-amber-600">🎉 Perfect Score! You're a superstar!</p>}
       <p className="font-black text-nb-lime">+{Math.round((score / questions.length) * points)} points earned!</p>
@@ -427,32 +424,11 @@ function QuizContent({ questions, points, onComplete }) {
         <div className="h-full rounded-full transition-all" style={{ width: `${(current / questions.length) * 100}%`, background: 'linear-gradient(90deg,#FFEB3C,#6FC911)' }} />
       </div>
       <div className="bg-white rounded-2xl border-2 border-nb-olive/20 p-6 text-center">
-        <p className="text-xl font-black text-nb-dark">{q.q}</p>
+        <p className="text-xl font-black text-nb-dark">{q.text}</p>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {q.options.map((opt, i) => {
-          let cls = 'border-gray-200 bg-white text-gray-700 hover:border-nb-green hover:bg-green-50'
-          let style = {}
-          if (answered) {
-            if (i === q.answer)      { cls = 'border-nb-green bg-green-50 text-nb-dark' }
-            else if (i === selected) { cls = 'border-red-300 bg-red-50 text-red-600' }
-            else                     { cls = 'border-gray-100 bg-gray-50 text-gray-300' }
-          } else if (selected === i) {
-            cls = 'border-nb-yellow text-nb-dark shadow-md'
-            style = { background: '#FFEB3C' }
-          }
-          return (
-            <button key={i} onClick={() => !answered && setSelected(i)}
-              className={`py-4 rounded-2xl font-black text-base border-2 transition-all ${cls}`} style={style}>
-              {opt}
-              {answered && i === q.answer && ' ✅'}
-              {answered && i === selected && i !== q.answer && ' ❌'}
-            </button>
-          )
-        })}
-      </div>
+      <QuestionBody q={q} value={value} onChange={setValue} answered={answered} />
       {!answered
-        ? <button onClick={submit} disabled={selected === null}
+        ? <button onClick={submit} disabled={!hasAnswer(q, value)}
             className="w-full py-4 text-nb-dark text-lg font-black rounded-2xl shadow-md disabled:opacity-40 transition hover:shadow-lg"
             style={{ background: '#FFEB3C' }}>Submit Answer ✅</button>
         : <button onClick={next}

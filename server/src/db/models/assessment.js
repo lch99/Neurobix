@@ -1,8 +1,8 @@
 'use strict';
 
 module.exports = (sequelize, DataTypes) => {
-  const Quiz = sequelize.define(
-    'Quiz',
+  const Assessment = sequelize.define(
+    'Assessment',
     {
       lesson_id: {
         type: DataTypes.INTEGER,
@@ -34,7 +34,7 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
-      tableName: 'quizzes',
+      tableName: 'assessments',
       underscored: true,
       timestamps: true,
       createdAt: 'created_at',
@@ -42,10 +42,10 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
 
-  Quiz.associate = (models) => {
-    Quiz.belongsTo(models.Lesson, { foreignKey: 'lesson_id', as: 'lesson' });
-    Quiz.hasMany(models.QuizQuestion, { foreignKey: 'quiz_id', as: 'questions' });
+  Assessment.associate = (models) => {
+    Assessment.belongsTo(models.Lesson, { foreignKey: 'lesson_id', as: 'lesson' });
+    Assessment.hasMany(models.AssessmentQuestion, { foreignKey: 'assessment_id', as: 'questions' });
   };
 
-  return Quiz;
+  return Assessment;
 };

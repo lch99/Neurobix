@@ -2,7 +2,7 @@
 
 const express = require('express');
 const { authenticate } = require('../middleware/auth.middleware');
-const { updateQuestion, deleteQuestion } = require('../controllers/quizzes.controller');
+const { updateQuestion, deleteQuestion } = require('../controllers/assessments.controller');
 
 const router = express.Router();
 

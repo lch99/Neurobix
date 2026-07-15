@@ -9,7 +9,6 @@ const TABS = [
       { id: 'memory',  icon: '🧠', label: 'Memory Techniques' },
     ] },
   { id: 'flashcards', icon: '🃏', label: 'Flash Cards' },
-  { id: 'quizzes',    icon: '📝', label: 'Quizzes'    },
   { id: 'shop',       icon: '🛍️', label: 'Shop'       },
   { id: 'rewards',    icon: '🏆', label: 'Rewards'    },
 ]

@@ -2,35 +2,37 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { logo as logoFull } from '../assets/icons'
 import BrainBackground from '../components/BrainBackground'
+import PinInput from '../components/PinInput'
 import { useAuth } from '../context/AuthContext'
 import ServerStatusBadge from '../components/ServerStatusBadge'
 
-const DEMO = { email: 'student1@neurobix.com', password: 'password123' }
+const DEMO = { username: 'ahmad2026', pin: '1234' }
 
 export default function LoginStudent() {
   const navigate = useNavigate()
   const { login } = useAuth()
-  const [email, setEmail]       = useState('')
-  const [password, setPassword] = useState('')
+  const [username, setUsername] = useState('')
+  const [pin, setPin]           = useState('')
   const [error, setError]       = useState('')
   const [shake, setShake]       = useState(false)
 
   async function handleLogin(e) {
     e.preventDefault()
     try {
-      const user = await login(email, password)
+      const user = await login(username, pin)
       if (user.role !== 'student') throw new Error('This account is not a student account.')
       navigate('/student')
     } catch (err) {
-      setError(err.message || 'Oops! Wrong email or password. Try again!')
+      setError(err.message || 'Oops! Wrong username or PIN. Try again!')
+      setPin('')
       setShake(true)
       setTimeout(() => setShake(false), 500)
     }
   }
 
   function fillDemo() {
-    setEmail(DEMO.email)
-    setPassword(DEMO.password)
+    setUsername(DEMO.username)
+    setPin(DEMO.pin)
     setError('')
   }
 
@@ -52,27 +54,23 @@ export default function LoginStudent() {
 
       {/* Form card */}
       <div className={`w-full max-w-xl bg-white rounded-[2rem] shadow-xl p-7 sm:p-10 ${shake ? 'animate-[wiggle_0.4s_ease]' : ''}`}>
-        <form onSubmit={handleLogin} className="space-y-5">
+        <form onSubmit={handleLogin} className="space-y-6">
           <div>
-            <label className="block text-base font-bold text-nb-dark mb-2">Email Address</label>
+            <label className="block text-base font-bold text-nb-dark mb-2">Username</label>
             <input
-              type="email"
-              value={email}
-              onChange={e => { setEmail(e.target.value); setError('') }}
+              type="text"
+              autoComplete="username"
+              value={username}
+              onChange={e => { setUsername(e.target.value); setError('') }}
+              placeholder="e.g. ahmad2026"
               className="w-full rounded-full border-2 border-nb-green bg-white px-5 py-3 text-nb-dark outline-none focus:ring-2 focus:ring-nb-lime/60 transition"
               required
             />
           </div>
 
           <div>
-            <label className="block text-base font-bold text-nb-dark mb-2">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={e => { setPassword(e.target.value); setError('') }}
-              className="w-full rounded-full border-2 border-nb-green bg-white px-5 py-3 text-nb-dark outline-none focus:ring-2 focus:ring-nb-lime/60 transition"
-              required
-            />
+            <label className="block text-base font-bold text-nb-dark mb-2 text-center">Enter your 4-digit PIN</label>
+            <PinInput length={4} value={pin} onChange={v => { setPin(v); setError('') }} />
           </div>
 
           {error && (
@@ -90,10 +88,14 @@ export default function LoginStudent() {
         </form>
       </div>
 
+      <p className="text-center text-sm text-nb-dark/50 mt-4 max-w-sm">
+        Forgot your username or PIN? Ask your parent — they can look it up or reset it for you.
+      </p>
+
       {/* Demo quick-fill (dev convenience) */}
       <button
         onClick={fillDemo}
-        className="mt-5 text-sm font-semibold text-nb-green/70 hover:text-nb-green underline underline-offset-2 transition"
+        className="mt-3 text-sm font-semibold text-nb-green/70 hover:text-nb-green underline underline-offset-2 transition"
       >
         Use demo student account
       </button>

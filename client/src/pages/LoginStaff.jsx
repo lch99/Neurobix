@@ -20,6 +20,8 @@ export default function LoginStaff() {
   const [password, setPassword] = useState('')
   const [error, setError]       = useState('')
   const [showPw, setShowPw]     = useState(false)
+  const [mode, setMode]         = useState('login') // 'login' | 'forgot' | 'sent'
+  const [resetEmail, setResetEmail] = useState('')
 
   function fillDemo(account) {
     setEmail(account.email)
@@ -37,6 +39,11 @@ export default function LoginStaff() {
     } catch (err) {
       setError(err.message || 'Invalid credentials.')
     }
+  }
+
+  function handleResetRequest(e) {
+    e.preventDefault()
+    setMode('sent')
   }
 
   return (
@@ -91,62 +98,112 @@ export default function LoginStaff() {
         </div>
 
         <div className="w-full max-w-sm mx-auto">
-          <h2 className="text-2xl font-black text-nb-dark">Sign In</h2>
-          <p className="text-gray-400 text-sm mt-1 mb-6">Parent · Teacher · Admin portal</p>
+          {mode === 'login' && (
+            <>
+              <h2 className="text-2xl font-black text-nb-dark">Sign In</h2>
+              <p className="text-gray-400 text-sm mt-1 mb-6">Parent · Teacher · Admin portal</p>
 
-          {error && (
-            <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">{error}</div>
+              {error && (
+                <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">{error}</div>
+              )}
+
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-black text-gray-500 uppercase tracking-wider mb-1.5">Email Address</label>
+                  <input
+                    type="email" value={email} onChange={e => { setEmail(e.target.value); setError('') }}
+                    placeholder="you@neurobix.com"
+                    className="w-full px-4 py-2.5 rounded-xl border-2 border-gray-100 focus:outline-none focus:border-nb-green bg-nb-cream text-sm transition"
+                    required
+                  />
+                </div>
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-black text-gray-500 uppercase tracking-wider">Password</label>
+                    <button type="button" onClick={() => { setMode('forgot'); setResetEmail(email); setError('') }}
+                      className="text-xs font-bold text-nb-green hover:text-nb-dark transition">Forgot password?</button>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type={showPw ? 'text' : 'password'} value={password} onChange={e => { setPassword(e.target.value); setError('') }}
+                      placeholder="••••••••"
+                      className="w-full px-4 py-2.5 pr-10 rounded-xl border-2 border-gray-100 focus:outline-none focus:border-nb-green bg-nb-cream text-sm transition"
+                      required
+                    />
+                    <button type="button" onClick={() => setShowPw(v => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-nb-green transition text-base select-none">
+                      {showPw ? '🙈' : '👁️'}
+                    </button>
+                  </div>
+                </div>
+                <button type="submit"
+                  className="w-full py-3 rounded-xl font-black text-nb-dark shadow-md transition-all hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] text-sm"
+                  style={{ background: 'linear-gradient(135deg,#FFEB3C,#6FC911)' }}>
+                  Sign In →
+                </button>
+              </form>
+
+              {/* Demo accounts */}
+              <div className="mt-5 pt-5 border-t border-gray-100">
+                <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2.5 text-center">
+                  Quick Demo Login
+                </p>
+                <div className="flex flex-col gap-2">
+                  {DEMO_ACCOUNTS.map(a => (
+                    <button key={a.role} onClick={() => fillDemo(a)}
+                      className={`w-full py-2.5 px-4 rounded-xl text-sm font-bold border-2 transition-all hover:scale-[1.02] active:scale-95 flex items-center gap-2 ${a.style}`}>
+                      {a.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[11px] text-gray-400 mt-2 text-center">
+                  Select a role to auto-fill, then click Sign In
+                </p>
+              </div>
+            </>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-xs font-black text-gray-500 uppercase tracking-wider mb-1.5">Email Address</label>
-              <input
-                type="email" value={email} onChange={e => { setEmail(e.target.value); setError('') }}
-                placeholder="you@neurobix.com"
-                className="w-full px-4 py-2.5 rounded-xl border-2 border-gray-100 focus:outline-none focus:border-nb-green bg-nb-cream text-sm transition"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-black text-gray-500 uppercase tracking-wider mb-1.5">Password</label>
-              <div className="relative">
-                <input
-                  type={showPw ? 'text' : 'password'} value={password} onChange={e => { setPassword(e.target.value); setError('') }}
-                  placeholder="••••••••"
-                  className="w-full px-4 py-2.5 pr-10 rounded-xl border-2 border-gray-100 focus:outline-none focus:border-nb-green bg-nb-cream text-sm transition"
-                  required
-                />
-                <button type="button" onClick={() => setShowPw(v => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-nb-green transition text-base select-none">
-                  {showPw ? '🙈' : '👁️'}
+          {mode === 'forgot' && (
+            <>
+              <h2 className="text-2xl font-black text-nb-dark">Reset Password</h2>
+              <p className="text-gray-400 text-sm mt-1 mb-6">Enter your account email and we'll send you a reset link.</p>
+              <form onSubmit={handleResetRequest} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-black text-gray-500 uppercase tracking-wider mb-1.5">Email Address</label>
+                  <input
+                    type="email" value={resetEmail} onChange={e => setResetEmail(e.target.value)}
+                    placeholder="you@neurobix.com"
+                    className="w-full px-4 py-2.5 rounded-xl border-2 border-gray-100 focus:outline-none focus:border-nb-green bg-nb-cream text-sm transition"
+                    required
+                  />
+                </div>
+                <button type="submit"
+                  className="w-full py-3 rounded-xl font-black text-nb-dark shadow-md transition-all hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] text-sm"
+                  style={{ background: 'linear-gradient(135deg,#FFEB3C,#6FC911)' }}>
+                  Send Reset Link →
                 </button>
-              </div>
-            </div>
-            <button type="submit"
-              className="w-full py-3 rounded-xl font-black text-nb-dark shadow-md transition-all hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] text-sm"
-              style={{ background: 'linear-gradient(135deg,#FFEB3C,#6FC911)' }}>
-              Sign In →
-            </button>
-          </form>
+                <button type="button" onClick={() => setMode('login')}
+                  className="w-full py-2 text-sm font-bold text-gray-400 hover:text-nb-green transition">
+                  ← Back to Sign In
+                </button>
+              </form>
+            </>
+          )}
 
-          {/* Demo accounts */}
-          <div className="mt-5 pt-5 border-t border-gray-100">
-            <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2.5 text-center">
-              Quick Demo Login
-            </p>
-            <div className="flex flex-col gap-2">
-              {DEMO_ACCOUNTS.map(a => (
-                <button key={a.role} onClick={() => fillDemo(a)}
-                  className={`w-full py-2.5 px-4 rounded-xl text-sm font-bold border-2 transition-all hover:scale-[1.02] active:scale-95 flex items-center gap-2 ${a.style}`}>
-                  {a.label}
-                </button>
-              ))}
+          {mode === 'sent' && (
+            <div className="text-center py-6">
+              <div className="text-5xl mb-4">📬</div>
+              <h2 className="text-xl font-black text-nb-dark">Check your email</h2>
+              <p className="text-gray-400 text-sm mt-2 leading-relaxed">
+                If an account exists for <strong className="text-nb-dark">{resetEmail}</strong>, a password reset link is on its way.
+              </p>
+              <button onClick={() => setMode('login')}
+                className="mt-6 px-6 py-2.5 rounded-xl font-black text-nb-dark text-sm shadow-md"
+                style={{ background: '#FFEB3C' }}>
+                ← Back to Sign In
+              </button>
             </div>
-            <p className="text-[11px] text-gray-400 mt-2 text-center">
-              Select a role to auto-fill, then click Sign In
-            </p>
-          </div>
+          )}
         </div>
       </div>
       <ServerStatusBadge />
