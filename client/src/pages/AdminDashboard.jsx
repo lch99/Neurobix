@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import Navbar from '../components/Navbar'
-import ComingSoon from '../components/ComingSoon'
+import MemoryFundamentals from '../components/MemoryFundamentals'
 import PinInput from '../components/PinInput'
 import { resetCredential, setMustChangeCredential, registerUser } from '../data/mockDb'
 import { apiRequest } from '../lib/api'
@@ -434,7 +434,8 @@ export default function AdminDashboard() {
             { id: 'overview', label: '📊 Overview' },
             { id: 'users',    label: '👥 Users' },
             { id: 'classes',  label: '🏫 Classes' },
-            { id: 'memory',   label: '🧠 Memory Techniques' },
+            { id: 'memory',   label: '🧠 Memory Fundamentals' },
+            { id: 'memportal', label: '🧠 Mem Portal' },
             { id: 'reports',  label: '📈 Reports' },
           ].map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
@@ -643,10 +644,17 @@ export default function AdminDashboard() {
         {/* CLASSES */}
         {tab === 'classes' && <div className="tab-panel"><AdminClassesTab /></div>}
 
-        {/* MEMORY TECHNIQUES (coming soon) */}
+        {/* MEMORY FUNDAMENTALS */}
         {tab === 'memory' && (
           <div className="tab-panel">
-            <ComingSoon description="A dedicated space to manage and monitor memory-technique content and analytics across all classes. We're building it now — check back soon!" />
+            <MemoryFundamentals role="admin" />
+          </div>
+        )}
+
+        {/* MEM PORTAL (coming soon) */}
+        {tab === 'memportal' && (
+          <div className="tab-panel">
+            <ComingSoon title="Mem Portal" description="A dedicated space for memory training tools and exercises. We're building it now — check back soon!" />
           </div>
         )}
 

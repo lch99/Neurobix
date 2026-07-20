@@ -35,26 +35,30 @@ export default function WeeklySchedule({ readOnly = false }) {
   }, {})
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h2 className="text-xl sm:text-2xl font-black text-nb-dark">🗓️ Weekly Schedule</h2>
-        <p className="text-sm text-gray-400 mt-0.5">See what's coming up each week across all your classes.</p>
+    <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-5 space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-xl sm:text-2xl font-bold text-nb-dark">🗓️ Weekly Schedule</h2>
+          <p className="text-sm text-gray-400 mt-0.5">See what's coming up each week across all your classes.</p>
+        </div>
+        <span className="hidden sm:inline-block text-xs text-gray-400 flex-shrink-0">{weekLessons.length} {weekLessons.length === 1 ? 'class' : 'classes'}</span>
       </div>
 
       {/* Term selector */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
-        {TERMS.map(t => (
-          <button key={t.id} onClick={() => selectTerm(t)}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-black whitespace-nowrap border-2 transition ${
-              t.id === term.id ? 'border-nb-green text-nb-dark' : 'border-gray-100 text-gray-400 hover:border-gray-200'
-            }`}
-            style={t.id === term.id ? { background: '#6FC91112' } : {}}>
-            <span className={`w-2 h-2 rounded-full ${TERM_STATUS_DOT[t.status]}`} />
-            {t.name}
-          </button>
-        ))}
+      <div>
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          {TERMS.map(t => (
+            <button key={t.id} onClick={() => selectTerm(t)}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition ${
+                t.id === term.id ? 'bg-nb-green text-white' : 'bg-nb-cream/60 text-gray-500 hover:bg-nb-cream'
+              }`}>
+              <span className={`w-2 h-2 rounded-full ${t.id === term.id ? 'bg-white' : TERM_STATUS_DOT[t.status]}`} />
+              {t.name}
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-gray-400 mt-1.5">{formatTermRange(term)} · ~{weekCount} weeks{isCurrentTerm ? ' · currently in progress' : ''}</p>
       </div>
-      <p className="text-xs text-gray-400 -mt-2">{formatTermRange(term)} · ~{weekCount} weeks{isCurrentTerm ? ' · currently in progress' : ''}</p>
 
       {/* Week selector */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
@@ -64,14 +68,13 @@ export default function WeeklySchedule({ readOnly = false }) {
           const isSelected = w === selectedWeek
           return (
             <button key={w} onClick={() => setSelectedWeek(w)}
-              className={`relative flex-shrink-0 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black transition ${
+              className={`relative flex-shrink-0 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition ${
                 isSelected
-                  ? 'text-nb-dark shadow'
+                  ? 'bg-nb-yellow text-nb-dark shadow-sm'
                   : hasContent
-                    ? 'bg-white border-2 border-nb-olive/20 text-gray-600 hover:border-nb-green/40'
-                    : 'bg-gray-50 border-2 border-gray-100 text-gray-300'
-              }`}
-              style={isSelected ? { background: '#FFEB3C' } : {}}>
+                    ? 'bg-nb-cream/60 text-gray-500 hover:bg-nb-cream'
+                    : 'bg-gray-50 text-gray-300'
+              }`}>
               Wk {w}
               {isNow && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-nb-green border-2 border-white" />}
             </button>
@@ -80,15 +83,15 @@ export default function WeeklySchedule({ readOnly = false }) {
       </div>
 
       {/* Selected week content */}
-      <div className="bg-white rounded-2xl border-2 border-nb-olive/20 p-4 sm:p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-black text-nb-dark">
+      <div className="border-t border-nb-olive/10 pt-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-bold text-sm sm:text-base text-nb-dark">
             Week {selectedWeek}
             {isCurrentTerm && selectedWeek === currentWeek && (
               <span className="ml-2 text-[10px] font-black bg-nb-green text-white px-2 py-1 rounded-full align-middle">THIS WEEK</span>
             )}
           </h3>
-          <span className="text-xs text-gray-400">{weekLessons.length} {weekLessons.length === 1 ? 'class' : 'classes'}</span>
+          <span className="sm:hidden text-xs text-gray-400">{weekLessons.length} {weekLessons.length === 1 ? 'class' : 'classes'}</span>
         </div>
 
         {weekLessons.length === 0 ? (
@@ -104,13 +107,13 @@ export default function WeeklySchedule({ readOnly = false }) {
                 <div key={subject}>
                   <div className="flex items-center gap-2 mb-2">
                     {meta.icon && <img src={meta.icon} alt="" className="w-5 h-5 object-contain" />}
-                    <span className="font-black text-sm text-nb-dark">{subject}</span>
+                    <span className="font-bold text-sm text-nb-dark">{subject}</span>
                   </div>
                   <div className="space-y-2">
                     {lessons.map(l => (
                       <button key={l.id} disabled={readOnly} onClick={() => navigate(`/lessons/${l.id}`)}
-                        className={`w-full flex items-center gap-3 rounded-xl border border-nb-olive/15 bg-nb-cream/40 px-3.5 py-2.5 text-left transition ${
-                          readOnly ? 'cursor-default' : 'hover:border-nb-green/40 hover:shadow-sm'
+                        className={`w-full flex items-center gap-3 rounded-xl bg-nb-cream/40 px-3.5 py-2.5 text-left transition ${
+                          readOnly ? 'cursor-default' : 'hover:bg-nb-cream/70'
                         }`}>
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${TYPE_COLOR[l.type]}`}>
                           {TYPE_ICON[l.type]} {l.type}

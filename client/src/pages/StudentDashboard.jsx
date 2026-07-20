@@ -4,6 +4,7 @@ import Navbar from '../components/Navbar'
 import LessonBrowser from '../components/LessonBrowser'
 import WeeklySchedule from '../components/WeeklySchedule'
 import ComingSoon from '../components/ComingSoon'
+import MemoryFundamentals from '../components/MemoryFundamentals'
 import { brainWatermark } from '../components/BrainBackground'
 import {
   mascotFemale, mascotMale, mascotRocket,
@@ -69,7 +70,7 @@ const TABS = [
   { id: 'home',       icon: '🏠', label: 'Home'       },
   { id: 'lessons',    icon: '📚', label: 'My Courses', dropdown: [
       { id: 'lessons', icon: '📚', label: 'Subjects' },
-      { id: 'memory',  icon: '🧠', label: 'Memory Techniques' },
+      { id: 'memory',  icon: '🧠', label: 'Memory Fundamentals' },
     ] },
   { id: 'flashcards', icon: '🃏', label: 'Flash Cards' },
   { id: 'shop',       icon: '🛍️', label: 'Shop'       },
@@ -323,10 +324,10 @@ export default function StudentDashboard() {
         {/* ── FLASH CARDS ── */}
         {tab === 'flashcards' && <div className="tab-panel"><FlashCardsView /></div>}
 
-        {/* ── MEMORY TECHNIQUES (coming soon) ── */}
+        {/* ── MEMORY FUNDAMENTALS ── */}
         {tab === 'memory' && (
           <div className="tab-panel">
-            <ComingSoon description="A dedicated space to learn the Story Method, Memory Palace, mnemonics and other memory techniques that power every lesson. We're building it now — check back soon!" />
+            <MemoryFundamentals role="student" />
           </div>
         )}
 

@@ -6,7 +6,7 @@ const TABS = [
   { id: 'home',       icon: '🏠', label: 'Home'       },
   { id: 'lessons',    icon: '📚', label: 'My Courses', dropdown: [
       { id: 'lessons', icon: '📚', label: 'Subjects' },
-      { id: 'memory',  icon: '🧠', label: 'Memory Techniques' },
+      { id: 'memory',  icon: '🧠', label: 'Memory Fundamentals' },
     ] },
   { id: 'flashcards', icon: '🃏', label: 'Flash Cards' },
   { id: 'shop',       icon: '🛍️', label: 'Shop'       },

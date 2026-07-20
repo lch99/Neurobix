@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import Navbar from '../components/Navbar'
-import ComingSoon from '../components/ComingSoon'
+import MemoryFundamentals from '../components/MemoryFundamentals'
 import PinInput from '../components/PinInput'
 import { registerUser, resetCredential, setMustChangeCredential, findAuthRecord } from '../data/mockDb'
 import {
@@ -230,7 +230,8 @@ export default function ParentDashboard() {
   const TABS = [
     { id: 'overview',   label: '📊 Overview' },
     { id: 'progress',   label: '📚 Progress' },
-    { id: 'memory',     label: '🧠 Memory Techniques' },
+    { id: 'memory',     label: '🧠 Memory Fundamentals' },
+    { id: 'memportal',  label: '🧠 Mem Portal' },
     { id: 'rewards',    label: '🏆 Rewards' },
     { id: 'messages',   label: '💬 Messages' },
     { id: 'deadlines',  label: '📅 Deadlines' },
@@ -516,10 +517,17 @@ export default function ParentDashboard() {
           </div>
         )}
 
-        {/* ── MEMORY TECHNIQUES (coming soon) ── */}
+        {/* ── MEMORY FUNDAMENTALS ── */}
         {tab === 'memory' && (
           <div className="tab-panel">
-            <ComingSoon description="A dedicated space to see the memory techniques your child is learning — Story Method, Memory Palace, mnemonics and more. We're building it now — check back soon!" />
+            <MemoryFundamentals role="parent" studentName={child.name.split(' ')[0]} />
+          </div>
+        )}
+
+        {/* ── MEM PORTAL (coming soon) ── */}
+        {tab === 'memportal' && (
+          <div className="tab-panel">
+            <ComingSoon title="Mem Portal" description="A dedicated space for memory training tools and exercises. We're building it now — check back soon!" />
           </div>
         )}
 

@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import iconSolarSystem from '../assets/icons/solar-system.png'
 import iconPlants from '../assets/icons/plants.png'
 import iconHumanBody from '../assets/icons/human-body.png'
@@ -91,6 +92,45 @@ function computeLockedIds(lessons) {
 }
 
 export const LOCKED_IDS = computeLockedIds(ALL_LESSONS)
+
+// ─── Teacher "force open" override ──────────────────────────────────────────
+// Lets a teacher open this week's class on the spot for a student who hasn't
+// finished the previous lesson yet, bypassing the sequential lock above.
+// Demo-only: state lives in localStorage (no server), shared across tabs so a
+// teacher's override is instantly visible on the student side in the browser.
+const FORCE_OPEN_KEY = 'nb_force_open_lesson_ids'
+
+function readForceOpenIds() {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(FORCE_OPEN_KEY)) || [])
+  } catch {
+    return new Set()
+  }
+}
+
+export function setForceOpen(lessonId, open) {
+  const ids = readForceOpenIds()
+  if (open) ids.add(lessonId)
+  else ids.delete(lessonId)
+  localStorage.setItem(FORCE_OPEN_KEY, JSON.stringify([...ids]))
+  window.dispatchEvent(new Event('nb-force-open-change'))
+}
+
+// Reactive set of force-opened lesson ids — re-renders when a teacher toggles
+// an override, in this tab or another (e.g. teacher + student tabs open side by side).
+export function useForceOpenIds() {
+  const [ids, setIds] = useState(() => readForceOpenIds())
+  useEffect(() => {
+    const sync = () => setIds(readForceOpenIds())
+    window.addEventListener('nb-force-open-change', sync)
+    window.addEventListener('storage', sync)
+    return () => {
+      window.removeEventListener('nb-force-open-change', sync)
+      window.removeEventListener('storage', sync)
+    }
+  }, [])
+  return ids
+}
 
 // ─── Weekly schedule helpers ────────────────────────────────────────────────
 

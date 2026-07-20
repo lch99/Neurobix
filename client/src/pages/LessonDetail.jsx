@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { LOCKED_IDS } from '../data/lessons'
+import { LOCKED_IDS, useForceOpenIds } from '../data/lessons'
 import Navbar from '../components/Navbar'
 import QuestionBody, { hasAnswer, isCorrectAnswer } from '../components/AssessmentQuestion'
 import logoWhite from '../assets/Asset 1@3x 1_White.png'
@@ -80,7 +80,8 @@ export default function LessonDetail() {
   }
   const [completed, setCompleted] = useState(false)
 
-  const isLocked = LOCKED_IDS.has(Number(id))
+  const forceOpenIds = useForceOpenIds()
+  const isLocked = LOCKED_IDS.has(Number(id)) && !forceOpenIds.has(Number(id))
 
   if (isLocked) {
     return (

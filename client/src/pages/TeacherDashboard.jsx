@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import Navbar from '../components/Navbar'
-import ComingSoon from '../components/ComingSoon'
+import MemoryFundamentals from '../components/MemoryFundamentals'
 import { useAuth } from '../context/AuthContext'
 import { apiRequest } from '../lib/api'
-import { TERMS } from '../data/lessons'
+import { TERMS, LOCKED_IDS, getCurrentTermWeek, getLessonsByWeek, useForceOpenIds, setForceOpen } from '../data/lessons'
 import { previewIcon, bookIcon, flashcardIcon } from '../assets/icons'
 
 const CO_TEACHER_OPTIONS = ['Ms Sarah Tan', 'Mr Alif Ibrahim', 'Ms Maria Wong']
@@ -23,7 +23,8 @@ export default function TeacherDashboard() {
             { id: 'classes',     label: '🏫 Classes'     },
             { id: 'lessons',     label: '📚 My Courses'  },
             { id: 'flashcards',  label: '🃏 Flash Cards'  },
-            { id: 'memory',      label: '🧠 Memory Techniques' },
+            { id: 'memory',      label: '🧠 Memory Fundamentals' },
+            { id: 'memportal',   label: '🧠 Mem Portal'  },
             { id: 'schedule',    label: '📅 Schedule'    },
             { id: 'students',    label: '👩‍🎓 Students'   },
           ].map(t => (
@@ -52,15 +53,27 @@ export default function TeacherDashboard() {
         {/* FLASH CARDS */}
         {tab === 'flashcards' && <div className="tab-panel"><FlashCardEditor /></div>}
 
-        {/* MEMORY TECHNIQUES (coming soon) */}
+        {/* MEMORY FUNDAMENTALS */}
         {tab === 'memory' && (
           <div className="tab-panel">
-            <ComingSoon description="A dedicated space to create and assign memory-method content — mnemonics, memory palace exercises and story-method templates for your classes. We're building it now — check back soon!" />
+            <MemoryFundamentals role="teacher" />
+          </div>
+        )}
+
+        {/* MEM PORTAL (coming soon) */}
+        {tab === 'memportal' && (
+          <div className="tab-panel">
+            <ComingSoon title="Mem Portal" description="A dedicated space for memory training tools and exercises. We're building it now — check back soon!" />
           </div>
         )}
 
         {/* SCHEDULE */}
-        {tab === 'schedule' && <div className="tab-panel"><ScheduleView /></div>}
+        {tab === 'schedule' && (
+          <div className="tab-panel space-y-5">
+            <LiveClassAccess />
+            <ScheduleView />
+          </div>
+        )}
 
         {/* STUDENTS — broken down by class */}
         {tab === 'students' && <div className="tab-panel"><StudentsTab /></div>}
@@ -960,7 +973,63 @@ function AssessmentEditor({ lesson, onClose, onLessonUpdate }) {
   )
 }
 
-/* ── Schedule View ── */
+/* ── Force-open this week's class for students stuck behind a locked lesson ── */
+function LiveClassAccess() {
+  const { term, week } = getCurrentTermWeek()
+  const byWeek = getLessonsByWeek(term.id)
+  // Prefer lessons scheduled for the exact current week; fall back to the
+  // rest of the active term so teachers still have something to act on
+  // when this week itself has no lesson scheduled.
+  const weekLessons = byWeek[week] || []
+  const termLessons = Object.values(byWeek).flat()
+  const showingWeekOnly = weekLessons.length > 0
+  const lessons = showingWeekOnly ? weekLessons : termLessons
+  const forceOpenIds = useForceOpenIds()
+
+  if (lessons.length === 0) return null
+
+  return (
+    <div className="bg-white rounded-2xl border-2 border-nb-olive/20 p-4 sm:p-5">
+      <h3 className="font-black text-nb-dark flex items-center gap-2 flex-wrap">
+        🔓 {showingWeekOnly ? "This Week's" : `${term.name}`} Class Access
+        {showingWeekOnly && <span className="text-[10px] font-black bg-nb-green text-white px-2 py-1 rounded-full">WEEK {week}</span>}
+      </h3>
+      <p className="text-xs text-gray-400 mt-0.5 mb-3">
+        Regular classes unlock in sequence. If a student hasn't finished the previous lesson yet, force this class open so they can still join now.
+      </p>
+      <div className="space-y-2">
+        {lessons.map(l => {
+          const baseLocked = LOCKED_IDS.has(l.id)
+          const forced = forceOpenIds.has(l.id)
+          return (
+            <div key={l.id} className="flex items-center justify-between gap-3 rounded-xl bg-nb-cream/40 px-3.5 py-2.5">
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-nb-dark truncate">{l.title}</p>
+                <p className="text-xs text-gray-400">
+                  {!baseLocked
+                    ? '✅ Already unlocked — sequence complete'
+                    : forced
+                      ? "🔓 Force-opened — student can join even though the previous lesson isn't done"
+                      : '🔒 Locked — waiting on previous lesson'}
+                </p>
+              </div>
+              {baseLocked && (
+                <button onClick={() => setForceOpen(l.id, !forced)}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-black flex-shrink-0 transition ${
+                    forced ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'text-nb-dark shadow-sm hover:shadow'
+                  }`}
+                  style={!forced ? { background: '#FFEB3C' } : {}}>
+                  {forced ? 'Revoke Access' : 'Force Open Now'}
+                </button>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 function ScheduleView() {
   const { token } = useAuth()
   const [lessons, setLessons] = useState([])

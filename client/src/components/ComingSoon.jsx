@@ -1,6 +1,6 @@
 import { brainIcon } from '../assets/icons'
 
-export default function ComingSoon({ title = 'Memory Techniques', description }) {
+export default function ComingSoon({ title = 'Coming Soon', description }) {
   return (
     <div className="flex items-center justify-center py-10 sm:py-16">
       <div className="bg-white rounded-3xl border-2 border-nb-olive/20 p-8 sm:p-12 text-center max-w-lg">

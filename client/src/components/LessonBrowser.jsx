@@ -5,7 +5,7 @@ import { starYellow, lockIcon, durationIcon } from '../assets/icons'
 import {
   ALL_LESSONS, LOCKED_IDS, TERMS, formatTermRange,
   STATUS_STYLE, STATUS_LABEL, DIFF_COLOR, TYPE_COLOR, TYPE_ICON,
-  SUBJECT_META, SUBJECT_BADGE,
+  SUBJECT_META, SUBJECT_BADGE, useForceOpenIds,
 } from '../data/lessons'
 
 const MILESTONES = [25, 50, 75, 100]
@@ -198,6 +198,7 @@ export default function LessonBrowser() {
 }
 
 function TermsView({ course, meta, expandedTerm, setExpandedTerm, onBack, navigate }) {
+  const forceOpenIds = useForceOpenIds()
   const courseLessons = ALL_LESSONS.filter(l => l.subject === course)
   const doneCount = courseLessons.filter(l => l.status === 'completed').length
   const subjPct   = Math.round((doneCount / courseLessons.length) * 100)
@@ -298,9 +299,11 @@ function TermsView({ course, meta, expandedTerm, setExpandedTerm, onBack, naviga
               {isExpanded && (
                 <div className="border-t-2 border-gray-100 p-3 space-y-2.5 bg-white">
                   {termLessons.map(lesson => {
-                    const locked = LOCKED_IDS.has(lesson.id)
+                    const baseLocked = LOCKED_IDS.has(lesson.id)
+                    const forced = forceOpenIds.has(lesson.id)
+                    const locked = baseLocked && !forced
                     return (
-                      <LessonRow key={lesson.id} lesson={lesson} locked={locked}
+                      <LessonRow key={lesson.id} lesson={lesson} locked={locked} forceOpened={baseLocked && forced}
                         onClick={() => !locked && navigate(`/lessons/${lesson.id}`)} />
                     )
                   })}
@@ -314,7 +317,7 @@ function TermsView({ course, meta, expandedTerm, setExpandedTerm, onBack, naviga
   )
 }
 
-function LessonRow({ lesson, locked, onClick }) {
+function LessonRow({ lesson, locked, forceOpened, onClick }) {
   return (
     <div
       onClick={onClick}
@@ -341,6 +344,11 @@ function LessonRow({ lesson, locked, onClick }) {
               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${DIFF_COLOR[lesson.difficulty]}`}>
                 {lesson.difficulty}
               </span>
+              {forceOpened && (
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                  🔓 Opened by teacher
+                </span>
+              )}
             </>
           )}
         </div>
