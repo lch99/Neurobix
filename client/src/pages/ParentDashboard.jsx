@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Navbar from '../components/Navbar'
 import MemoryFundamentals from '../components/MemoryFundamentals'
 import PinInput from '../components/PinInput'
+import { useAuth } from '../context/AuthContext'
+import { apiRequest } from '../lib/api'
 import { registerUser, resetCredential, setMustChangeCredential, findAuthRecord } from '../data/mockDb'
 import {
   subjectMicroscope,
@@ -165,7 +167,7 @@ function AddChildModal({ onClose, onAdd }) {
       class: form.className.trim() || 'Not yet assigned',
       avatar: initials || '🙂',
       subjects: [], points: 0, streak: 0, badges: [], assessmentResults: [],
-      recentActivity: [], teacherNotes: [], upcomingDeadlines: [],
+      recentActivity: [], teacherNotes: [], upcomingDeadlines: [], guardians: [],
     })
   }
 
@@ -215,13 +217,105 @@ function AddChildModal({ onClose, onAdd }) {
   )
 }
 
+/* ── Invite a second guardian to a child's account (view-only linking) ── */
+function AddGuardianModal({ child, onClose, onAdd }) {
+  const [form, setForm] = useState({ name: '', email: '', relation: 'Father' })
+  const [error, setError] = useState('')
+
+  function set(k, v) { setForm(f => ({ ...f, [k]: v })); setError('') }
+
+  function submit(e) {
+    e.preventDefault()
+    if (!form.name.trim()) { setError("Please enter the guardian's name."); return }
+    if (!form.email.trim()) { setError('Please enter an email address.'); return }
+    onAdd({ name: form.name, email: form.email, relation: form.relation })
+    onClose()
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+         style={{ background: 'rgba(0,0,0,0.4)' }}
+         onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-sm p-6 sm:p-8">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-lg font-black text-nb-dark">Add a Guardian for {child.name}</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
+        </div>
+        {error && <p className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-2">{error}</p>}
+        <form onSubmit={submit} className="space-y-4">
+          <div>
+            <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-1.5">Full Name</label>
+            <input value={form.name} onChange={e => set('name', e.target.value)}
+              placeholder="e.g. Puan Rohana"
+              className="w-full px-4 py-2.5 rounded-xl border-2 border-gray-100 focus:outline-none focus:border-nb-green bg-nb-cream text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-1.5">Email Address</label>
+            <input type="email" value={form.email} onChange={e => set('email', e.target.value)}
+              placeholder="guardian@email.com"
+              className="w-full px-4 py-2.5 rounded-xl border-2 border-gray-100 focus:outline-none focus:border-nb-green bg-nb-cream text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-1.5">Relation</label>
+            <select value={form.relation} onChange={e => set('relation', e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl border-2 border-gray-100 focus:outline-none focus:border-nb-green bg-nb-cream text-sm">
+              {['Father', 'Mother', 'Guardian'].map(r => <option key={r}>{r}</option>)}
+            </select>
+          </div>
+          <p className="text-xs text-gray-400">They'll be invited by email to create their own login and view {child.name}'s progress alongside you.</p>
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={onClose}
+              className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-500 font-bold text-sm hover:border-gray-300 transition">Cancel</button>
+            <button type="submit"
+              className="flex-1 py-3 rounded-xl font-black text-nb-dark text-sm shadow-md transition hover:shadow-lg"
+              style={{ background: '#FFEB3C' }}>Send Invite →</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 export default function ParentDashboard() {
   const [childIdx, setChildIdx] = useState(0)
   const [tab, setTab] = useState('overview')
   const [children, setChildren] = useState(CHILDREN)
   const [showAddChild, setShowAddChild] = useState(false)
   const [pinTarget, setPinTarget] = useState(null)
+  const [guardianTarget, setGuardianTarget] = useState(null)
+  const { token } = useAuth()
   const child = children[childIdx]
+
+  // Ahmad (child id 1) is the same demo student account used elsewhere in the app — pull his
+  // real assessment attempts in place of the hardcoded sample results. Other demo children
+  // have no real linked student account yet, so they keep showing "no attempts" rather than
+  // fabricated numbers (there's no persisted parent↔student link to generalise this further).
+  useEffect(() => {
+    let cancelled = false
+    async function loadRealResults() {
+      const allAssessments = await apiRequest('/api/assessments', { token })
+      const perAssessment = await Promise.all(
+        (allAssessments || []).map(a =>
+          apiRequest(`/api/assessments/${a.id}/attempts`, { token }).then(rows => ({ assessment: a, rows: rows || [] }))
+        )
+      )
+      if (cancelled) return
+      const results = []
+      perAssessment.forEach(({ assessment, rows }) => {
+        rows.filter(r => r.studentId === 1).forEach(r => {
+          const pct = r.totalPoints > 0 ? Math.round((r.score / r.totalPoints) * 100) : 0
+          results.push({
+            title: assessment.title, subject: assessment.subject || 'Science',
+            score: pct, date: (r.completedAt || '').slice(0, 10), passed: pct >= assessment.passMark,
+          })
+        })
+      })
+      if (results.length === 0) return
+      setChildren(cs => cs.map(c => c.id === 1 ? { ...c, assessmentResults: results } : c))
+    }
+    loadRealResults()
+    return () => { cancelled = true }
+  }, [token])
 
   const overallProgress = child.subjects.length
     ? Math.round(child.subjects.reduce((sum, s) => sum + s.progress, 0) / child.subjects.length)
@@ -296,6 +390,10 @@ export default function ParentDashboard() {
           />
         )}
         {pinTarget && <ResetChildPinModal child={pinTarget} onClose={() => setPinTarget(null)} />}
+        {guardianTarget && (
+          <AddGuardianModal child={guardianTarget} onClose={() => setGuardianTarget(null)}
+            onAdd={g => setChildren(cs => cs.map(c => c.id === guardianTarget.id ? { ...c, guardians: [...(c.guardians || []), g] } : c))} />
+        )}
 
         {/* ── OVERVIEW ── */}
         {tab === 'overview' && (
@@ -328,6 +426,26 @@ export default function ParentDashboard() {
                 <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center text-lg sm:text-2xl font-black text-nb-dark flex-shrink-0 shadow-lg relative z-10"
                      style={{ background: '#FFEB3C' }}>{child.avatar}</div>
               </div>
+            </div>
+
+            {/* Guardians */}
+            <div className="bg-white rounded-2xl border border-nb-olive/20 p-5">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-black text-nb-dark flex items-center gap-1.5">👨‍👩‍👧 Linked Guardians</h3>
+                <button onClick={() => setGuardianTarget(child)}
+                  className="text-xs font-black text-nb-green hover:text-nb-dark transition">+ Add Guardian</button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-nb-cream text-nb-dark border border-nb-olive/20">You (Primary)</span>
+                {(child.guardians || []).map((g, i) => (
+                  <span key={i} className="px-3 py-1.5 rounded-full text-xs font-bold bg-nb-cream text-nb-dark border border-nb-olive/20">
+                    {g.name} · {g.relation}
+                  </span>
+                ))}
+              </div>
+              {(!child.guardians || child.guardians.length === 0) && (
+                <p className="text-xs text-gray-400 mt-2">Add a second parent/guardian so they can also view {child.name}'s progress.</p>
+              )}
             </div>
 
             {/* Quick stats */}

@@ -3,7 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import logoSquare from '../assets/NM_Square.png'
 import logoWhite from '../assets/Asset 1@3x 1_White.png'
 import { useAuth } from '../context/AuthContext'
+import { findAuthRecord, resetCredential, setMustChangeCredential } from '../data/mockDb'
 import ServerStatusBadge from '../components/ServerStatusBadge'
+
+function genTempPassword() {
+  return Math.random().toString(36).slice(-4) + Math.floor(10 + Math.random() * 90)
+}
 
 const DEMO_ACCOUNTS = [
   { role: 'parent',  label: '👨‍👩‍👧 Parent',  email: 'parent1@neurobix.com',  password: 'password123', path: '/parent',  style: 'bg-nb-olive text-white border-nb-olive' },
@@ -22,6 +27,7 @@ export default function LoginStaff() {
   const [showPw, setShowPw]     = useState(false)
   const [mode, setMode]         = useState('login') // 'login' | 'forgot' | 'sent'
   const [resetEmail, setResetEmail] = useState('')
+  const [tempPassword, setTempPassword] = useState('')
 
   function fillDemo(account) {
     setEmail(account.email)
@@ -43,6 +49,14 @@ export default function LoginStaff() {
 
   function handleResetRequest(e) {
     e.preventDefault()
+    if (findAuthRecord(resetEmail)) {
+      const temp = genTempPassword()
+      resetCredential(resetEmail, temp)
+      setMustChangeCredential(resetEmail, true)
+      setTempPassword(temp)
+    } else {
+      setTempPassword('')
+    }
     setMode('sent')
   }
 
@@ -195,8 +209,16 @@ export default function LoginStaff() {
               <div className="text-5xl mb-4">📬</div>
               <h2 className="text-xl font-black text-nb-dark">Check your email</h2>
               <p className="text-gray-400 text-sm mt-2 leading-relaxed">
-                If an account exists for <strong className="text-nb-dark">{resetEmail}</strong>, a password reset link is on its way.
+                If an account exists for <strong className="text-nb-dark">{resetEmail}</strong>, a password reset is on its way.
               </p>
+              {tempPassword && (
+                <div className="mt-5 p-4 rounded-2xl border-2 border-nb-yellow text-left" style={{ background: '#FFF7E9' }}>
+                  <p className="text-[11px] font-black text-amber-600 uppercase tracking-widest mb-1.5">🧪 Demo mode — no email server</p>
+                  <p className="text-xs text-gray-500 mb-2">This build doesn't send real emails, so here's the temporary password that was normally emailed:</p>
+                  <p className="font-mono font-black text-nb-dark text-lg text-center bg-white rounded-xl py-2 border border-nb-olive/20">{tempPassword}</p>
+                  <p className="text-xs text-gray-400 mt-2">You'll be asked to set a new password on next sign-in.</p>
+                </div>
+              )}
               <button onClick={() => setMode('login')}
                 className="mt-6 px-6 py-2.5 rounded-xl font-black text-nb-dark text-sm shadow-md"
                 style={{ background: '#FFEB3C' }}>

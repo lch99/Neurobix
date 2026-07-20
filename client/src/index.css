@@ -69,7 +69,11 @@ input, button, textarea, select { font-family: inherit; }
   to   { opacity: 1; transform: translateY(0); }
 }
 .tab-panel {
-  animation: tab-fade 0.18s ease both;
+  /* No `forwards`/`both` fill-mode: leaving the final keyframe's transform applied after
+     the animation ends would make this element a CSS containing block for any
+     `position: fixed` descendant (e.g. checkout/confirm modals), pinning them inside this
+     panel's box instead of the viewport. */
+  animation: tab-fade 0.18s ease;
 }
 
 /* Wrong-credentials shake */

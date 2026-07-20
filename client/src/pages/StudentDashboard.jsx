@@ -72,7 +72,7 @@ const BADGES = [
 const TABS = [
   { id: 'home',       icon: '🏠', label: 'Home'       },
   { id: 'lessons',    icon: '📚', label: 'My Courses', dropdown: [
-      { id: 'lessons', icon: '📚', label: 'Subjects' },
+      { id: 'lessons', icon: '📚', label: 'Mnemonics' },
       { id: 'memory',  icon: '🧠', label: 'Memory Fundamentals' },
     ] },
   { id: 'memportal',  icon: '🧠', label: 'Mem Portal' },
@@ -81,32 +81,52 @@ const TABS = [
   { id: 'rewards',    icon: '🏆', label: 'Rewards'    },
 ]
 
-const OPEN_CLASSES = [
-  { id: 12, name: 'Science Explorers',     subject: 'Science', level: 'Primary 4–6', slots: 16, status: 'enrolled'  },
-  { id: 13, name: 'Young Scientists Lab',  subject: 'Science', level: 'Primary 3–5', slots: 16, status: 'available' },
-]
-
 const BADGE_THRESHOLDS = [500, 1000, 1500, 2000, 3000, 5000]
 
 const REDEEM_ITEMS = [
-  { id: 'r1', icon: '📅', name: '1-Week Extension',      category: 'Subscription', cost: 300,  desc: 'Adds 7 days to your active subscription plan. Credited automatically.' },
-  { id: 'r2', icon: '📆', name: '1-Month Extension',     category: 'Subscription', cost: 1000, desc: 'Adds 30 days to your active subscription plan. Credited automatically.' },
-  { id: 'r3', icon: '🏷️', name: '10% Renewal Discount', category: 'Voucher',       cost: 200,  desc: 'Receive a 10% discount code applied on your next subscription renewal.' },
-  { id: 'r4', icon: '🎨', name: 'Sticker Pack (10 pcs)', category: 'Product',      cost: 150,  desc: 'Exclusive Neurobix memory stickers. Collect at the centre or posted to you.' },
-  { id: 'r5', icon: <img src={flashcardIcon} alt="" className="w-9 h-9 object-contain" />, name: 'Bonus Flash Deck', category: 'Product', cost: 100,  desc: 'Unlock a bonus flash card deck for any subject instantly.' },
-  { id: 'r6', icon: '⚡', name: 'Double XP — 3 Days',    category: 'Digital',      cost: 250,  desc: 'Earn 2× points on every lesson for the next 3 days.' },
+  { id: 'r1', icon: '🎨', name: 'Sticker Pack (10 pcs)',     category: 'Stationery', cost: 150, desc: 'Exclusive Neurobix memory stickers. Collect at the centre or posted to you.' },
+  { id: 'r2', icon: '🖍️', name: 'Colour Pen Set (12 pcs)',  category: 'Stationery', cost: 250, desc: 'A set of 12 vibrant colour pens for notes, art and drawing.' },
+  { id: 'r3', icon: '📓', name: 'Neurobix Notebook',         category: 'Stationery', cost: 180, desc: 'A5 hardcover notebook with the Neurobix logo — great for practice.' },
+  { id: 'r4', icon: '🎒', name: 'Pencil Case',                category: 'Stationery', cost: 220, desc: 'A roomy pencil case to keep all your stationery in one place.' },
+  { id: 'r5', icon: '🧸', name: 'Neurobix Mascot Plush Toy',  category: 'Toys',       cost: 500, desc: 'A cuddly plush of your favourite Neurobix mascot.' },
+  { id: 'r6', icon: '🧩', name: 'Memory Puzzle Cube',         category: 'Toys',       cost: 350, desc: 'A fun brain-training puzzle cube to sharpen your memory.' },
+  { id: 'r7', icon: '🧱', name: 'Mini Building Blocks Set',   category: 'Toys',       cost: 400, desc: 'A fun building blocks set to build, create and play with.' },
+  { id: 'r8', icon: <img src={flashcardIcon} alt="" className="w-9 h-9 object-contain" />, name: 'Bonus Flash Deck', category: 'Digital', cost: 100,  desc: 'Unlock a bonus flash card deck for any subject instantly.' },
+  { id: 'r9', icon: '⚡', name: 'Double XP — 3 Days',        category: 'Digital',    cost: 250, desc: 'Earn 2× points on every lesson for the next 3 days.' },
 ]
+
+// Real, deterministic per-student/per-class certificate serial (e.g. "SN001-1"), replacing the
+// old static placeholder — client's own example format: "SN001 - Class 1".
+function certSerial(studentId, classId) {
+  return `SN${String(studentId).padStart(3, '0')} · Class ${classId}`
+}
 
 export default function StudentDashboard() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { user, token } = useAuth()
   const [tab, setTab] = useState(location.state?.tab || 'home')
   const [certModal, setCertModal] = useState(null)
-  const [openClasses, setOpenClasses] = useState(OPEN_CLASSES)
+  const [openClasses, setOpenClasses] = useState([])
+  const [openClassesLoaded, setOpenClassesLoaded] = useState(false)
   const [studentPoints, setStudentPoints] = useState(1240)
   const [redeemConfirm, setRedeemConfirm] = useState(null)
   const [redeemedIds, setRedeemedIds]     = useState([])
   const [redeemToast, setRedeemToast]     = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    apiRequest('/api/classes', { token }).then(all => {
+      if (cancelled) return
+      const extras = (all || []).filter(c => c.type === 'extra').map(c => ({
+        id: c.id, name: c.name, subject: c.subject, level: c.level,
+        slots: c.slots || 16, filled: c.students || 0, status: 'available',
+      }))
+      setOpenClasses(extras)
+      setOpenClassesLoaded(true)
+    })
+    return () => { cancelled = true }
+  }, [token])
 
   return (
     <div className={`min-h-screen flex flex-col ${tab === 'home' ? 'bg-white' : 'bg-nb-cream'}`}>
@@ -291,34 +311,47 @@ export default function StudentDashboard() {
                 <h3 className="text-base sm:text-lg font-black text-nb-dark">🏫 Open Classes — Browse &amp; Enrol</h3>
                 <p className="text-xs text-gray-400 font-semibold mt-0.5">No lesson sequence — access any lesson freely</p>
               </div>
+              {openClassesLoaded && openClasses.length === 0 && (
+                <div className="bg-white rounded-2xl border-2 border-dashed border-nb-olive/30 p-8 text-center">
+                  <p className="text-3xl mb-2">🏫</p>
+                  <p className="font-black text-nb-dark">No open classes yet</p>
+                  <p className="text-sm text-gray-400 mt-1">Check back once your teacher opens an Extra class for enrolment.</p>
+                </div>
+              )}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {openClasses.map(c => (
-                  <div key={c.id} className={`bg-white rounded-2xl border-2 p-5 ${
-                    c.status === 'enrolled' ? 'border-nb-green' : c.status === 'left' ? 'border-amber-300' : 'border-nb-olive/20'
-                  }`}>
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="w-10 h-10 rounded-xl flex items-center justify-center p-2"
-                           style={{ background: '#FFF7E9' }}><img src={bookIcon} alt="" className="w-full h-full object-contain" /></div>
-                      {c.status === 'enrolled' && <span className="text-[10px] font-black bg-nb-green text-white px-2 py-1 rounded-full">✓ Enrolled</span>}
-                      {c.status === 'left' && <span className="text-[10px] font-black bg-amber-100 text-amber-700 px-2 py-1 rounded-full">Left · progress saved</span>}
-                    </div>
-                    <p className="font-black text-nb-dark text-sm mt-2">{c.name}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">{c.subject} · {c.level}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">{c.slots} slots available</p>
-                    <button
-                      onClick={() => setOpenClasses(prev => prev.map(x => x.id === c.id
-                        ? { ...x, status: x.status === 'enrolled' ? 'left' : 'enrolled' }
-                        : x))}
-                      className={`w-full mt-3 py-2.5 rounded-xl font-black text-sm transition ${
-                        c.status === 'enrolled'
-                          ? 'border-2 border-red-200 text-red-500 hover:bg-red-50'
+                {openClasses.map(c => {
+                  const isFull = c.filled >= c.slots && c.status === 'available'
+                  return (
+                    <div key={c.id} className={`bg-white rounded-2xl border-2 p-5 ${
+                      c.status === 'enrolled' ? 'border-nb-green' : c.status === 'left' ? 'border-amber-300' : 'border-nb-olive/20'
+                    }`}>
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center p-2"
+                             style={{ background: '#FFF7E9' }}><img src={bookIcon} alt="" className="w-full h-full object-contain" /></div>
+                        {c.status === 'enrolled' && <span className="text-[10px] font-black bg-nb-green text-white px-2 py-1 rounded-full">✓ Enrolled</span>}
+                        {c.status === 'left' && <span className="text-[10px] font-black bg-amber-100 text-amber-700 px-2 py-1 rounded-full">Left · progress saved</span>}
+                        {isFull && <span className="text-[10px] font-black bg-red-100 text-red-600 px-2 py-1 rounded-full">Full</span>}
+                      </div>
+                      <p className="font-black text-nb-dark text-sm mt-2">{c.name}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{c.subject} · {c.level}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{c.filled} / {c.slots} slots filled</p>
+                      <button disabled={isFull}
+                        onClick={() => setOpenClasses(prev => prev.map(x => {
+                          if (x.id !== c.id) return x
+                          if (x.status === 'enrolled') return { ...x, status: 'left', filled: Math.max(0, x.filled - 1) }
+                          return { ...x, status: 'enrolled', filled: x.filled + 1 }
+                        }))}
+                        className={`w-full mt-3 py-2.5 rounded-xl font-black text-sm transition ${
+                          isFull ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                          : c.status === 'enrolled' ? 'border-2 border-red-200 text-red-500 hover:bg-red-50'
                           : 'text-nb-dark shadow hover:shadow-md'
-                      }`}
-                      style={c.status === 'enrolled' ? {} : { background: '#FFEB3C' }}>
-                      {c.status === 'enrolled' ? 'Leave Class' : c.status === 'left' ? 'Rejoin Class ↻' : 'Join Class →'}
-                    </button>
-                  </div>
-                ))}
+                        }`}
+                        style={!isFull && c.status !== 'enrolled' ? { background: '#FFEB3C' } : {}}>
+                        {isFull ? 'Class Full' : c.status === 'enrolled' ? 'Leave Class' : c.status === 'left' ? 'Rejoin Class ↻' : 'Join Class →'}
+                      </button>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           </div>
@@ -369,13 +402,13 @@ export default function StudentDashboard() {
                 <h3 className="text-base sm:text-lg font-black text-nb-dark">🎁 Redeem Points</h3>
                 <span className="text-sm font-bold text-nb-green flex items-center gap-1"><img src={starYellow} alt="" className="w-4 h-4 object-contain" /> {studentPoints.toLocaleString()} available</span>
               </div>
-              <p className="text-xs text-gray-400 mb-4">Use your earned points to extend your subscription, grab vouchers, or redeem products.</p>
+              <p className="text-xs text-gray-400 mb-4">Use your earned points to grab stationery, toys and fun digital perks.</p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {REDEEM_ITEMS.map(item => {
                   const isRedeemed  = redeemedIds.includes(item.id)
                   const canAfford   = studentPoints >= item.cost
-                  const CAT_COLOR   = { Subscription: '#3b82f6', Voucher: '#f59e0b', Product: '#36913F', Digital: '#9333ea' }
+                  const CAT_COLOR   = { Stationery: '#f59e0b', Toys: '#ec4899', Digital: '#9333ea' }
                   const catColor    = CAT_COLOR[item.category] || '#91BA4F'
                   return (
                     <div key={item.id}
@@ -419,7 +452,7 @@ export default function StudentDashboard() {
               </div>
 
               <p className="text-xs text-gray-400 text-center mt-4">
-                Subscription extensions are applied automatically · Voucher codes emailed to parent · Physical products collected at the centre
+                Stationery &amp; toys collected at the centre or posted to you · Digital rewards applied automatically
               </p>
             </div>
 
@@ -447,6 +480,7 @@ export default function StudentDashboard() {
                     <div className="flex-1 min-w-0">
                       <p className="font-black text-nb-dark text-sm">Science — Primary 4</p>
                       <p className="text-xs text-gray-400 mt-0.5">All 10 lessons · All assessments passed · Issued 2025-05-10</p>
+                      <p className="text-[11px] text-gray-300 mt-0.5 font-mono">Cert #{certSerial(user.id, 1)}</p>
                     </div>
                   </div>
                   <div className="flex gap-2">
@@ -579,7 +613,7 @@ export default function StudentDashboard() {
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-6 text-xs text-white/60">
                   <span>📅 Issued: 2025-05-10</span>
                   <span>🏫 Neurobix Method</span>
-                  <span className="flex items-center gap-1"><img src={lockIcon} alt="" className="w-3 h-3 object-contain opacity-70" /> Cert #NM-2025-0041</span>
+                  <span className="flex items-center gap-1"><img src={lockIcon} alt="" className="w-3 h-3 object-contain opacity-70" /> Cert #{certSerial(user.id, 1)}</span>
                 </div>
               </div>
             </div>

@@ -35,6 +35,7 @@ export default function LessonDetail() {
   const [lesson, setLesson]       = useState(null)
   const [cards, setCards]         = useState([])
   const [assessment, setAssessment] = useState(null)
+  const [ownerClass, setOwnerClass] = useState(null)
   const [loading, setLoading]     = useState(true)
   const [completed, setCompleted] = useState(false)
 
@@ -44,6 +45,7 @@ export default function LessonDetail() {
     setCompleted(false)
     setAssessment(null)
     setCards([])
+    setOwnerClass(null)
 
     async function load() {
       const found = await apiRequest(`/api/lessons/${id}`, { token })
@@ -54,6 +56,10 @@ export default function LessonDetail() {
         return
       }
       setLesson(found)
+      if (found.classId) {
+        const allClasses = await apiRequest('/api/classes', { token })
+        if (!cancelled) setOwnerClass((allClasses || []).find(c => c.id === found.classId) || null)
+      }
       if (found.type === 'flashcard') {
         const deck = await apiRequest(`/api/flashcards?lessonId=${id}`, { token })
         if (!cancelled) setCards(deck || [])
@@ -68,7 +74,10 @@ export default function LessonDetail() {
   }, [id])
 
   const forceOpenIds = useForceOpenIds()
-  const isLocked = LOCKED_IDS.has(Number(id)) && !forceOpenIds.has(Number(id))
+  const sequentialLocked = LOCKED_IDS.has(Number(id)) && !forceOpenIds.has(Number(id))
+  // An archived class hides its lessons from students again unless Admin has force-opened a term.
+  const archivedLocked = ownerClass?.status === 'archived' && !ownerClass?.forcedOpenTerm
+  const isLocked = sequentialLocked || archivedLocked
 
   if (isLocked) {
     return (
@@ -82,13 +91,18 @@ export default function LessonDetail() {
         <div className="flex-1 flex items-center justify-center p-6">
           <div className="bg-white rounded-3xl border-2 border-gray-200 p-10 max-w-sm w-full text-center shadow-lg">
             <img src={lockIcon} alt="" className="w-16 h-16 mx-auto mb-4 object-contain" />
-            <h2 className="text-2xl font-black text-nb-dark">Lesson Locked</h2>
+            <h2 className="text-2xl font-black text-nb-dark">{archivedLocked ? 'Class Archived' : 'Lesson Locked'}</h2>
             <p className="text-gray-500 mt-2 text-sm leading-relaxed">
-              You need to complete the previous lesson before unlocking <strong>{lesson?.title || 'this lesson'}</strong>.
+              {archivedLocked
+                ? <>This class has been archived. Ask your teacher or Neurobix admin to reopen a term to access <strong>{lesson?.title || 'this lesson'}</strong> again.</>
+                : <>You need to complete the previous lesson before unlocking <strong>{lesson?.title || 'this lesson'}</strong>.</>}
             </p>
             <div className="mt-4 p-3 rounded-xl text-xs font-semibold text-nb-dark border-2 border-nb-yellow flex items-center gap-2 text-left"
                  style={{ background: '#FFEB3C22' }}>
-              <img src={brainIcon} alt="" className="w-6 h-6 object-contain flex-shrink-0" /> <span><strong>Neurobix tip:</strong> Sequential learning helps your brain build knowledge step by step — like building blocks!</span>
+              <img src={brainIcon} alt="" className="w-6 h-6 object-contain flex-shrink-0" />
+              {archivedLocked
+                ? <span><strong>Neurobix tip:</strong> Your progress and certificates for this class are safe — they'll be right here once it reopens.</span>
+                : <span><strong>Neurobix tip:</strong> Sequential learning helps your brain build knowledge step by step — like building blocks!</span>}
             </div>
             <button onClick={() => navigate('/lessons')}
               className="mt-6 w-full py-3 rounded-2xl font-black text-nb-dark shadow-md transition hover:shadow-lg"

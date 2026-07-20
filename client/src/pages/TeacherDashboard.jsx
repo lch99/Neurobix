@@ -4,6 +4,7 @@ import MemoryFundamentals from '../components/MemoryFundamentals'
 import { useAuth } from '../context/AuthContext'
 import { apiRequest } from '../lib/api'
 import { TERMS, LOCKED_IDS, getCurrentTermWeek, getLessonsByWeek, useForceOpenIds, setForceOpen } from '../data/lessons'
+import { QuestionCard } from '../components/AssessmentQuestion'
 import { previewIcon, bookIcon, flashcardIcon } from '../assets/icons'
 
 const CO_TEACHER_OPTIONS = ['Ms Sarah Tan', 'Mr Alif Ibrahim', 'Ms Maria Wong']
@@ -725,8 +726,22 @@ function AssessmentEditor({ lesson, onClose, onLessonUpdate }) {
   const [loading, setLoading]       = useState(true)
   const [error, setError]           = useState('')
   const [saved, setSaved]           = useState(false)
+  const [subTab, setSubTab]         = useState('questions') // 'questions' | 'results'
+  const [attempts, setAttempts]         = useState([])
+  const [attemptsLoading, setAttemptsLoading] = useState(false)
+  const [expandedAttemptId, setExpandedAttemptId] = useState(null)
 
   useEffect(() => { load() }, [lesson.id])
+
+  useEffect(() => {
+    if (subTab !== 'results' || !assessment) return
+    let cancelled = false
+    setAttemptsLoading(true)
+    apiRequest(`/api/assessments/${assessment.id}/attempts`, { token }).then(rows => {
+      if (!cancelled) { setAttempts(rows || []); setAttemptsLoading(false) }
+    })
+    return () => { cancelled = true }
+  }, [subTab, assessment?.id])
 
   async function load() {
     setLoading(true)
@@ -866,6 +881,20 @@ function AssessmentEditor({ lesson, onClose, onLessonUpdate }) {
 
       {error && <p className="text-sm text-red-500">{error}</p>}
 
+      {/* Questions / Results tab toggle */}
+      <div className="flex gap-1 bg-nb-cream rounded-2xl p-1 w-fit">
+        <button onClick={() => setSubTab('questions')}
+          className={`px-4 py-2 rounded-xl text-sm font-black transition ${subTab === 'questions' ? 'bg-white text-nb-dark shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>
+          📝 Questions
+        </button>
+        <button onClick={() => setSubTab('results')}
+          className={`px-4 py-2 rounded-xl text-sm font-black transition ${subTab === 'results' ? 'bg-white text-nb-dark shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>
+          📊 Results{attempts.length > 0 ? ` (${attempts.length})` : ''}
+        </button>
+      </div>
+
+      {subTab === 'questions' && (
+      <>
       {/* Assessment settings bar */}
       <div className="bg-white rounded-2xl border border-nb-olive/20 p-4 flex flex-wrap gap-4 items-center">
         <div className="flex items-center gap-2">
@@ -969,6 +998,52 @@ function AssessmentEditor({ lesson, onClose, onLessonUpdate }) {
         className="w-full py-4 rounded-2xl border-2 border-dashed border-nb-olive/40 text-nb-green font-bold hover:border-nb-green hover:bg-white transition">
         + Add Question
       </button>
+      </>
+      )}
+
+      {subTab === 'results' && (
+        <div className="space-y-3">
+          {attemptsLoading && <p className="text-sm text-gray-400">Loading attempts…</p>}
+          {!attemptsLoading && attempts.length === 0 && (
+            <div className="bg-white rounded-2xl border-2 border-dashed border-nb-olive/30 p-8 text-center">
+              <p className="text-3xl mb-2">📊</p>
+              <p className="font-black text-nb-dark">No attempts yet</p>
+              <p className="text-sm text-gray-400 mt-1">Results will appear here once a student takes this assessment.</p>
+            </div>
+          )}
+          {attempts.map(a => {
+            const expanded = expandedAttemptId === a.id
+            const pct = a.totalPoints > 0 ? Math.round((a.score / a.totalPoints) * 100) : 0
+            return (
+              <div key={a.id} className="bg-white rounded-2xl border-2 border-nb-olive/20 overflow-hidden">
+                <button onClick={() => setExpandedAttemptId(expanded ? null : a.id)}
+                  className="w-full flex items-center justify-between gap-3 p-4 text-left hover:bg-nb-cream/50 transition">
+                  <div>
+                    <p className="font-black text-nb-dark text-sm">{a.studentName}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{new Date(a.completedAt).toLocaleString()}</p>
+                  </div>
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    <span className={`text-xs font-black px-2.5 py-1 rounded-full ${pct >= assessment.passMark ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
+                      {a.score}/{a.totalPoints} ({pct}%)
+                    </span>
+                    <span className={`text-gray-400 text-lg transition-transform duration-200 ${expanded ? 'rotate-90' : ''}`}>›</span>
+                  </div>
+                </button>
+                {expanded && (
+                  <div className="border-t-2 border-gray-100 p-4 space-y-4 bg-nb-cream/30">
+                    {assessment.questions.map((q, idx) => (
+                      <div key={q.id}>
+                        <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1.5">Q{idx + 1} · {q.points} pt{q.points === 1 ? '' : 's'}</p>
+                        <QuestionCard q={q} value={a.answers?.[q.id]} onChange={() => {}} answered={true} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }

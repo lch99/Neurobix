@@ -5,7 +5,7 @@ import LessonBrowser from '../components/LessonBrowser'
 const TABS = [
   { id: 'home',       icon: '🏠', label: 'Home'       },
   { id: 'lessons',    icon: '📚', label: 'My Courses', dropdown: [
-      { id: 'lessons', icon: '📚', label: 'Subjects' },
+      { id: 'lessons', icon: '📚', label: 'Mnemonics' },
       { id: 'memory',  icon: '🧠', label: 'Memory Fundamentals' },
     ] },
   { id: 'flashcards', icon: '🃏', label: 'Flash Cards' },

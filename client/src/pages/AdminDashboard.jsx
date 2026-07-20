@@ -7,9 +7,10 @@ import { apiRequest } from '../lib/api'
 import { TERMS } from '../data/lessons'
 import { teacherIcon, parentIcon, bookIcon, medalIcon, overdueIcon, brainIcon } from '../assets/icons'
 
-function AddUserModal({ onClose, onAdd }) {
-  const [form, setForm] = useState({ name: '', email: '', username: '', pin: '', role: 'student', password: '' })
+function AddUserModal({ onClose, onAdd, parents = [] }) {
+  const [form, setForm] = useState({ name: '', email: '', username: '', pin: '', role: 'student', password: '', parentId: '' })
   const [error, setError] = useState('')
+  const [justCreatedParent, setJustCreatedParent] = useState(null)
   const isStudent = form.role === 'student'
 
   function set(k, v) { setForm(f => ({ ...f, [k]: v })); setError('') }
@@ -30,13 +31,45 @@ function AddUserModal({ onClose, onAdd }) {
       ...(isStudent ? { username: form.username } : { email: form.email }),
     })
 
+    const id = Date.now()
     onAdd({
-      id: Date.now(), name: form.name, role: form.role, status: 'active',
+      id, name: form.name, role: form.role, status: 'active',
       email: isStudent ? null : form.email, username: isStudent ? form.username : null,
       joined: new Date().toISOString().slice(0, 10), mustChangeCredential: registered.mustChangeCredential,
+      parentId: isStudent ? (form.parentId ? Number(form.parentId) : null) : null,
     })
-    onClose()
+
+    if (form.role === 'parent') setJustCreatedParent({ id, name: form.name })
+    else onClose()
   }
+
+  function addChildNow() {
+    setForm({ name: '', email: '', username: '', pin: '', role: 'student', password: '', parentId: String(justCreatedParent.id) })
+    setJustCreatedParent(null)
+    setError('')
+  }
+
+  if (justCreatedParent) return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+         style={{ background: 'rgba(0,0,0,0.4)' }}>
+      <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-sm p-6 sm:p-8 text-center space-y-4">
+        <div className="text-4xl">✅</div>
+        <h2 className="text-lg font-black text-nb-dark">Parent account created</h2>
+        <p className="text-sm text-gray-400">{justCreatedParent.name} can now log in. Add their child's student account now?</p>
+        <div className="flex gap-3 pt-2">
+          <button onClick={onClose}
+            className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-500 font-bold text-sm hover:border-gray-300 transition">
+            Done
+          </button>
+          <button onClick={addChildNow}
+            className="flex-1 py-3 rounded-xl font-black text-nb-dark text-sm shadow-md transition hover:shadow-lg"
+            style={{ background: '#FFEB3C' }}>
+            + Add a Child Now
+          </button>
+        </div>
+      </div>
+    </div>
+  )
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
@@ -81,6 +114,14 @@ function AddUserModal({ onClose, onAdd }) {
                 <PinInput length={4} value={form.pin} onChange={v => set('pin', v)} />
               </div>
               <p className="text-xs text-gray-400 text-center">Student will be asked to set a new PIN on first login.</p>
+              <div>
+                <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-1.5">Link to Parent (optional)</label>
+                <select value={form.parentId} onChange={e => set('parentId', e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border-2 border-gray-100 focus:outline-none focus:border-nb-green bg-nb-cream text-sm">
+                  <option value="">No parent linked</option>
+                  {parents.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+              </div>
             </>
           ) : (
             <>
@@ -424,9 +465,22 @@ export default function AdminDashboard() {
     (u.email || u.username || '').toLowerCase().includes(search.toLowerCase())
   )
 
+  // Small "linked family" chip shown next to a row — parent name for a student, child count for a parent.
+  function linkLabel(u) {
+    if (u.role === 'student' && u.parentId) {
+      const parent = users.find(p => p.id === u.parentId)
+      return parent ? `👨‍👩‍👧 ${parent.name}` : null
+    }
+    if (u.role === 'parent') {
+      const count = users.filter(c => c.parentId === u.id).length
+      return count > 0 ? `👨‍👩‍👧 ${count} child${count === 1 ? '' : 'ren'}` : null
+    }
+    return null
+  }
+
   return (
     <div className="min-h-screen bg-nb-cream">
-      {showModal && <AddUserModal onClose={() => setShowModal(false)} onAdd={handleAddUser} />}
+      {showModal && <AddUserModal onClose={() => setShowModal(false)} onAdd={handleAddUser} parents={users.filter(u => u.role === 'parent')} />}
       {resetTarget && <ResetPasswordModal user={resetTarget} onClose={() => setResetTarget(null)} />}
       <Navbar role="admin" userName="Admin">
         <div className="max-w-7xl mx-auto px-2 flex gap-1 overflow-x-auto py-2 scrollbar-hide">
@@ -573,6 +627,9 @@ export default function AdminDashboard() {
                       {u.status}
                     </span>
                     <span className="text-xs text-gray-400">{u.joined}</span>
+                    {linkLabel(u) && (
+                      <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-nb-cream text-gray-500">{linkLabel(u)}</span>
+                    )}
                     {u.role === 'parent' && (
                       <button onClick={() => setResetTarget(u)}
                         className="ml-auto text-xs font-bold text-nb-green hover:text-nb-dark transition">🔑 Reset Password</button>
@@ -608,6 +665,9 @@ export default function AdminDashboard() {
                             {u.name[0]}
                           </div>
                           <span className="font-bold text-nb-dark">{u.name}</span>
+                          {linkLabel(u) && (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-nb-cream text-gray-500 whitespace-nowrap">{linkLabel(u)}</span>
+                          )}
                         </div>
                       </td>
                       <td className="px-5 py-3 text-gray-500">{u.email || u.username}</td>
