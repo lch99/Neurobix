@@ -1,6 +1,8 @@
 // In-memory mock database — all backend data lives here for the frontend-only demo build.
 // Mutations update these arrays in-memory so CRUD operations work for the session.
 
+import { isCorrectAnswer } from '../components/AssessmentQuestion'
+
 let nextId = 1000
 const uid = () => ++nextId
 
@@ -18,29 +20,36 @@ let classes = [
   { id: 2, name: 'Primary 5A', subject: 'Science', level: 'P5', students: 4,  lessons: 5, teacherId: 3, termId: 3 },
 ]
 
+// Lesson ids 7/8/18/19/20/21 are shared with the curated student curriculum in
+// `data/lessons.js` (ALL_LESSONS) — LessonBrowser/StudentDashboard already link to those
+// exact ids, so keeping ids aligned here is what makes a teacher's authored flashcards/
+// assessment content actually reachable from the student's normal "My Courses" navigation.
 let lessons = [
-  { id: 1,  classId: 1, title: 'The Solar System',             type: 'video',     status: 'published', subject: 'Science', cardCount: 0, publishAt: null, deadlineAt: '2026-03-14', notifyEmail: true,  weekNumber: 1 },
-  { id: 2,  classId: 1, title: 'Plants & Photosynthesis',       type: 'reading',   status: 'published', subject: 'Science', cardCount: 0, publishAt: null, deadlineAt: '2026-03-28', notifyEmail: false, weekNumber: 2 },
-  { id: 3,  classId: 1, title: 'The Human Body',                type: 'flashcard', status: 'published', subject: 'Science', cardCount: 5, publishAt: null, deadlineAt: '2026-05-25', notifyEmail: true,  weekNumber: 3 },
-  { id: 4,  classId: 1, title: 'Forces & Motion',                type: 'video',     status: 'scheduled', subject: 'Science', cardCount: 0, publishAt: '2026-06-30T09:00', deadlineAt: '2026-07-15', notifyEmail: true, weekNumber: 4 },
-  { id: 5,  classId: 1, title: 'States of Matter',              type: 'assessment', status: 'draft',     subject: 'Science', cardCount: 0, publishAt: null, deadlineAt: null, notifyEmail: false, weekNumber: 5 },
-  { id: 6,  classId: 2, title: 'Food Chains & Ecosystems',      type: 'activity',  status: 'published', subject: 'Science', cardCount: 0, publishAt: null, deadlineAt: null, notifyEmail: false, weekNumber: 1 },
-  { id: 7,  classId: 2, title: 'States of Matter',              type: 'assessment', status: 'published', subject: 'Science', cardCount: 0, publishAt: null, deadlineAt: '2026-05-20', notifyEmail: true,  weekNumber: 2 },
-  { id: 8,  classId: 2, title: 'The Human Body',                type: 'reading',   status: 'draft',     subject: 'Science', cardCount: 0, publishAt: null, deadlineAt: null, notifyEmail: false, weekNumber: 3 },
-  { id: 9,  classId: 2, title: 'Forces & Motion',                type: 'flashcard', status: 'scheduled', subject: 'Science', cardCount: 4, publishAt: '2026-07-01T08:00', deadlineAt: '2026-07-30', notifyEmail: true, weekNumber: 4 },
-  { id: 10, classId: 2, title: 'Plants & Photosynthesis',       type: 'video',     status: 'published', subject: 'Science', cardCount: 0, publishAt: null, deadlineAt: '2026-07-15', notifyEmail: true,  weekNumber: 5 },
+  { id: 7,  classId: 1, title: 'The Solar System',        type: 'video',      status: 'published', subject: 'Science', cardCount: 0, publishAt: null, deadlineAt: '2026-03-14', notifyEmail: true,  weekNumber: 1, difficulty: 'Easy',   durationMinutes: 18, description: 'Journey through the 8 planets! Remember them with the Neurobix mnemonic memory trick.', objectives: ['Name all 8 planets in order', 'Know key facts about each planet', 'Use mnemonics to memorise them'], memoryTip: '"My Very Educated Mother Just Served Us Nachos" — Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune. Say it 3 times fast! 🪐' },
+  { id: 8,  classId: 1, title: 'Plants & Photosynthesis',  type: 'reading',    status: 'published', subject: 'Science', cardCount: 0, publishAt: null, deadlineAt: '2026-03-28', notifyEmail: false, weekNumber: 2, difficulty: 'Medium', durationMinutes: 14, description: "Discover how plants turn sunlight into food — nature's own factory!", readingSections: [
+      { heading: 'What is Photosynthesis?', body: 'Plants make their own food using sunlight, water and carbon dioxide. This process is called photosynthesis — it happens mostly in the leaves.' },
+      { heading: 'Why It Matters', body: 'Photosynthesis also releases oxygen — the very air we breathe! Without plants doing this every day, animals (including us) couldn\'t survive.' },
+    ] },
+  { id: 5,  classId: 1, title: 'States of Matter',        type: 'assessment', status: 'draft',     subject: 'Science', cardCount: 0, publishAt: null, deadlineAt: null, notifyEmail: false, weekNumber: 5, difficulty: 'Easy', durationMinutes: 12, description: 'Solid, liquid, gas — a shorter warm-up set on how matter changes state.' },
+  { id: 19, classId: 1, title: 'Forces & Motion',         type: 'video',      status: 'scheduled', subject: 'Science', cardCount: 0, publishAt: '2026-06-30T09:00', deadlineAt: '2026-07-15', notifyEmail: true, weekNumber: 4, difficulty: 'Medium', durationMinutes: 15, description: 'Push, pull, gravity — understand forces through fun experiments!' },
+  { id: 18, classId: 1, title: 'The Human Body',          type: 'flashcard', status: 'published', subject: 'Science', cardCount: 5, publishAt: null, deadlineAt: '2026-05-25', notifyEmail: true,  weekNumber: 3, difficulty: 'Medium', durationMinutes: 16, description: 'Learn the major organs and their functions with labelled flash cards.', objectives: ['Name the major organs', 'Describe what each organ does', 'Recall organ facts in under 5 seconds'], memoryTip: 'Picture a "factory" inside your body — the heart is the pump room, the lungs are the air vents, the brain is the control room!' },
+  { id: 21, classId: 2, title: 'Food Chains & Ecosystems', type: 'activity',  status: 'published', subject: 'Science', cardCount: 0, publishAt: null, deadlineAt: null, notifyEmail: false, weekNumber: 1, difficulty: 'Hard', durationMinutes: 20, description: 'Build your own food chain and understand how ecosystems balance.' },
+  { id: 20, classId: 2, title: 'States of Matter',        type: 'assessment', status: 'published', subject: 'Science', cardCount: 0, publishAt: null, deadlineAt: '2026-05-20', notifyEmail: true,  weekNumber: 2, difficulty: 'Easy', durationMinutes: 12, description: 'Solid, liquid, gas — test yourself on how matter changes state.', objectives: ['Identify the three states of matter', 'Explain melting, freezing and boiling', 'Give real-life examples of each state'], memoryTip: 'Solid = "stuck together and still". Liquid = "loose and flowing". Gas = "gone and spread out"! Say it out loud to lock it in.' },
+  { id: 108, classId: 2, title: 'The Human Body',         type: 'reading',   status: 'draft',     subject: 'Science', cardCount: 0, publishAt: null, deadlineAt: null, notifyEmail: false, weekNumber: 3, difficulty: 'Medium', durationMinutes: 16, description: "Read about the body's major organs and systems." },
+  { id: 109, classId: 2, title: 'Forces & Motion',        type: 'flashcard', status: 'scheduled', subject: 'Science', cardCount: 4, publishAt: '2026-07-01T08:00', deadlineAt: '2026-07-30', notifyEmail: true, weekNumber: 4, difficulty: 'Medium', durationMinutes: 15, description: 'Learn force & motion facts with flash cards.' },
+  { id: 10, classId: 2, title: 'Plants & Photosynthesis', type: 'video',     status: 'published', subject: 'Science', cardCount: 0, publishAt: null, deadlineAt: '2026-07-15', notifyEmail: true,  weekNumber: 5, difficulty: 'Medium', durationMinutes: 14, description: "Discover how plants turn sunlight into food — nature's own factory!" },
 ]
 
 let flashcards = [
-  { id: 1, lessonId: 3, front: 'What pumps blood around your body?', back: 'Heart',   hint: 'It beats about 100,000 times a day!' },
-  { id: 2, lessonId: 3, front: 'What organ helps you breathe?',      back: 'Lungs',   hint: 'You have two of them!'               },
-  { id: 3, lessonId: 3, front: "What organ is your body's control room?", back: 'Brain', hint: 'It sends signals through your nerves.' },
-  { id: 4, lessonId: 3, front: 'What organ filters your blood?',     back: 'Kidneys', hint: 'You have a pair of these too.'       },
-  { id: 5, lessonId: 3, front: 'What organ digests your food?',      back: 'Stomach', hint: 'It uses acid to break down food.'    },
-  { id: 6, lessonId: 9, front: 'What force pulls objects toward Earth?', back: 'Gravity', hint: 'It keeps your feet on the ground!' },
-  { id: 7, lessonId: 9, front: 'A push or a pull is called a…',      back: 'Force',   hint: 'It can make things move, stop or change direction.' },
-  { id: 8, lessonId: 9, front: 'What force slows down a sliding object?', back: 'Friction', hint: 'Rougher surfaces make more of it!' },
-  { id: 9, lessonId: 9, front: 'What happens to a ball when you push it?', back: 'It moves in the direction of the push', hint: 'Newton\'s first law!' },
+  { id: 1, lessonId: 18, front: 'What pumps blood around your body?', back: 'Heart',   hint: 'It beats about 100,000 times a day!' },
+  { id: 2, lessonId: 18, front: 'What organ helps you breathe?',      back: 'Lungs',   hint: 'You have two of them!'               },
+  { id: 3, lessonId: 18, front: "What organ is your body's control room?", back: 'Brain', hint: 'It sends signals through your nerves.' },
+  { id: 4, lessonId: 18, front: 'What organ filters your blood?',     back: 'Kidneys', hint: 'You have a pair of these too.'       },
+  { id: 5, lessonId: 18, front: 'What organ digests your food?',      back: 'Stomach', hint: 'It uses acid to break down food.'    },
+  { id: 6, lessonId: 109, front: 'What force pulls objects toward Earth?', back: 'Gravity', hint: 'It keeps your feet on the ground!' },
+  { id: 7, lessonId: 109, front: 'A push or a pull is called a…',      back: 'Force',   hint: 'It can make things move, stop or change direction.' },
+  { id: 8, lessonId: 109, front: 'What force slows down a sliding object?', back: 'Friction', hint: 'Rougher surfaces make more of it!' },
+  { id: 9, lessonId: 109, front: 'What happens to a ball when you push it?', back: 'It moves in the direction of the push', hint: 'Newton\'s first law!' },
 ]
 
 // Each assessment belongs to exactly one lesson (of type 'assessment') — there is no
@@ -57,24 +66,20 @@ let assessments = [
     ],
   },
   {
-    id: 2, lessonId: 7, passMark: 70, rewardPoints: 50, leaderboardEnabled: true, isPastYearPaper: false,
+    id: 2, lessonId: 20, passMark: 70, rewardPoints: 50, leaderboardEnabled: true, isPastYearPaper: false,
     questions: [
       { id: 5, assessmentId: 2, type: 'mcq',       text: 'Which of these is a liquid at room temperature?', options: ['Ice','Water','Steam','Rock'], answer: 1, points: 1 },
       { id: 6, assessmentId: 2, type: 'true_false', text: 'Gas has a fixed shape.', options: ['True','False'], answer: false, points: 1 },
       { id: 9, assessmentId: 2, type: 'match',     text: 'Match each process to its description', options: { pairs: [
           { left: 'Melting', right: 'Solid to liquid' }, { left: 'Evaporation', right: 'Liquid to gas' },
         ] }, answer: null, points: 2 },
-      { id: 10, assessmentId: 2, type: 'drag_drop', text: 'Sort each substance by its state at room temperature', options: {
-          buckets: ['Solid', 'Liquid', 'Gas'],
-          items: [
-            { label: 'Wood',   bucket: 'Solid' },
-            { label: 'Milk',   bucket: 'Liquid' },
-            { label: 'Oxygen', bucket: 'Gas' },
-            { label: 'Iron',   bucket: 'Solid' },
-          ] }, answer: null, points: 2 },
     ],
   },
 ]
+
+// A student's completed run of an assessment — score/points are computed from the
+// assessment's own stored `answer`/`points` per question, never trusted from the client.
+let assessmentAttempts = []
 
 function serializeAssessment(a) {
   const lesson = lessons.find(l => l.id === a.lessonId)
@@ -91,6 +96,27 @@ function serializeAssessment(a) {
     leaderboard: a.leaderboardEnabled,
     isPastYearPaper: a.isPastYearPaper,
     questions: a.questions,
+  }
+}
+
+const TEACHER_NAMES = { 3: 'Ms Sarah Tan' }
+
+// Non-assessment lessons don't have an authored reward value anywhere yet, so points are
+// derived from something real on the lesson (duration/card count) rather than invented per-id.
+function computeLessonPoints(lesson, assessmentRewardPoints) {
+  if (lesson.type === 'assessment') return assessmentRewardPoints ?? 30
+  if (lesson.type === 'flashcard') return Math.max(20, (lesson.cardCount || 0) * 8)
+  return Math.max(20, (lesson.durationMinutes || 10) * 2)
+}
+
+function serializeLessonDetail(lesson) {
+  const cls = classes.find(c => c.id === lesson.classId)
+  const assessment = lesson.type === 'assessment' ? assessments.find(a => a.lessonId === lesson.id) : null
+  return {
+    ...lesson,
+    className: cls?.name ?? null,
+    teacherName: TEACHER_NAMES[cls?.teacherId] || 'Teacher',
+    points: computeLessonPoints(lesson, assessment?.rewardPoints),
   }
 }
 
@@ -121,6 +147,30 @@ let students = [
   { enrollmentId: 13, studentId: 13, classId: 2, name: 'Aisyah Rahman',      email: 'aisyah@student.neurobix.com'  },
   { enrollmentId: 14, studentId: 1,  classId: 2, name: 'Ahmad bin Hassan',   email: 'ahmad@student.neurobix.com'   },
 ]
+
+// A student's personal "saved cards" library — persisted to localStorage (same pattern as
+// RUNTIME_USERS below) so it survives a page reload, since this is a frontend-only mock.
+const FLASHCARD_LIBRARY_KEY = 'nb_flashcard_library'
+
+let flashcardLibrary = (() => {
+  try { return JSON.parse(localStorage.getItem(FLASHCARD_LIBRARY_KEY)) || [] } catch { return [] }
+})()
+
+function persistFlashcardLibrary() {
+  localStorage.setItem(FLASHCARD_LIBRARY_KEY, JSON.stringify(flashcardLibrary))
+}
+
+// Per-student, per-card study progress (starred/known status, correct streak) used by
+// Study Set's Flashcards/Learn modes — one row per (studentId, cardId), upserted.
+const FLASHCARD_PROGRESS_KEY = 'nb_flashcard_progress'
+
+let flashcardProgress = (() => {
+  try { return JSON.parse(localStorage.getItem(FLASHCARD_PROGRESS_KEY)) || [] } catch { return [] }
+})()
+
+function persistFlashcardProgress() {
+  localStorage.setItem(FLASHCARD_PROGRESS_KEY, JSON.stringify(flashcardProgress))
+}
 
 // ─── Router ───────────────────────────────────────────────────────────────────
 
@@ -204,6 +254,10 @@ export async function mockApiRequest(path, { method = 'GET', body } = {}) {
   const lessonMatch = path.match(/^\/api\/lessons\/(\d+)$/)
   if (lessonMatch) {
     const id = Number(lessonMatch[1])
+    if (method === 'GET') {
+      const lesson = lessons.find(l => l.id === id)
+      return lesson ? serializeLessonDetail(lesson) : null
+    }
     if (method === 'PUT') {
       lessons = lessons.map(l => l.id === id ? { ...l, ...body } : l)
       schedules = schedules.map(l => l.id === id ? { ...l, ...body } : l)
@@ -245,6 +299,53 @@ export async function mockApiRequest(path, { method = 'GET', body } = {}) {
     }
   }
 
+  // ── Personal flash card library (per student, "save for later" across any deck) ────
+  if (path.startsWith('/api/flashcard-library')) {
+    const qsMatch = path.match(/\?studentId=(\d+)/)
+    if (method === 'GET' && qsMatch) {
+      const studentId = Number(qsMatch[1])
+      return flashcardLibrary.filter(c => c.studentId === studentId)
+    }
+    if (method === 'POST') {
+      const existing = flashcardLibrary.find(c => c.studentId === body.studentId && c.flashcardId === body.flashcardId)
+      if (existing) return existing
+      const created = { id: uid(), ...body }
+      flashcardLibrary.push(created)
+      persistFlashcardLibrary()
+      return created
+    }
+  }
+  const libMatch = path.match(/^\/api\/flashcard-library\/(\d+)$/)
+  if (libMatch) {
+    const id = Number(libMatch[1])
+    if (method === 'DELETE') {
+      flashcardLibrary = flashcardLibrary.filter(c => c.id !== id)
+      persistFlashcardLibrary()
+      return null
+    }
+  }
+
+  // ── Flash card study progress (per student, per card — powers Study Set modes) ─────
+  if (path.startsWith('/api/flashcard-progress')) {
+    const qsMatch = path.match(/\?studentId=(\d+)/)
+    if (method === 'GET' && qsMatch) {
+      const studentId = Number(qsMatch[1])
+      return flashcardProgress.filter(p => p.studentId === studentId)
+    }
+    if (method === 'POST') {
+      const idx = flashcardProgress.findIndex(p => p.studentId === body.studentId && p.cardId === body.cardId)
+      if (idx >= 0) {
+        flashcardProgress[idx] = { ...flashcardProgress[idx], ...body }
+        persistFlashcardProgress()
+        return flashcardProgress[idx]
+      }
+      const created = { status: 'new', correctStreak: 0, starred: false, ...body }
+      flashcardProgress.push(created)
+      persistFlashcardProgress()
+      return created
+    }
+  }
+
   // ── Assessments (always scoped to a lesson) ─────────────────────────────────
   if (path === '/api/assessments') {
     if (method === 'GET')  return assessments.map(serializeAssessment)
@@ -271,6 +372,33 @@ export async function mockApiRequest(path, { method = 'GET', body } = {}) {
       const q = { id: uid(), assessmentId, ...body }
       assessments = assessments.map(a => a.id === assessmentId ? { ...a, questions: [...a.questions, q] } : a)
       return q
+    }
+  }
+  // Attempts: submitting one scores it server-side from the assessment's own stored
+  // answers/points (never trusted from the client) and is what powers the leaderboard.
+  const attemptsMatch = path.match(/^\/api\/assessments\/(\d+)\/attempts$/)
+  if (attemptsMatch) {
+    const assessmentId = Number(attemptsMatch[1])
+    if (method === 'GET') {
+      return assessmentAttempts
+        .filter(a => a.assessmentId === assessmentId)
+        .sort((a, b) => b.score - a.score)
+    }
+    if (method === 'POST') {
+      const assessment = assessments.find(a => a.id === assessmentId)
+      if (!assessment) throw new Error('Assessment not found')
+      let score = 0
+      let totalPoints = 0
+      assessment.questions.forEach(q => {
+        totalPoints += q.points || 1
+        if (isCorrectAnswer(q, body.answers?.[q.id])) score += q.points || 1
+      })
+      const created = {
+        id: uid(), assessmentId, studentId: body.studentId, studentName: body.studentName,
+        score, totalPoints, answers: body.answers, completedAt: new Date().toISOString(),
+      }
+      assessmentAttempts.push(created)
+      return created
     }
   }
   const assessmentMatch = path.match(/^\/api\/assessments\/(\d+)$/)

@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { DndContext, PointerSensor, TouchSensor, useDraggable, useDroppable, useSensor, useSensors } from '@dnd-kit/core'
+import { useSpeech } from '../lib/speech'
 
 const EMPTY = {}
 
@@ -18,11 +18,6 @@ export function isCorrectAnswer(q, value) {
       if (!pairs.length || !value) return false
       return pairs.every((p, i) => value[i] === p.right)
     }
-    case 'drag_drop': {
-      const items = q.options?.items || []
-      if (!items.length || !value) return false
-      return items.every((it, i) => value[i] === it.bucket)
-    }
     default:
       return false
   }
@@ -40,31 +35,46 @@ export function hasAnswer(q, value) {
       const pairs = q.options?.pairs || []
       return pairs.length > 0 && pairs.every((_, i) => value?.[i] !== undefined)
     }
-    case 'drag_drop': {
-      const items = q.options?.items || []
-      return items.length > 0 && items.every((_, i) => value?.[i] !== undefined)
-    }
     default:
       return false
   }
 }
 
+/* ── Question card: text + read-aloud + the type-specific body below it ──
+   Shared by real assessments, and Study Set's Learn/Test modes, so audio only
+   needed to be added in this one place to cover all three. ── */
+
+export function QuestionCard({ q, value, onChange, answered }) {
+  const { speak, isSpeaking } = useSpeech()
+  return (
+    <>
+      <div className="bg-white rounded-2xl border-2 border-nb-olive/20 p-6 text-center relative">
+        <button onClick={() => speak(q.text)} title="Read aloud"
+          className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center text-sm border-2 transition-all ${isSpeaking(q.text) ? 'border-nb-green bg-green-50 animate-pulse' : 'border-gray-100 bg-nb-cream hover:border-nb-green'}`}>
+          🔊
+        </button>
+        <p className="text-xl font-black text-nb-dark pr-8">{q.text}</p>
+      </div>
+      <QuestionBody q={q} value={value} onChange={onChange} answered={answered} speak={speak} isSpeaking={isSpeaking} />
+    </>
+  )
+}
+
 /* ── Question type dispatcher ── */
 
-export default function QuestionBody({ q, value, onChange, answered }) {
+export default function QuestionBody({ q, value, onChange, answered, speak, isSpeaking }) {
   switch (q.type) {
     case 'true_false': return <TrueFalseBody q={q} value={value} onChange={onChange} answered={answered} />
     case 'fill_in':
     case 'image': return <FillInBody q={q} value={value} onChange={onChange} answered={answered} />
     case 'match': return <MatchBody q={q} value={value} onChange={onChange} answered={answered} />
-    case 'drag_drop': return <DragDropBody q={q} value={value} onChange={onChange} answered={answered} />
     case 'mcq':
-    default: return <McqBody q={q} value={value} onChange={onChange} answered={answered} />
+    default: return <McqBody q={q} value={value} onChange={onChange} answered={answered} speak={speak} isSpeaking={isSpeaking} />
   }
 }
 
 /* ── MCQ ── */
-function McqBody({ q, value, onChange, answered }) {
+function McqBody({ q, value, onChange, answered, speak, isSpeaking }) {
   const options = q.options || []
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -81,8 +91,14 @@ function McqBody({ q, value, onChange, answered }) {
         }
         return (
           <button key={i} onClick={() => !answered && onChange(i)}
-            className={`py-3.5 rounded-xl font-black border-2 transition-all ${cls}`} style={style}>
-            {opt}{answered && i === q.answer && ' ✅'}{answered && i === value && i !== q.answer && ' ❌'}
+            className={`py-3.5 pl-4 pr-2.5 rounded-xl font-black border-2 transition-all flex items-center justify-between gap-2 ${cls}`} style={style}>
+            <span>{opt}{answered && i === q.answer && ' ✅'}{answered && i === value && i !== q.answer && ' ❌'}</span>
+            {speak && (
+              <span onClick={e => { e.stopPropagation(); speak(opt) }} title="Read aloud"
+                className={`w-6 h-6 rounded-full flex items-center justify-center text-xs flex-shrink-0 ${isSpeaking?.(opt) ? 'opacity-100' : 'opacity-40 hover:opacity-80'}`}>
+                🔊
+              </span>
+            )}
           </button>
         )
       })}
@@ -256,80 +272,5 @@ function MatchBody({ q, value, onChange, answered }) {
       </div>
       {!answered && <p className="text-[11px] text-gray-400 mt-3 text-center">Tap an item on the left, then tap its match on the right to draw a line.</p>}
     </div>
-  )
-}
-
-/* ── Drag & Drop ── */
-function DraggableItem({ id, label, disabled, correctness, correctBucket }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id, disabled })
-  const style = {
-    transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
-    opacity: isDragging ? 0.4 : 1,
-  }
-  let cls = 'border-gray-200 bg-white text-gray-700'
-  if (correctness === true) cls = 'border-nb-green bg-green-50 text-nb-dark'
-  else if (correctness === false) cls = 'border-red-300 bg-red-50 text-red-500'
-  return (
-    <button ref={setNodeRef} style={style} {...listeners} {...attributes}
-      className={`px-3 py-2 rounded-xl border-2 font-bold text-sm transition touch-none ${disabled ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'} ${cls}`}>
-      {label}
-      {correctness === true && ' ✅'}
-      {correctness === false && <span className="block text-[9px] font-bold mt-0.5">→ {correctBucket}</span>}
-    </button>
-  )
-}
-
-function DroppableBucket({ id, label, children }) {
-  const { setNodeRef, isOver } = useDroppable({ id })
-  return (
-    <div ref={setNodeRef}
-      className={`min-h-[92px] rounded-2xl border-2 border-dashed p-3 transition ${isOver ? 'border-nb-green bg-green-50/50' : 'border-gray-200 bg-nb-cream/40'}`}>
-      <p className="text-[10px] font-black text-gray-400 uppercase tracking-wide mb-2">{label}</p>
-      <div className="flex flex-wrap gap-2">{children}</div>
-    </div>
-  )
-}
-
-function DragDropBody({ q, value, onChange, answered }) {
-  const buckets = q.options?.buckets || []
-  const items = q.options?.items || []
-  const assignment = value || EMPTY // { [itemIdx]: bucketName }
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }),
-  )
-
-  function handleDragEnd({ active, over }) {
-    if (!over || answered) return
-    const itemIdx = Number(String(active.id).replace('item-', ''))
-    const bucket = String(over.id).replace('bucket-', '')
-    onChange({ ...assignment, [itemIdx]: bucket })
-  }
-
-  const unassigned = items.map((_, i) => i).filter(i => assignment[i] === undefined)
-
-  return (
-    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-      <div className="space-y-3">
-        <div className="flex flex-wrap gap-2 p-3 rounded-2xl bg-white border-2 border-gray-100 min-h-[56px]">
-          {unassigned.length === 0 && <span className="text-xs text-gray-300 italic">All items placed</span>}
-          {unassigned.map(i => (
-            <DraggableItem key={i} id={`item-${i}`} label={items[i].label} disabled={answered}
-              correctness={answered ? false : undefined} correctBucket={items[i].bucket} />
-          ))}
-        </div>
-        <div className="grid sm:grid-cols-2 gap-3">
-          {buckets.map(b => (
-            <DroppableBucket key={b} id={`bucket-${b}`} label={b}>
-              {items.map((it, i) => assignment[i] === b ? (
-                <DraggableItem key={i} id={`item-${i}`} label={it.label} disabled={answered}
-                  correctness={answered ? it.bucket === b : undefined} correctBucket={it.bucket} />
-              ) : null)}
-            </DroppableBucket>
-          ))}
-        </div>
-        {!answered && <p className="text-[11px] text-gray-400 text-center">Drag each item into the bucket where it belongs.</p>}
-      </div>
-    </DndContext>
   )
 }

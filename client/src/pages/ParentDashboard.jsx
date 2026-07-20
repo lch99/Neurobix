@@ -230,8 +230,8 @@ export default function ParentDashboard() {
   const TABS = [
     { id: 'overview',   label: '📊 Overview' },
     { id: 'progress',   label: '📚 Progress' },
-    { id: 'memory',     label: '🧠 Memory Fundamentals' },
     { id: 'memportal',  label: '🧠 Mem Portal' },
+    { id: 'memory',     label: '🧠 Memory Fundamentals' },
     { id: 'rewards',    label: '🏆 Rewards' },
     { id: 'messages',   label: '💬 Messages' },
     { id: 'deadlines',  label: '📅 Deadlines' },

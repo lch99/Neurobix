@@ -434,8 +434,8 @@ export default function AdminDashboard() {
             { id: 'overview', label: '📊 Overview' },
             { id: 'users',    label: '👥 Users' },
             { id: 'classes',  label: '🏫 Classes' },
-            { id: 'memory',   label: '🧠 Memory Fundamentals' },
             { id: 'memportal', label: '🧠 Mem Portal' },
+            { id: 'memory',   label: '🧠 Memory Fundamentals' },
             { id: 'reports',  label: '📈 Reports' },
           ].map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}

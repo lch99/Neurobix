@@ -22,9 +22,9 @@ export default function TeacherDashboard() {
             { id: 'overview',    label: '📊 Overview'    },
             { id: 'classes',     label: '🏫 Classes'     },
             { id: 'lessons',     label: '📚 My Courses'  },
+            { id: 'memportal',   label: '🧠 Mem Portal'  },
             { id: 'flashcards',  label: '🃏 Flash Cards'  },
             { id: 'memory',      label: '🧠 Memory Fundamentals' },
-            { id: 'memportal',   label: '🧠 Mem Portal'  },
             { id: 'schedule',    label: '📅 Schedule'    },
             { id: 'students',    label: '👩‍🎓 Students'   },
           ].map(t => (

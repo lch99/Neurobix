@@ -1,17 +1,20 @@
-import { useState } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import { apiRequest } from '../lib/api'
 import Navbar from '../components/Navbar'
 import LessonBrowser from '../components/LessonBrowser'
 import WeeklySchedule from '../components/WeeklySchedule'
 import ComingSoon from '../components/ComingSoon'
 import MemoryFundamentals from '../components/MemoryFundamentals'
+import StudySet from '../components/StudySet'
 import { brainWatermark } from '../components/BrainBackground'
 import {
   mascotFemale, mascotMale, mascotRocket,
   subjectMicroscope,
-  starYellow, starOutline, badgeIcon, badgeLockIcon, medalIcon, brainIcon, bookIcon, streakIcon,
+  starYellow, badgeIcon, badgeLockIcon, medalIcon, brainIcon, bookIcon, streakIcon,
   lightBulbIcon, lockIcon, flashcardIcon,
-  passIcon, overdueIcon, inProgressIcon, retryIcon,
+  passIcon, overdueIcon, inProgressIcon,
   certScience, certDesign,
   previewIcon, downloadIcon,
 } from '../assets/icons'
@@ -72,10 +75,10 @@ const TABS = [
       { id: 'lessons', icon: '📚', label: 'Subjects' },
       { id: 'memory',  icon: '🧠', label: 'Memory Fundamentals' },
     ] },
+  { id: 'memportal',  icon: '🧠', label: 'Mem Portal' },
   { id: 'flashcards', icon: '🃏', label: 'Flash Cards' },
   { id: 'shop',       icon: '🛍️', label: 'Shop'       },
   { id: 'rewards',    icon: '🏆', label: 'Rewards'    },
-  { id: 'memportal',  icon: '🧠', label: 'Mem Portal' },
 ]
 
 const OPEN_CLASSES = [
@@ -944,57 +947,88 @@ function ShopView() {
 const LIBRARY_CAP = 1000
 
 function FlashCardsView() {
-  const ALL_DECKS = [
-    { id: 5, subject: 'Science', title: 'The Solar System', icon: '🪐', cards: [
-      { front: 'Closest planet to the Sun?', back: 'Mercury',   hint: 'My Very Educated Mother…' },
-      { front: 'The Red Planet?',            back: 'Mars',      hint: '4th planet from the Sun'   },
-      { front: 'Largest planet?',            back: 'Jupiter',   hint: '5th planet, a gas giant'   },
-      { front: 'How many planets?',          back: '8 planets', hint: 'Pluto is a dwarf planet!'  },
-    ]},
-    { id: 6, subject: 'Science', title: 'States of Matter', icon: '🔬', cards: [
-      { front: 'What gas do plants absorb?',  back: 'Carbon Dioxide (CO₂)', hint: 'They breathe what we exhale!' },
-      { front: 'Water at 100°C becomes?',     back: 'Steam (gas)',           hint: 'Boiling point of water'       },
-      { front: 'Solid → Liquid is called?',   back: 'Melting',               hint: 'Ice → water'                  },
-    ]},
-  ]
+  const { user, token } = useAuth()
 
   const SUBJECT_CFG = {
     Science:     { color: '#36913F', bg: '#F0FDF4', badge: 'bg-green-100 text-green-700',  icon: '🔬' },
   }
 
+  const [loading, setLoading]             = useState(true)
+  const [decks, setDecks]                 = useState([])
   const [subjectFilter, setSubjectFilter] = useState('All')
   const [activeDeck, setActiveDeck]       = useState(null)
   const [cards, setCards]                 = useState([])
-  const [cardIdx, setCardIdx]             = useState(0)
-  const [flipped, setFlipped]             = useState(false)
-  const [known, setKnown]                 = useState(new Set())
   const [library, setLibrary]             = useState([])
   const [showLibrary, setShowLibrary]     = useState(false)
+  const [studyingLibrary, setStudyingLibrary] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      const [allLessons, allClasses, students, lib] = await Promise.all([
+        apiRequest('/api/lessons', { token }),
+        apiRequest('/api/classes', { token }),
+        apiRequest('/api/students', { token }),
+        apiRequest(`/api/flashcard-library?studentId=${user.id}`, { token }),
+      ])
+      if (cancelled) return
+      const myClassIds = new Set(students.filter(s => s.studentId === user.id).map(s => s.classId))
+      const classById = Object.fromEntries(allClasses.map(c => [c.id, c]))
+      const myDecks = allLessons
+        .filter(l => l.type === 'flashcard' && l.status === 'published' && myClassIds.has(l.classId))
+        .map(l => ({ id: l.id, subject: l.subject, title: l.title, className: classById[l.classId]?.name || '', cardCount: l.cardCount || 0 }))
+      setDecks(myDecks)
+      setLibrary(lib || [])
+      setLoading(false)
+    }
+    load()
+    return () => { cancelled = true }
+  }, [user.id])
 
   const subjectCounts = {}
-  ALL_DECKS.forEach(d => { subjectCounts[d.subject] = (subjectCounts[d.subject] || 0) + 1 })
-  const filteredDecks = ALL_DECKS.filter(d => subjectFilter === 'All' || d.subject === subjectFilter)
+  decks.forEach(d => { subjectCounts[d.subject] = (subjectCounts[d.subject] || 0) + 1 })
+  const filteredDecks = decks.filter(d => subjectFilter === 'All' || d.subject === subjectFilter)
 
-  function enterDeck(deck) {
-    setActiveDeck(deck); setCards([...deck.cards]); setCardIdx(0)
-    setFlipped(false); setKnown(new Set())
+  async function enterDeck(deck) {
+    setActiveDeck(deck)
+    const deckCards = await apiRequest(`/api/flashcards?lessonId=${deck.id}`, { token })
+    setCards(deckCards || [])
   }
-  function exitDeck() { setActiveDeck(null) }
+  function exitDeck() { setActiveDeck(null); setCards([]) }
 
-  const card    = activeDeck ? cards[cardIdx] : null
-  const cardKey = activeDeck ? `${activeDeck.id}-${cardIdx}` : ''
-  const isSaved = library.some(c => c.key === cardKey)
-
-  function markKnown()  { setKnown(s => new Set([...s, cardIdx])); goNext() }
-  function goNext()     { setFlipped(false); setCardIdx(i => (i + 1) % cards.length) }
-  function goPrev()     { setFlipped(false); setCardIdx(i => (i - 1 + cards.length) % cards.length) }
-  function shuffle()    { setCards(c => [...c].sort(() => Math.random() - 0.5)); setCardIdx(0); setFlipped(false) }
-  function restart()    { setCardIdx(0); setFlipped(false); setKnown(new Set()) }
-  function toggleSave() {
-    if (!activeDeck || !card) return
-    if (isSaved) setLibrary(l => l.filter(c => c.key !== cardKey))
-    else if (library.length < LIBRARY_CAP) setLibrary(l => [...l, { key: cardKey, subject: activeDeck.subject, front: card.front, back: card.back, hint: card.hint }])
+  function isCardInLibrary(card) { return library.some(c => c.flashcardId === card.id) }
+  async function toggleLibrary(card) {
+    const entry = library.find(c => c.flashcardId === card.id)
+    if (entry) {
+      await apiRequest(`/api/flashcard-library/${entry.id}`, { method: 'DELETE', token })
+      setLibrary(l => l.filter(c => c.id !== entry.id))
+    } else if (library.length < LIBRARY_CAP) {
+      const created = await apiRequest('/api/flashcard-library', {
+        method: 'POST',
+        body: { studentId: user.id, flashcardId: card.id, subject: activeDeck.subject, front: card.front, back: card.back, hint: card.hint },
+        token,
+      })
+      setLibrary(l => [...l, created])
+    }
   }
+  async function removeFromLibrary(entryId) {
+    await apiRequest(`/api/flashcard-library/${entryId}`, { method: 'DELETE', token })
+    setLibrary(l => l.filter(c => c.id !== entryId))
+  }
+
+  if (loading) return <p className="text-sm text-gray-400 font-semibold py-10 text-center">Loading flash cards…</p>
+
+  if (studyingLibrary) return (
+    <StudySet title="My Saved Cards" subject="My Library" deckKey="library"
+      cards={library.map(c => ({ id: c.id, front: c.front, back: c.back, hint: c.hint }))}
+      onExit={() => setStudyingLibrary(false)} />
+  )
+
+  if (activeDeck) return (
+    <StudySet title={activeDeck.title} subject={activeDeck.subject} cards={cards}
+      deckKey={`lesson-${activeDeck.id}`} onExit={exitDeck}
+      onToggleLibrary={toggleLibrary} isInLibrary={isCardInLibrary} />
+  )
 
   /* ── Saved library view ── */
   if (showLibrary) return (
@@ -1006,10 +1040,18 @@ function FlashCardsView() {
             {library.length.toLocaleString()} / {LIBRARY_CAP.toLocaleString()} cards {library.length >= LIBRARY_CAP && '· Library full, remove some to save more'}
           </p>
         </div>
-        <button onClick={() => setShowLibrary(false)}
-          className="text-sm font-bold text-gray-400 hover:text-nb-dark transition px-3 py-1.5 rounded-lg hover:bg-gray-100">
-          ← Back
-        </button>
+        <div className="flex gap-2 flex-shrink-0">
+          {library.length > 0 && (
+            <button onClick={() => setStudyingLibrary(true)}
+              className="px-4 py-2 rounded-xl text-sm font-black text-nb-dark shadow-md hover:shadow-lg transition" style={{ background: '#FFEB3C' }}>
+              🧠 Study
+            </button>
+          )}
+          <button onClick={() => setShowLibrary(false)}
+            className="text-sm font-bold text-gray-400 hover:text-nb-dark transition px-3 py-1.5 rounded-lg hover:bg-gray-100">
+            ← Back
+          </button>
+        </div>
       </div>
       {library.length === 0 ? (
         <div className="text-center py-16 text-gray-400">
@@ -1019,15 +1061,15 @@ function FlashCardsView() {
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 gap-3">
-          {library.map((c, i) => {
+          {library.map((c) => {
             const cfg = SUBJECT_CFG[c.subject]
             return (
-              <div key={i} className="bg-white rounded-2xl border-2 border-nb-yellow overflow-hidden">
+              <div key={c.id} className="bg-white rounded-2xl border-2 border-nb-yellow overflow-hidden">
                 <div className="h-1 w-full" style={{ background: cfg?.color }} />
                 <div className="p-4">
                   <div className="flex items-center justify-between mb-2">
                     <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${cfg?.badge}`}>{cfg?.icon} {c.subject}</span>
-                    <button onClick={() => setLibrary(l => l.filter((_, j) => j !== i))}
+                    <button onClick={() => removeFromLibrary(c.id)}
                       className="text-xs text-red-400 font-bold hover:text-red-600">✕ Remove</button>
                   </div>
                   <p className="font-black text-nb-dark text-sm">{c.front}</p>
@@ -1041,150 +1083,6 @@ function FlashCardsView() {
       )}
     </div>
   )
-
-  /* ── Study view ── */
-  if (activeDeck && card) {
-    const cfg      = SUBJECT_CFG[activeDeck.subject]
-    const knownPct = cards.length > 0 ? (known.size / cards.length) * 100 : 0
-    return (
-      <div className="space-y-4">
-        {/* Header */}
-        <div className="flex items-center gap-3">
-          <button onClick={exitDeck}
-            className="text-sm font-bold text-gray-400 hover:text-nb-dark transition px-3 py-1.5 rounded-lg hover:bg-gray-100">
-            ← Back
-          </button>
-          <div className="flex-1 min-w-0">
-            <p className="text-[11px] font-bold uppercase tracking-wide" style={{ color: cfg?.color }}>{activeDeck.subject}</p>
-            <p className="font-black text-nb-dark text-sm truncate">{activeDeck.title}</p>
-          </div>
-          <div className="flex gap-2 flex-shrink-0">
-            <button onClick={shuffle} title="Shuffle"
-              className="w-9 h-9 rounded-xl border-2 border-gray-200 flex items-center justify-center hover:border-gray-300 transition">🔀</button>
-            <button onClick={restart} title="Restart"
-              className="w-9 h-9 rounded-xl border-2 border-gray-200 flex items-center justify-center hover:border-gray-300 transition text-base font-black text-gray-400">↺</button>
-          </div>
-        </div>
-
-        {/* Progress: know it (green) vs still learning (gray) */}
-        <div>
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-xs text-gray-400">{cardIdx + 1} / {cards.length}</span>
-            <span className="text-xs font-bold" style={{ color: '#36913F' }}>
-              {known.size} know it · {cards.length - known.size} still learning
-            </span>
-          </div>
-          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${knownPct}%`, background: '#36913F' }} />
-          </div>
-        </div>
-
-        {/* Card position dots */}
-        <div className="flex gap-1.5 justify-center flex-wrap">
-          {cards.map((_, i) => (
-            <div key={i} onClick={() => { setCardIdx(i); setFlipped(false) }}
-              className="rounded-full cursor-pointer transition-all"
-              style={{
-                width: i === cardIdx ? 28 : 8, height: 8,
-                background: known.has(i) ? '#36913F' : i === cardIdx ? cfg?.color || '#FFEB3C' : '#e5e7eb',
-              }} />
-          ))}
-        </div>
-
-        {/* Flip card */}
-        <div
-          onClick={() => setFlipped(f => !f)}
-          className="cursor-pointer rounded-3xl border-2 select-none transition-all hover:shadow-xl flex flex-col items-center justify-center text-center"
-          style={{
-            minHeight: 220, padding: '24px 28px',
-            borderColor: flipped ? cfg?.color || '#6FC911' : '#e5e7eb',
-            background: flipped ? (cfg?.bg || '#F0FDF4') : '#fff',
-          }}>
-          {!flipped ? (
-            <>
-              <span className="text-[11px] font-black uppercase tracking-widest mb-3 text-gray-300">
-                {activeDeck.subject} · {activeDeck.title}
-              </span>
-              <p className="font-black text-nb-dark leading-snug"
-                 style={{ fontSize: card.front.length > 35 ? 16 : 22 }}>
-                {card.front}
-              </p>
-              <span className="text-xs text-gray-300 mt-5">Tap to reveal answer</span>
-            </>
-          ) : (
-            <>
-              <span className="text-[11px] font-black uppercase tracking-widest mb-3" style={{ color: cfg?.color }}>
-                Answer
-              </span>
-              <p className="font-black leading-snug" style={{ color: cfg?.color, fontSize: card.back.length > 20 ? 18 : 28 }}>
-                {card.back}
-              </p>
-              {card.hint && (
-                <p className="text-xs text-gray-400 mt-3 italic leading-snug max-w-xs">🧠 {card.hint}</p>
-              )}
-              <span className="text-xs text-gray-300 mt-3">Tap to flip back</span>
-            </>
-          )}
-        </div>
-
-        {/* Confidence buttons after flip · Nav before flip */}
-        {flipped ? (
-          <div className="grid grid-cols-2 gap-3">
-            <button onClick={goNext}
-              className="py-4 rounded-xl font-black text-red-500 border-2 border-red-200 bg-red-50 hover:bg-red-100 transition text-sm flex items-center justify-center gap-2">
-              <img src={retryIcon} alt="" className="w-4 h-4 object-contain" /> Still Learning
-            </button>
-            <button onClick={markKnown}
-              className="py-4 rounded-xl font-black text-white border-2 border-transparent shadow-md hover:opacity-90 transition text-sm flex items-center justify-center gap-2"
-              style={{ background: '#36913F' }}>
-              ✓ Know It
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-3 gap-2.5">
-            <button onClick={goPrev}
-              className="py-3.5 rounded-xl border-2 border-gray-200 text-gray-500 font-black hover:border-nb-olive transition text-sm">
-              ← Prev
-            </button>
-            <button onClick={toggleSave} disabled={!isSaved && library.length >= LIBRARY_CAP}
-              className={`py-3.5 rounded-xl font-black text-sm border-2 transition-all flex items-center justify-center gap-1.5 ${
-                isSaved ? 'border-nb-yellow text-nb-dark' : library.length >= LIBRARY_CAP ? 'border-gray-100 text-gray-300 cursor-not-allowed' : 'border-gray-200 text-gray-400 hover:border-nb-yellow'
-              }`}
-              style={isSaved ? { background: '#FFEB3C' } : {}}>
-              {isSaved ? <img src={starYellow} alt="" className="w-4 h-4 object-contain" /> : <img src={starOutline} alt="" className="w-4 h-4 object-contain opacity-50" />}
-              {isSaved ? 'Saved' : library.length >= LIBRARY_CAP ? 'Library Full' : 'Save'}
-            </button>
-            <button onClick={goNext}
-              className="py-3.5 rounded-xl border-2 border-nb-green font-black text-nb-dark hover:bg-nb-green hover:text-white transition text-sm">
-              Next →
-            </button>
-          </div>
-        )}
-
-        {/* All cards in set */}
-        <div>
-          <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2">All Cards in Set</p>
-          <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
-            {cards.map((c, i) => (
-              <div key={i} onClick={() => { setCardIdx(i); setFlipped(false) }}
-                className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all flex items-center gap-3 ${
-                  i === cardIdx ? 'border-nb-green shadow-sm' : 'bg-white border-gray-100 hover:border-nb-olive'
-                }`}
-                style={i === cardIdx ? { background: '#6FC91112' } : {}}>
-                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0 ${known.has(i) ? 'bg-nb-green text-white' : 'bg-gray-100 text-gray-400'}`}>
-                  {known.has(i) ? '✓' : i + 1}
-                </span>
-                <p className="text-sm font-black text-nb-dark leading-snug flex-1">{c.front}</p>
-                {i === cardIdx && flipped && (
-                  <p className="text-xs font-bold flex-shrink-0" style={{ color: '#36913F' }}>{c.back}</p>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    )
-  }
 
   /* ── Deck library ── */
   return (
@@ -1215,7 +1113,7 @@ function FlashCardsView() {
               style={active ? { background: cfg?.color || '#36913F' } : {}}>
               {s === 'All' ? '📋' : cfg?.icon} {s}
               <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full ml-0.5 ${active ? 'bg-white/25 text-white' : 'bg-gray-100 text-gray-400'}`}>
-                {s === 'All' ? ALL_DECKS.length : (subjectCounts[s] || 0)}
+                {s === 'All' ? decks.length : (subjectCounts[s] || 0)}
               </span>
             </button>
           )
@@ -1228,12 +1126,19 @@ function FlashCardsView() {
           <span className="text-3xl">{SUBJECT_CFG[subjectFilter]?.icon}</span>
           <div>
             <p className="font-black text-nb-dark">{subjectFilter}</p>
-            <p className="text-xs text-gray-500">{subjectCounts[subjectFilter] || 0} study sets · Primary 4A</p>
+            <p className="text-xs text-gray-500">{subjectCounts[subjectFilter] || 0} study sets</p>
           </div>
         </div>
       )}
 
       {/* Deck cards grid */}
+      {filteredDecks.length === 0 && (
+        <div className="text-center py-16 text-gray-400">
+          <p className="text-5xl mb-3">🃏</p>
+          <p className="font-bold">No flash card decks yet</p>
+          <p className="text-sm mt-1">Your teacher hasn't published any flash card lessons yet.</p>
+        </div>
+      )}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {filteredDecks.map(deck => {
           const cfg = SUBJECT_CFG[deck.subject]
@@ -1252,7 +1157,7 @@ function FlashCardsView() {
                   {deck.title}
                 </p>
                 <div className="flex items-center justify-between">
-                  <p className="text-xs text-gray-400">{deck.cards.length} terms · Primary 4A</p>
+                  <p className="text-xs text-gray-400">{deck.cardCount} terms · {deck.className}</p>
                   <span className="text-xs font-bold text-nb-green opacity-0 group-hover:opacity-100 transition-opacity">Study →</span>
                 </div>
               </div>
