@@ -25,6 +25,7 @@ export default function TeacherDashboard() {
             { id: 'lessons',     label: '📚 My Courses'  },
             { id: 'memportal',   label: '🧠 Mem Portal'  },
             { id: 'flashcards',  label: '🃏 Flash Cards'  },
+            { id: 'assessments', label: '📝 Assessments' },
             { id: 'memory',      label: '🧠 Memory Fundamentals' },
             { id: 'schedule',    label: '📅 Schedule'    },
             { id: 'students',    label: '👩‍🎓 Students'   },
@@ -53,6 +54,9 @@ export default function TeacherDashboard() {
 
         {/* FLASH CARDS */}
         {tab === 'flashcards' && <div className="tab-panel"><FlashCardEditor /></div>}
+
+        {/* ASSESSMENTS — quick-jump list; opens the same lesson-scoped editor as "Questions →" */}
+        {tab === 'assessments' && <div className="tab-panel"><AssessmentsTab /></div>}
 
         {/* MEMORY FUNDAMENTALS */}
         {tab === 'memory' && (
@@ -546,6 +550,69 @@ function LessonsTab() {
             </table>
           </div>
         </>
+      )}
+    </div>
+  )
+}
+
+/* ── Assessments — quick-jump list across all classes, opens the lesson-scoped editor ── */
+function AssessmentsTab() {
+  const { token } = useAuth()
+  const [lessons, setLessons] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [editingAssessmentLesson, setEditingAssessmentLesson] = useState(null)
+
+  useEffect(() => {
+    apiRequest('/api/lessons', { token })
+      .then(data => setLessons(data.filter(l => l.type === 'assessment')))
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false))
+  }, [])
+
+  if (editingAssessmentLesson) {
+    return (
+      <AssessmentEditor
+        lesson={editingAssessmentLesson}
+        onClose={() => setEditingAssessmentLesson(null)}
+        onLessonUpdate={updated => setLessons(ls => ls.map(l => l.id === updated.id ? updated : l))}
+      />
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h2 className="text-lg sm:text-xl font-black text-nb-dark">Assessments</h2>
+        <p className="text-xs text-gray-400 mt-0.5">Every assessment across your classes, in one place — questions are still authored from inside each lesson.</p>
+      </div>
+
+      {error && (
+        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-2">{error}</p>
+      )}
+
+      {loading ? (
+        <p className="text-sm text-gray-400 py-8 text-center">Loading assessments…</p>
+      ) : lessons.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-nb-olive/20 py-10 flex flex-col items-center gap-2 text-center">
+          <span className="text-3xl">📝</span>
+          <p className="font-black text-nb-dark">No assessments yet</p>
+          <p className="text-sm text-gray-400">Add a lesson with material type "Assessment" from the My Courses tab.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {lessons.map(l => (
+            <button key={l.id} onClick={() => setEditingAssessmentLesson(l)}
+              className="text-left bg-white rounded-2xl border-2 border-nb-olive/20 p-4 hover:shadow-md hover:border-nb-green/40 transition">
+              <div className="flex items-start justify-between gap-2 mb-1.5">
+                <p className="font-black text-nb-dark text-sm">📝 {l.title}</p>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold flex-shrink-0 ${STATUS_STYLE[l.status]}`}>{l.status}</span>
+              </div>
+              <p className="text-xs text-gray-400">{l.className} · {l.subject}</p>
+              <span className="text-xs font-black mt-2 inline-block" style={{ color: '#396336' }}>Open Questions →</span>
+            </button>
+          ))}
+        </div>
       )}
     </div>
   )

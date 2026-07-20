@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { apiRequest } from '../lib/api'
 import Navbar from '../components/Navbar'
 import LessonBrowser from '../components/LessonBrowser'
+import { ALL_LESSONS, LOCKED_IDS, STATUS_STYLE, STATUS_LABEL, useForceOpenIds } from '../data/lessons'
 import WeeklySchedule from '../components/WeeklySchedule'
 import ComingSoon from '../components/ComingSoon'
 import MemoryFundamentals from '../components/MemoryFundamentals'
@@ -77,6 +78,7 @@ const TABS = [
     ] },
   { id: 'memportal',  icon: '🧠', label: 'Mem Portal' },
   { id: 'flashcards', icon: '🃏', label: 'Flash Cards' },
+  { id: 'assessments', icon: '📝', label: 'Assessments' },
   { id: 'shop',       icon: '🛍️', label: 'Shop'       },
   { id: 'rewards',    icon: '🏆', label: 'Rewards'    },
 ]
@@ -359,6 +361,9 @@ export default function StudentDashboard() {
 
         {/* ── FLASH CARDS ── */}
         {tab === 'flashcards' && <div className="tab-panel"><FlashCardsView /></div>}
+
+        {/* ── ASSESSMENTS — quick-jump list; opens the same lesson page as "My Courses" ── */}
+        {tab === 'assessments' && <div className="tab-panel"><AssessmentsTab navigate={navigate} /></div>}
 
         {/* ── MEMORY FUNDAMENTALS ── */}
         {tab === 'memory' && (
@@ -971,6 +976,58 @@ function ShopView() {
       {toast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-nb-dark text-white px-5 py-3 rounded-2xl shadow-xl font-bold text-sm whitespace-nowrap">
           {toast}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ─── Assessments — quick-jump list across all courses, opens the real lesson page ─── */
+function AssessmentsTab({ navigate }) {
+  const forceOpenIds = useForceOpenIds()
+  const assessmentLessons = ALL_LESSONS.filter(l => l.type === 'assessment')
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h2 className="text-lg sm:text-xl font-black text-nb-dark">📝 Assessments</h2>
+        <p className="text-xs text-gray-400 mt-0.5">Every assessment across your courses, in one place.</p>
+      </div>
+
+      {assessmentLessons.length === 0 ? (
+        <div className="bg-white rounded-2xl border-2 border-dashed border-nb-olive/30 p-8 text-center">
+          <p className="text-3xl mb-2">📝</p>
+          <p className="font-black text-nb-dark">No assessments yet</p>
+        </div>
+      ) : (
+        <div className="space-y-2.5">
+          {assessmentLessons.map(lesson => {
+            const baseLocked = LOCKED_IDS.has(lesson.id)
+            const forced = forceOpenIds.has(lesson.id)
+            const locked = baseLocked && !forced
+            return (
+              <div key={lesson.id}
+                onClick={() => !locked && navigate(`/lessons/${lesson.id}`)}
+                className={`bg-white rounded-2xl border-2 p-4 flex items-center gap-4 transition ${
+                  locked ? 'border-gray-200 opacity-60 cursor-not-allowed'
+                         : 'border-nb-olive/20 hover:shadow-md hover:border-nb-green/40 cursor-pointer group'
+                }`}>
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm p-2 ${locked ? 'grayscale' : ''}`}
+                     style={{ background: '#FFF7E9' }}>
+                  {locked
+                    ? <img src={lockIcon} alt="" className="w-5 h-5 object-contain opacity-60" />
+                    : <img src={lesson.icon} alt="" className="w-full h-full object-contain" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={`font-black text-sm ${locked ? 'text-gray-400' : 'text-nb-dark group-hover:text-nb-green'}`}>{lesson.title}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{lesson.subject} · Term {lesson.term} · {lesson.duration}</p>
+                </div>
+                <span className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap flex-shrink-0 ${locked ? 'bg-gray-100 text-gray-400' : STATUS_STYLE[lesson.status]}`}>
+                  {locked ? 'Locked' : STATUS_LABEL[lesson.status]}
+                </span>
+              </div>
+            )
+          })}
         </div>
       )}
     </div>
