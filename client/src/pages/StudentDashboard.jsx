@@ -79,6 +79,7 @@ const TABS = [
   { id: 'memportal',  icon: '🧠', label: 'Mem Portal' },
   { id: 'flashcards', icon: '🃏', label: 'Flash Cards' },
   { id: 'assessments', icon: '📝', label: 'Assessments' },
+  { id: 'quizzes',     icon: '🎯', label: 'Quizzes' },
   { id: 'shop',       icon: '🛍️', label: 'Shop'       },
   { id: 'rewards',    icon: '🏆', label: 'Rewards'    },
 ]
@@ -364,6 +365,9 @@ export default function StudentDashboard() {
 
         {/* ── ASSESSMENTS — quick-jump list; opens the same lesson page as "My Courses" ── */}
         {tab === 'assessments' && <div className="tab-panel"><AssessmentsTab navigate={navigate} /></div>}
+
+        {/* ── QUIZZES — ungraded, between-class checks; same Quizlet-style StudySet as flashcards ── */}
+        {tab === 'quizzes' && <div className="tab-panel"><StudentQuizzesTab /></div>}
 
         {/* ── MEMORY FUNDAMENTALS ── */}
         {tab === 'memory' && (
@@ -1028,6 +1032,69 @@ function AssessmentsTab({ navigate }) {
               </div>
             )
           })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ─── Quizzes — ungraded, between-class checks. Cards are front/back so taking one is the
+   exact same Quizlet-style StudySet (Flashcards/Learn/Test/Match) as a flashcard deck. ─── */
+function StudentQuizzesTab() {
+  const { token } = useAuth()
+  const [quizzes, setQuizzes] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [takingQuizId, setTakingQuizId] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    apiRequest('/api/quizzes', { token })
+      .then(data => { if (!cancelled) setQuizzes((data || []).filter(q => q.status === 'published')) })
+      .catch(err => !cancelled && setError(err.message))
+      .finally(() => !cancelled && setLoading(false))
+    return () => { cancelled = true }
+  }, [token])
+
+  const takingQuiz = quizzes.find(q => q.id === takingQuizId) || null
+
+  if (takingQuiz) {
+    return (
+      <StudySet title={takingQuiz.title} subject={takingQuiz.subject} cards={takingQuiz.cards}
+        deckKey={`quiz-${takingQuiz.id}`} onExit={() => setTakingQuizId(null)} />
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h2 className="text-lg sm:text-xl font-black text-nb-dark">🎯 Quizzes</h2>
+        <p className="text-xs text-gray-400 mt-0.5">Quick practice checks between your classes — ungraded, just for you.</p>
+      </div>
+
+      {error && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-2">{error}</p>}
+
+      {loading ? (
+        <p className="text-sm text-gray-400 py-8 text-center">Loading quizzes…</p>
+      ) : quizzes.length === 0 ? (
+        <div className="bg-white rounded-2xl border-2 border-dashed border-nb-olive/30 p-8 text-center">
+          <p className="text-3xl mb-2">🎯</p>
+          <p className="font-black text-nb-dark">No quizzes yet</p>
+        </div>
+      ) : (
+        <div className="space-y-2.5">
+          {quizzes.map(qz => (
+            <div key={qz.id}
+              onClick={() => setTakingQuizId(qz.id)}
+              className="bg-white rounded-2xl border-2 border-nb-olive/20 p-4 flex items-center gap-4 hover:shadow-md hover:border-nb-green/40 cursor-pointer transition group">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm p-2 text-2xl" style={{ background: '#FFF7E9' }}>🎯</div>
+              <div className="flex-1 min-w-0">
+                <p className="font-black text-sm text-nb-dark group-hover:text-nb-green">{qz.title}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{qz.subject}{qz.afterLessonTitle ? ` · after "${qz.afterLessonTitle}"` : ''} · {qz.cardCount} card{qz.cardCount === 1 ? '' : 's'}</p>
+              </div>
+              <span className="text-gray-300 text-lg group-hover:text-nb-green transition-colors">›</span>
+            </div>
+          ))}
         </div>
       )}
     </div>

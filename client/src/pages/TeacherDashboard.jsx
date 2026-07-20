@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import { apiRequest } from '../lib/api'
 import { TERMS, LOCKED_IDS, getCurrentTermWeek, getLessonsByWeek, useForceOpenIds, setForceOpen } from '../data/lessons'
 import { QuestionCard } from '../components/AssessmentQuestion'
+import StudySet from '../components/StudySet'
 import { previewIcon, bookIcon, flashcardIcon } from '../assets/icons'
 
 const CO_TEACHER_OPTIONS = ['Ms Sarah Tan', 'Mr Alif Ibrahim', 'Ms Maria Wong']
@@ -26,6 +27,7 @@ export default function TeacherDashboard() {
             { id: 'memportal',   label: '🧠 Mem Portal'  },
             { id: 'flashcards',  label: '🃏 Flash Cards'  },
             { id: 'assessments', label: '📝 Assessments' },
+            { id: 'quizzes',     label: '🎯 Quizzes'     },
             { id: 'memory',      label: '🧠 Memory Fundamentals' },
             { id: 'schedule',    label: '📅 Schedule'    },
             { id: 'students',    label: '👩‍🎓 Students'   },
@@ -57,6 +59,9 @@ export default function TeacherDashboard() {
 
         {/* ASSESSMENTS — quick-jump list; opens the same lesson-scoped editor as "Questions →" */}
         {tab === 'assessments' && <div className="tab-panel"><AssessmentsTab /></div>}
+
+        {/* QUIZZES — ungraded, class-scoped, Quizlet-style (Flashcards/Learn/Test/Match) */}
+        {tab === 'quizzes' && <div className="tab-panel"><QuizzesTab /></div>}
 
         {/* MEMORY FUNDAMENTALS */}
         {tab === 'memory' && (
@@ -614,6 +619,345 @@ function AssessmentsTab() {
           ))}
         </div>
       )}
+    </div>
+  )
+}
+
+/* ── Quizzes — ungraded, class-scoped checks that sit "between" two lessons. Cards are
+   front/back (same shape as flashcards) so taking one is the exact same Quizlet-style
+   Flashcards/Learn/Test/Match experience as a flashcard deck — see mockDb.js comment. ── */
+function QuizzesTab() {
+  const { token } = useAuth()
+  const [quizzes, setQuizzes] = useState([])
+  const [classesList, setClassesList] = useState([])
+  const [lessonsList, setLessonsList] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [showModal, setShowModal] = useState(false)
+  const [editingQuiz, setEditingQuiz] = useState(null)
+  const [openQuizId, setOpenQuizId] = useState(null)
+
+  useEffect(() => { load() }, [])
+
+  async function load() {
+    setLoading(true)
+    setError('')
+    try {
+      const [quizzesData, classesData, lessonsData] = await Promise.all([
+        apiRequest('/api/quizzes', { token }),
+        apiRequest('/api/classes', { token }),
+        apiRequest('/api/lessons', { token }),
+      ])
+      setQuizzes(quizzesData)
+      setClassesList(classesData)
+      setLessonsList(lessonsData)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleSave(form) {
+    if (editingQuiz) {
+      const updated = await apiRequest(`/api/quizzes/${editingQuiz.id}`, { method: 'PUT', body: form, token })
+      setQuizzes(qs => qs.map(q => q.id === updated.id ? updated : q))
+    } else {
+      const created = await apiRequest('/api/quizzes', { method: 'POST', body: form, token })
+      setQuizzes(qs => [created, ...qs])
+    }
+    setShowModal(false)
+    setEditingQuiz(null)
+  }
+
+  async function handleDelete(quiz) {
+    if (!window.confirm(`Delete "${quiz.title}"? This cannot be undone.`)) return
+    await apiRequest(`/api/quizzes/${quiz.id}`, { method: 'DELETE', token })
+    setQuizzes(qs => qs.filter(q => q.id !== quiz.id))
+  }
+
+  const openQuiz = quizzes.find(q => q.id === openQuizId) || null
+
+  if (openQuiz) {
+    return (
+      <QuizEditor
+        quiz={openQuiz}
+        onClose={() => setOpenQuizId(null)}
+        onQuizUpdate={updated => setQuizzes(qs => qs.map(q => q.id === updated.id ? { ...q, ...updated } : q))}
+      />
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      {showModal && (
+        <QuizModal
+          initial={editingQuiz}
+          classes={classesList}
+          lessons={lessonsList}
+          onClose={() => { setShowModal(false); setEditingQuiz(null) }}
+          onSave={handleSave}
+        />
+      )}
+
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg sm:text-xl font-black text-nb-dark">Quizzes</h2>
+          <p className="text-xs text-gray-400 mt-0.5">Quick, ungraded checks between two lessons — same Flashcards/Learn/Test/Match modes as a flashcard deck.</p>
+        </div>
+        <button onClick={() => { setEditingQuiz(null); setShowModal(true) }}
+          disabled={classesList.length === 0}
+          className="px-3 sm:px-4 py-2 text-nb-dark text-xs sm:text-sm font-black rounded-xl shadow hover:shadow-md transition disabled:opacity-40"
+          style={{ background: '#FFEB3C' }}>+ Add Quiz</button>
+      </div>
+
+      {error && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-2">{error}</p>}
+
+      {loading ? (
+        <p className="text-sm text-gray-400 py-8 text-center">Loading quizzes…</p>
+      ) : quizzes.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-nb-olive/20 py-10 flex flex-col items-center gap-2 text-center">
+          <span className="text-3xl">🎯</span>
+          <p className="font-black text-nb-dark">No quizzes yet</p>
+          <p className="text-sm text-gray-400">Click "+ Add Quiz" to get started</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {quizzes.map(qz => (
+            <div key={qz.id} className="bg-white rounded-2xl border-2 border-nb-olive/20 p-4">
+              <div className="flex items-start justify-between gap-2 mb-1.5">
+                <p className="font-black text-nb-dark text-sm">🎯 {qz.title}</p>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold flex-shrink-0 ${STATUS_STYLE[qz.status]}`}>{qz.status}</span>
+              </div>
+              <p className="text-xs text-gray-400">{qz.className} · {qz.subject} · {qz.cardCount} card{qz.cardCount === 1 ? '' : 's'}</p>
+              {qz.afterLessonTitle && <p className="text-xs text-gray-400 mt-0.5">📍 Appears after: {qz.afterLessonTitle}</p>}
+              <div className="flex items-center gap-3 mt-3">
+                <button onClick={() => setOpenQuizId(qz.id)} className="text-xs font-black" style={{ color: '#396336' }}>Cards →</button>
+                <button onClick={() => { setEditingQuiz(qz); setShowModal(true) }} className="text-xs font-bold" style={{ color: '#36913F' }}>Edit</button>
+                <button onClick={() => handleDelete(qz)} className="text-xs font-bold text-red-400 ml-auto">Delete</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ── Quiz meta modal (title / class / "appears after" lesson) ── */
+function QuizModal({ initial, classes, lessons, onClose, onSave }) {
+  const [form, setForm] = useState({
+    title: initial?.title || '',
+    classId: initial?.classId || classes[0]?.id || '',
+    afterLessonId: initial?.afterLessonId || '',
+  })
+  const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  function set(k, v) { setError(''); setForm(f => ({ ...f, [k]: v })) }
+
+  const classLessons = lessons.filter(l => Number(l.classId) === Number(form.classId))
+
+  async function submit(e) {
+    e.preventDefault()
+    if (!form.title.trim()) { setError('Please enter a quiz title.'); return }
+    if (!form.classId) { setError('Please select a class.'); return }
+    setSaving(true)
+    try {
+      await onSave({
+        title: form.title,
+        classId: Number(form.classId),
+        afterLessonId: form.afterLessonId ? Number(form.afterLessonId) : null,
+      })
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+         style={{ background: 'rgba(0,0,0,0.45)' }}
+         onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-xl p-5 sm:p-7 max-h-[92vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-xl font-black text-nb-dark">{initial ? 'Edit Quiz' : 'New Quiz'}</h2>
+            <p className="text-xs text-gray-400 mt-0.5">A quick, ungraded check that sits between two lessons.</p>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
+        </div>
+
+        {error && <p className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-2">{error}</p>}
+
+        <form onSubmit={submit} className="space-y-4">
+          <div>
+            <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-1.5">Quiz Title *</label>
+            <input value={form.title} onChange={e => set('title', e.target.value)}
+              placeholder="e.g. Space Quick Quiz"
+              className="w-full px-4 py-2.5 rounded-xl border-2 border-gray-100 focus:outline-none focus:border-nb-green bg-nb-cream text-sm" />
+          </div>
+
+          <div>
+            <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-1.5">Class</label>
+            <select value={form.classId} onChange={e => set('classId', e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl border-2 border-gray-100 focus:outline-none focus:border-nb-green bg-nb-cream text-sm">
+              {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-1.5">Appears After Lesson</label>
+            <select value={form.afterLessonId} onChange={e => set('afterLessonId', e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl border-2 border-gray-100 focus:outline-none focus:border-nb-green bg-nb-cream text-sm">
+              <option value="">— Not tied to a specific lesson —</option>
+              {classLessons.map(l => <option key={l.id} value={l.id}>{l.title}</option>)}
+            </select>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button type="button" onClick={onClose} className="px-4 py-2.5 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition">Cancel</button>
+            <button type="submit" disabled={saving}
+              className="px-5 py-2.5 rounded-xl text-sm font-black text-nb-dark shadow hover:shadow-md transition disabled:opacity-50"
+              style={{ background: '#FFEB3C' }}>{saving ? 'Saving…' : (initial ? 'Save Changes' : 'Create Quiz')}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+/* ── Quiz card editor — front/back/hint rows, same shape as a flashcard deck's editor,
+   plus a Preview that opens the real StudySet so a teacher sees exactly what students get ── */
+function QuizEditor({ quiz, onClose, onQuizUpdate }) {
+  const { token } = useAuth()
+  const [cards, setCards] = useState(quiz.cards || [])
+  const [saved, setSaved] = useState(false)
+  const [error, setError] = useState('')
+  const [previewing, setPreviewing] = useState(false)
+
+  async function addCard() {
+    try {
+      const card = await apiRequest('/api/quiz-cards', { method: 'POST', body: { quizId: quiz.id, front: '', back: '', hint: '' }, token })
+      setCards(cs => {
+        const next = [...cs, card]
+        onQuizUpdate?.({ ...quiz, cardCount: next.length })
+        return next
+      })
+    } catch (err) { setError(err.message) }
+  }
+  async function removeCard(cardId) {
+    try {
+      await apiRequest(`/api/quiz-cards/${cardId}`, { method: 'DELETE', token })
+      setCards(cs => {
+        const next = cs.filter(c => c.id !== cardId)
+        onQuizUpdate?.({ ...quiz, cardCount: next.length })
+        return next
+      })
+    } catch (err) { setError(err.message) }
+  }
+  function updateCard(cardId, field, value) {
+    setCards(cs => cs.map(c => c.id === cardId ? { ...c, [field]: value } : c))
+  }
+  async function saveCards() {
+    try {
+      await Promise.all(cards.map(c => apiRequest(`/api/quiz-cards/${c.id}`, {
+        method: 'PUT', body: { front: c.front, back: c.back, hint: c.hint }, token,
+      })))
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    } catch (err) { setError(err.message) }
+  }
+  async function togglePublish() {
+    try {
+      const updated = await apiRequest(`/api/quizzes/${quiz.id}`, {
+        method: 'PUT', body: { status: quiz.status === 'published' ? 'draft' : 'published' }, token,
+      })
+      onQuizUpdate?.(updated)
+    } catch (err) { setError(err.message) }
+  }
+
+  if (previewing) {
+    return (
+      <StudySet title={quiz.title} subject={quiz.subject} cards={cards}
+        deckKey={`quiz-${quiz.id}`} onExit={() => setPreviewing(false)} />
+    )
+  }
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-3">
+          <button onClick={onClose} className="text-sm font-bold text-gray-400 hover:text-nb-dark">← Back to Quizzes</button>
+          <div>
+            <h2 className="text-xl font-black text-nb-dark">{quiz.title}</h2>
+            <p className="text-xs text-gray-400">{quiz.className} · {quiz.subject} · {cards.length} card{cards.length === 1 ? '' : 's'}{quiz.afterLessonTitle ? ` · after "${quiz.afterLessonTitle}"` : ''}</p>
+          </div>
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          <span className={`px-3 py-1 rounded-full text-xs font-bold ${STATUS_STYLE[quiz.status]}`}>{quiz.status}</span>
+          <button onClick={() => setPreviewing(true)} disabled={cards.length === 0}
+            className="px-4 py-2 text-nb-green border-2 border-nb-green text-sm font-black rounded-xl hover:bg-nb-green hover:text-white transition disabled:opacity-40">
+            ▶ Preview
+          </button>
+          <button onClick={togglePublish}
+            className="px-4 py-2 text-white text-sm font-black rounded-xl shadow hover:opacity-90 transition"
+            style={{ background: quiz.status === 'published' ? '#9CA3AF' : '#36913F' }}>
+            {quiz.status === 'published' ? 'Unpublish' : '✅ Publish'}
+          </button>
+          <button onClick={saveCards}
+            className="px-4 py-2 text-sm font-black rounded-xl shadow hover:shadow-md transition"
+            style={{ background: saved ? '#6FC911' : '#FFEB3C', color: saved ? 'white' : '#396336' }}>
+            {saved ? '✓ Saved!' : '💾 Save'}
+          </button>
+        </div>
+      </div>
+
+      {error && <p className="text-sm text-red-500">{error}</p>}
+      <p className="text-xs text-gray-400 bg-white rounded-2xl border border-nb-olive/20 p-4">
+        Same Flashcards/Learn/Test/Match study modes as a flashcard deck — ungraded, never affects points, certificates or the leaderboard.
+      </p>
+
+      <div className="space-y-3">
+        {cards.map((card, idx) => (
+          <div key={card.id} className="bg-white rounded-2xl border-2 border-nb-olive/20 p-4">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Card {idx + 1}</span>
+              <button onClick={() => removeCard(card.id)}
+                className="text-xs font-bold text-red-400 hover:text-red-600 transition">✕ Remove</button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
+              <div>
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-wide mb-1">Front (Question)</label>
+                <textarea rows={2} value={card.front}
+                  onChange={e => updateCard(card.id, 'front', e.target.value)}
+                  placeholder="e.g. Which planet is closest to the Sun?"
+                  className="w-full px-3 py-2 rounded-xl border-2 border-gray-100 focus:outline-none focus:border-nb-green bg-nb-cream text-sm resize-none" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-wide mb-1">Back (Answer)</label>
+                <textarea rows={2} value={card.back}
+                  onChange={e => updateCard(card.id, 'back', e.target.value)}
+                  placeholder="e.g. Mercury"
+                  className="w-full px-3 py-2 rounded-xl border-2 border-gray-100 focus:outline-none focus:border-nb-green bg-nb-cream text-sm resize-none" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black text-nb-olive uppercase tracking-wide mb-1">🧠 Memory Hint (记忆法)</label>
+                <textarea rows={2} value={card.hint}
+                  onChange={e => updateCard(card.id, 'hint', e.target.value)}
+                  placeholder="Optional"
+                  className="w-full px-3 py-2 rounded-xl border-2 border-nb-yellow/40 focus:outline-none focus:border-nb-olive bg-nb-cream text-sm resize-none" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <button onClick={addCard}
+        className="w-full py-4 rounded-2xl border-2 border-dashed border-nb-olive/40 text-nb-green font-bold hover:border-nb-green hover:bg-white transition">
+        + Add Card
+      </button>
     </div>
   )
 }

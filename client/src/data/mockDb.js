@@ -81,6 +81,47 @@ let assessments = [
 // assessment's own stored `answer`/`points` per question, never trusted from the client.
 let assessmentAttempts = []
 
+// A Quiz is NOT scoped to a lesson — it belongs directly to a Class and sits "between"
+// two lessons via afterLessonId, for a quick informal check. Cards are front/back, same
+// shape as flashcards, so the taking experience is the exact same Quizlet-style StudySet
+// (Flashcards/Learn/Test/Match) already used for flashcard decks — Test mode there is
+// self-practice only (never submitted/graded), which is exactly the "ungraded, no
+// points/certs/leaderboard" behaviour a quiz needs. This is a deliberate distinction from
+// Assessment (which was literally renamed from "quiz" earlier in the SRS) — see
+// project_assessments_nav_shortcut memory for that history.
+let quizzes = [
+  {
+    id: 1, classId: 1, title: 'Space Quick Quiz', status: 'published', afterLessonId: 7,
+    cards: [
+      { id: 1, quizId: 1, front: 'Which planet is closest to the Sun?', back: 'Mercury', hint: "It's also the smallest planet!" },
+      { id: 2, quizId: 1, front: 'What galaxy is our Solar System in?', back: 'The Milky Way', hint: '' },
+    ],
+  },
+  {
+    id: 2, classId: 2, title: 'Ecosystems Quick Quiz', status: 'published', afterLessonId: 21,
+    cards: [
+      { id: 3, quizId: 2, front: 'What do we call a chain of who-eats-who in nature?', back: 'A food chain', hint: '' },
+    ],
+  },
+]
+
+function serializeQuiz(q) {
+  const cls = classes.find(c => c.id === q.classId)
+  const afterLesson = q.afterLessonId ? lessons.find(l => l.id === q.afterLessonId) : null
+  return {
+    id: q.id,
+    classId: q.classId,
+    className: cls?.name ?? null,
+    subject: cls?.subject ?? null,
+    title: q.title,
+    status: q.status,
+    afterLessonId: q.afterLessonId ?? null,
+    afterLessonTitle: afterLesson?.title ?? null,
+    cardCount: q.cards.length,
+    cards: q.cards,
+  }
+}
+
 function serializeAssessment(a) {
   const lesson = lessons.find(l => l.id === a.lessonId)
   return {
@@ -428,6 +469,56 @@ export async function mockApiRequest(path, { method = 'GET', body } = {}) {
     }
     if (method === 'DELETE') {
       assessments = assessments.map(a => ({ ...a, questions: a.questions.filter(q => q.id !== id) }))
+      return null
+    }
+  }
+
+  // ── Quizzes (belong to a Class, not a Lesson — sit "between" two lessons; ungraded,
+  // never touches points/leaderboard/certs) ──────────────────────────────────
+  if (path === '/api/quizzes') {
+    if (method === 'GET')  return quizzes.map(serializeQuiz)
+    if (method === 'POST') {
+      const created = { id: uid(), status: 'draft', afterLessonId: null, cards: [], ...body }
+      quizzes.push(created)
+      return serializeQuiz(created)
+    }
+  }
+  const quizMatch = path.match(/^\/api\/quizzes\/(\d+)$/)
+  if (quizMatch) {
+    const id = Number(quizMatch[1])
+    if (method === 'GET') { const z = quizzes.find(x => x.id === id); return z ? serializeQuiz(z) : null }
+    if (method === 'PUT') {
+      quizzes = quizzes.map(z => z.id === id ? { ...z, ...body } : z)
+      return serializeQuiz(quizzes.find(z => z.id === id))
+    }
+    if (method === 'DELETE') {
+      quizzes = quizzes.filter(z => z.id !== id)
+      return null
+    }
+  }
+
+  // ── Quiz cards (front/back/hint — same shape as flashcards) ─────────────────
+  if (path.startsWith('/api/quiz-cards')) {
+    const qsMatch = path.match(/\?quizId=(\d+)/)
+    if (method === 'GET' && qsMatch) {
+      const quizId = Number(qsMatch[1])
+      return quizzes.find(z => z.id === quizId)?.cards || []
+    }
+    if (method === 'POST') {
+      const created = { id: uid(), ...body }
+      quizzes = quizzes.map(z => z.id === body.quizId ? { ...z, cards: [...z.cards, created] } : z)
+      return created
+    }
+  }
+  const qcMatch = path.match(/^\/api\/quiz-cards\/(\d+)$/)
+  if (qcMatch) {
+    const id = Number(qcMatch[1])
+    if (method === 'PUT') {
+      quizzes = quizzes.map(z => ({ ...z, cards: z.cards.map(c => c.id === id ? { ...c, ...body } : c) }))
+      return quizzes.flatMap(z => z.cards).find(c => c.id === id)
+    }
+    if (method === 'DELETE') {
+      quizzes = quizzes.map(z => ({ ...z, cards: z.cards.filter(c => c.id !== id) }))
       return null
     }
   }
