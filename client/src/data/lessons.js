@@ -100,11 +100,19 @@ export const LOCKED_IDS = computeLockedIds(ALL_LESSONS)
 // teacher's override is instantly visible on the student side in the browser.
 const FORCE_OPEN_KEY = 'nb_force_open_lesson_ids'
 
+// Demo default: lesson 20 ("States of Matter", the Assessment showcase example) comes
+// pre-opened in any fresh browser, so it's reachable without first completing lessons
+// 7/8/18/19 in sequence. Only applies before any real toggle exists for this browser —
+// once a teacher uses the actual "Force Open Now" button, that explicit state takes over.
+const DEMO_DEFAULT_FORCE_OPEN_IDS = [20]
+
 function readForceOpenIds() {
   try {
-    return new Set(JSON.parse(localStorage.getItem(FORCE_OPEN_KEY)) || [])
+    const raw = localStorage.getItem(FORCE_OPEN_KEY)
+    if (raw === null) return new Set(DEMO_DEFAULT_FORCE_OPEN_IDS)
+    return new Set(JSON.parse(raw) || [])
   } catch {
-    return new Set()
+    return new Set(DEMO_DEFAULT_FORCE_OPEN_IDS)
   }
 }
 
