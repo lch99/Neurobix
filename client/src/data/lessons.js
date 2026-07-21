@@ -76,6 +76,24 @@ export const SUBJECT_BADGE = {
   Science: 'bg-green-100 text-green-700',
 }
 
+// Single source of truth for the student top-nav — shared by StudentDashboard.jsx (the
+// tab-switching container) and LessonDetail.jsx (a separate route that only navigates
+// back to StudentDashboard with a target tab). Keeping one copy means a page added here
+// can never silently go missing from one of the two places again.
+export const STUDENT_TABS = [
+  { id: 'home',       icon: '🏠', label: 'Home'       },
+  { id: 'lessons',    icon: '📚', label: 'My Courses', dropdown: [
+      { id: 'lessons', icon: '📚', label: 'Mnemonics' },
+      { id: 'memory',  icon: '🧠', label: 'Memory Fundamentals' },
+    ] },
+  { id: 'memportal',  icon: '🧠', label: 'Mem Portal' },
+  { id: 'flashcards', icon: '🃏', label: 'Flash Cards' },
+  { id: 'assessments', icon: '📝', label: 'Assessments' },
+  { id: 'quizzes',     icon: '🎯', label: 'Quizzes' },
+  { id: 'shop',       icon: '🛍️', label: 'Shop'       },
+  { id: 'rewards',    icon: '🏆', label: 'Rewards'    },
+]
+
 // Returns a Set of lesson IDs that are locked.
 // Science only: a lesson is locked if the immediately previous Science lesson
 // is not completed (lock propagates forward through the chain).

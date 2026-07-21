@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { apiRequest } from '../lib/api'
 import Navbar from '../components/Navbar'
 import LessonBrowser from '../components/LessonBrowser'
-import { ALL_LESSONS, LOCKED_IDS, STATUS_STYLE, STATUS_LABEL, useForceOpenIds } from '../data/lessons'
+import { ALL_LESSONS, LOCKED_IDS, STATUS_STYLE, STATUS_LABEL, STUDENT_TABS, useForceOpenIds } from '../data/lessons'
 import WeeklySchedule from '../components/WeeklySchedule'
 import ComingSoon from '../components/ComingSoon'
 import MemoryFundamentals from '../components/MemoryFundamentals'
@@ -70,19 +70,6 @@ const BADGES = [
   { icon: mascotRocket, label: 'Fast Finisher', earned: false },
 ]
 
-const TABS = [
-  { id: 'home',       icon: '🏠', label: 'Home'       },
-  { id: 'lessons',    icon: '📚', label: 'My Courses', dropdown: [
-      { id: 'lessons', icon: '📚', label: 'Mnemonics' },
-      { id: 'memory',  icon: '🧠', label: 'Memory Fundamentals' },
-    ] },
-  { id: 'memportal',  icon: '🧠', label: 'Mem Portal' },
-  { id: 'flashcards', icon: '🃏', label: 'Flash Cards' },
-  { id: 'assessments', icon: '📝', label: 'Assessments' },
-  { id: 'quizzes',     icon: '🎯', label: 'Quizzes' },
-  { id: 'shop',       icon: '🛍️', label: 'Shop'       },
-  { id: 'rewards',    icon: '🏆', label: 'Rewards'    },
-]
 
 const BADGE_THRESHOLDS = [500, 1000, 1500, 2000, 3000, 5000]
 
@@ -136,7 +123,7 @@ export default function StudentDashboard() {
 
       {/* ── Top bar ── */}
       <Navbar role="student" userName="Ahmad bin Hassan" points={studentPoints} avatar="AH"
-              tabs={TABS} activeTab={tab} onTabChange={setTab} />
+              tabs={STUDENT_TABS} activeTab={tab} onTabChange={setTab} />
 
       {/* ── Welcome hero (full-width) ── */}
       {tab === 'home' && (

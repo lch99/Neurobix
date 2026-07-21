@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { LOCKED_IDS, useForceOpenIds } from '../data/lessons'
+import { LOCKED_IDS, STUDENT_TABS, useForceOpenIds } from '../data/lessons'
 import { useAuth } from '../context/AuthContext'
 import { apiRequest } from '../lib/api'
 import Navbar from '../components/Navbar'
@@ -11,14 +11,6 @@ import {
   lockIcon, brainIcon, passIcon, teacherIcon, durationIcon, starYellow,
   lightBulbIcon, playIcon, assessmentPassIcon,
 } from '../assets/icons'
-
-const TABS = [
-  { id: 'home',       icon: '🏠', label: 'Home'       },
-  { id: 'lessons',    icon: '📚', label: 'Lessons'    },
-  { id: 'flashcards', icon: '🃏', label: 'Flash Cards' },
-  { id: 'schedule',   icon: '📅', label: 'Schedule'   },
-  { id: 'rewards',    icon: '🏆', label: 'Rewards'    },
-]
 
 const TYPE_LABEL = { video: 'Video', flashcard: 'Flash Cards', assessment: 'Assessment', reading: 'Reading', activity: 'Activity' }
 
@@ -131,7 +123,7 @@ export default function LessonDetail() {
   return (
     <div className="min-h-screen bg-nb-cream">
       <Navbar role="student" userName="Ahmad bin Hassan" points={1240} avatar="AH"
-              tabs={TABS} activeTab="lessons" onTabChange={handleTabChange} />
+              tabs={STUDENT_TABS} activeTab="lessons" onTabChange={handleTabChange} />
 
       {/* Hero (full-width) */}
       <div className="w-full text-white relative overflow-hidden"
@@ -273,6 +265,14 @@ function VideoContent({ lesson, onComplete, completed }) {
   )
 }
 
+// Matches StudySet's local helper exactly, so the elapsed-time readout looks identical
+// whether you're taking an Assessment or a Quiz.
+function formatSeconds(totalSeconds) {
+  const m = Math.floor(totalSeconds / 60)
+  const s = totalSeconds % 60
+  return `${m}:${String(s).padStart(2, '0')}`
+}
+
 /* ─── Assessment ─── */
 function AssessmentContent({ assessment, onComplete }) {
   const { user, token } = useAuth()
@@ -284,6 +284,13 @@ function AssessmentContent({ assessment, onComplete }) {
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState(null)
   const [leaderboard, setLeaderboard] = useState([])
+  const [seconds, setSeconds] = useState(0)
+
+  useEffect(() => {
+    if (result) return
+    const t = setInterval(() => setSeconds(s => s + 1), 1000)
+    return () => clearInterval(t)
+  }, [result])
 
   if (!questions || questions.length === 0) return (
     <div className="bg-white rounded-3xl border-2 border-dashed border-nb-olive/30 p-10 text-center">
@@ -333,6 +340,7 @@ function AssessmentContent({ assessment, onComplete }) {
           <div className="flex justify-center">{pct === 1 ? <img src={assessmentPassIcon} alt="" className="w-24 h-24 object-contain" /> : <span className="text-7xl">{pct >= 0.5 ? '👍' : '📖'}</span>}</div>
           <h2 className="text-3xl font-black text-nb-dark">Assessment Complete!</h2>
           <p className="text-xl text-gray-600">Score: <span className="font-black text-nb-green">{result.score}/{result.totalPoints}</span></p>
+          <p className="text-sm text-gray-400">Time: {formatSeconds(seconds)}</p>
           <p className={`text-sm font-bold ${passed ? 'text-nb-green' : 'text-amber-600'}`}>
             {passed ? '✅ ' : ''}Pass mark: {assessment.passMark}%{passed ? ' — Passed!' : ''}
           </p>
@@ -368,6 +376,7 @@ function AssessmentContent({ assessment, onComplete }) {
     <div className="space-y-4">
       <div className="flex justify-between text-sm font-semibold text-gray-500">
         <span>Question {current + 1} of {questions.length}</span>
+        <span>⏱ {formatSeconds(seconds)}</span>
       </div>
       <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
         <div className="h-full rounded-full transition-all" style={{ width: `${(current / questions.length) * 100}%`, background: 'linear-gradient(90deg,#FFEB3C,#6FC911)' }} />
