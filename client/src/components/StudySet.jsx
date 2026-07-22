@@ -42,7 +42,7 @@ function generateQuestion(card, allCards) {
  * `deckKey` must be a stable identifier for this exact set of cards (e.g. `lesson-18` or
  * `library`) — it namespaces the per-student progress/best-time persisted for this set.
  */
-export default function StudySet({ title, subject, cards, deckKey, onExit, onComplete, onToggleLibrary, isInLibrary }) {
+export default function StudySet({ title, subject, cards, deckKey, onExit, onComplete, onToggleLibrary, isInLibrary, onTestComplete }) {
   const { user, token } = useAuth()
   const [mode, setMode] = useState('flashcards')
   const [progress, setProgress] = useState({})
@@ -106,7 +106,7 @@ export default function StudySet({ title, subject, cards, deckKey, onExit, onCom
           onComplete={onComplete} onToggleLibrary={onToggleLibrary} isInLibrary={isInLibrary} />
       )}
       {mode === 'learn' && <LearnMode cards={cards} onUpdateProgress={updateProgress} />}
-      {mode === 'test'  && <TestMode cards={cards} />}
+      {mode === 'test'  && <TestMode cards={cards} onComplete={onTestComplete} />}
       {mode === 'match' && <MatchMode cards={cards} deckKey={deckKey} studentId={user.id} />}
     </div>
   )
@@ -301,8 +301,10 @@ function LearnMode({ cards, onUpdateProgress }) {
   )
 }
 
-/* ─── Test mode: one timed self-practice pass — not submitted or graded anywhere ─── */
-function TestMode({ cards }) {
+/* ─── Test mode: one timed self-practice pass — never submitted/graded for points or the
+   leaderboard, but does report its final score via onComplete so a caller (e.g. a Quiz
+   row in My Courses) can show a "you've done this" marker — cosmetic only. ─── */
+function TestMode({ cards, onComplete }) {
   const [questions] = useState(() => shuffleArray(cards.map(c => generateQuestion(c, cards))))
   const [current, setCurrent] = useState(0)
   const [value, setValue] = useState(null)
@@ -323,8 +325,12 @@ function TestMode({ cards }) {
   }
   function next() {
     setAnswered(false); setValue(null)
-    if (current + 1 < questions.length) setCurrent(c => c + 1)
-    else setDone(true)
+    if (current + 1 < questions.length) {
+      setCurrent(c => c + 1)
+      return
+    }
+    setDone(true)
+    onComplete?.(score, questions.length)
   }
 
   if (done) return (

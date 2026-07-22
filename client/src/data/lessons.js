@@ -157,6 +157,41 @@ export function useForceOpenIds() {
   return ids
 }
 
+// ─── Quiz completion tracking ────────────────────────────────────────────────
+// A quiz stays ungraded — no points/certs/leaderboard — but a student still needs some
+// visible sign of "I've done this one, and I did well" after finishing Test mode. This is
+// purely a local, cosmetic marker (same demo-only localStorage pattern as force-open
+// above), not a scoring/rewards system.
+const QUIZ_COMPLETIONS_KEY = 'nb_quiz_completions'
+const QUIZ_PASS_RATIO = 0.7
+
+function readQuizCompletions() {
+  try { return JSON.parse(localStorage.getItem(QUIZ_COMPLETIONS_KEY)) || {} } catch { return {} }
+}
+
+export function recordQuizCompletion(quizId, score, total) {
+  const all = readQuizCompletions()
+  all[quizId] = { score, total, passed: total > 0 && score / total >= QUIZ_PASS_RATIO, completedAt: new Date().toISOString() }
+  localStorage.setItem(QUIZ_COMPLETIONS_KEY, JSON.stringify(all))
+  window.dispatchEvent(new Event('nb-quiz-completion-change'))
+}
+
+// Reactive map of { [quizId]: { score, total, passed, completedAt } } — re-renders live
+// once Test mode finishes, so the quiz's row in My Courses updates without a reload.
+export function useQuizCompletions() {
+  const [completions, setCompletions] = useState(() => readQuizCompletions())
+  useEffect(() => {
+    const sync = () => setCompletions(readQuizCompletions())
+    window.addEventListener('nb-quiz-completion-change', sync)
+    window.addEventListener('storage', sync)
+    return () => {
+      window.removeEventListener('nb-quiz-completion-change', sync)
+      window.removeEventListener('storage', sync)
+    }
+  }, [])
+  return completions
+}
+
 // ─── Weekly schedule helpers ────────────────────────────────────────────────
 
 export function getTermWeekCount(term) {

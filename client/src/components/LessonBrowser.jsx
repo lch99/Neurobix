@@ -9,6 +9,7 @@ import {
   ALL_LESSONS, LOCKED_IDS, TERMS, formatTermRange,
   STATUS_STYLE, STATUS_LABEL, DIFF_COLOR, TYPE_COLOR, TYPE_ICON,
   SUBJECT_META, SUBJECT_BADGE, useForceOpenIds,
+  useQuizCompletions, recordQuizCompletion,
 } from '../data/lessons'
 
 const MILESTONES = [25, 50, 75, 100]
@@ -216,6 +217,7 @@ export default function LessonBrowser() {
 
 function TermsView({ course, meta, expandedTerm, setExpandedTerm, onBack, navigate, quizzes }) {
   const forceOpenIds = useForceOpenIds()
+  const quizCompletions = useQuizCompletions()
   const courseLessons = ALL_LESSONS.filter(l => l.subject === course)
   const doneCount = courseLessons.filter(l => l.status === 'completed').length
   const subjPct   = Math.round((doneCount / courseLessons.length) * 100)
@@ -224,7 +226,8 @@ function TermsView({ course, meta, expandedTerm, setExpandedTerm, onBack, naviga
   if (takingQuiz) {
     return (
       <StudySet title={takingQuiz.title} subject={course} cards={takingQuiz.cards}
-        deckKey={`quiz-${takingQuiz.id}`} onExit={() => setTakingQuiz(null)} />
+        deckKey={`quiz-${takingQuiz.id}`} onExit={() => setTakingQuiz(null)}
+        onTestComplete={(score, total) => recordQuizCompletion(takingQuiz.id, score, total)} />
     )
   }
 
@@ -333,7 +336,7 @@ function TermsView({ course, meta, expandedTerm, setExpandedTerm, onBack, naviga
                         <LessonRow lesson={lesson} locked={locked} forceOpened={baseLocked && forced}
                           onClick={() => !locked && navigate(`/lessons/${lesson.id}`)} />
                         {afterQuizzes.map(q => (
-                          <QuizRow key={q.id} quiz={q} onClick={() => setTakingQuiz(q)} />
+                          <QuizRow key={q.id} quiz={q} completion={quizCompletions[q.id]} onClick={() => setTakingQuiz(q)} />
                         ))}
                       </div>
                     )
@@ -352,7 +355,7 @@ function TermsView({ course, meta, expandedTerm, setExpandedTerm, onBack, naviga
 // styling is deliberately distinct from LessonRow so it reads as "a quick check between
 // classes" rather than another lesson in the sequence. No lock logic: quizzes are ungraded
 // practice, never part of the sequential-unlock chain.
-function QuizRow({ quiz, onClick }) {
+function QuizRow({ quiz, completion, onClick }) {
   return (
     <div onClick={onClick}
       className="ml-4 sm:ml-6 bg-nb-cream/50 rounded-2xl border-2 border-dashed border-nb-yellow/70 p-3.5 flex items-center gap-3.5 hover:shadow-md hover:border-nb-yellow cursor-pointer group transition">
@@ -360,9 +363,15 @@ function QuizRow({ quiz, onClick }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <p className="font-black text-sm text-nb-dark group-hover:text-nb-green">{quiz.title}</p>
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">Ungraded</span>
+          {completion ? (
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${completion.passed ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+              {completion.passed ? '✅ Passed' : '📖 Try again'} · {completion.score}/{completion.total}
+            </span>
+          ) : (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">Ungraded</span>
+          )}
         </div>
-        <p className="text-xs text-gray-400 mt-0.5">{quiz.cardCount} card{quiz.cardCount === 1 ? '' : 's'} · quick practice between classes</p>
+        <p className="text-xs text-gray-400 mt-0.5">{quiz.cardCount} card{quiz.cardCount === 1 ? '' : 's'} · quick practice between classes · Test mode marks your score</p>
       </div>
       <span className="text-gray-300 text-lg group-hover:text-nb-green transition-colors">›</span>
     </div>
