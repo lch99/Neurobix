@@ -36,21 +36,16 @@ function generateQuestion(card, allCards) {
 }
 
 /**
- * A Quizlet-style study set: a mode picker over one shared `cards` array. Used for a
- * lesson's flashcard deck, a student's personal library, and Quiz.
+ * A Quizlet-style study set: a mode picker (Flashcards/Learn/Test/Match) over one shared
+ * `cards` array. Used for a lesson's flashcard deck, a student's personal library, and Quiz
+ * — all get the full mode set, matching real Quizlet's own study sets.
  *
  * `deckKey` must be a stable identifier for this exact set of cards (e.g. `lesson-18` or
  * `library`) — it namespaces the per-student progress/best-time persisted for this set.
- *
- * `modes` restricts which tabs show and which one opens first — a flashcard deck gets all
- * four (defaults to Flashcards), while Quiz passes `['learn', 'test']` so it opens straight
- * into an actual question to answer instead of a flippable card, since a quiz is meant to
- * feel like a small test rather than a flashcard deck even though it reuses the same engine.
  */
-export default function StudySet({ title, subject, cards, deckKey, onExit, onComplete, onToggleLibrary, isInLibrary, onTestComplete, modes }) {
+export default function StudySet({ title, subject, cards, deckKey, onExit, onComplete, onToggleLibrary, isInLibrary, onTestComplete }) {
   const { user, token } = useAuth()
-  const visibleModes = modes ? MODES.filter(m => modes.includes(m.id)) : MODES
-  const [mode, setMode] = useState(visibleModes[0]?.id || 'flashcards')
+  const [mode, setMode] = useState('flashcards')
   const [progress, setProgress] = useState({})
 
   useEffect(() => {
@@ -98,7 +93,7 @@ export default function StudySet({ title, subject, cards, deckKey, onExit, onCom
           )}
         </div>
         <div className="flex gap-1 bg-nb-cream rounded-2xl p-1 flex-wrap">
-          {visibleModes.map(m => (
+          {MODES.map(m => (
             <button key={m.id} onClick={() => setMode(m.id)}
               className={`px-3.5 py-2 rounded-xl text-xs font-black transition flex items-center gap-1.5 ${mode === m.id ? 'bg-white text-nb-dark shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>
               <span>{m.icon}</span> {m.label}

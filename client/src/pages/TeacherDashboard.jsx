@@ -846,7 +846,7 @@ function QuizEditor({ quiz, onClose, onQuizUpdate }) {
   if (previewing) {
     return (
       <StudySet title={quiz.title} subject={quiz.subject} cards={cards}
-        deckKey={`quiz-${quiz.id}`} onExit={() => setPreviewing(false)} modes={['learn', 'test']} />
+        deckKey={`quiz-${quiz.id}`} onExit={() => setPreviewing(false)} />
     )
   }
 
