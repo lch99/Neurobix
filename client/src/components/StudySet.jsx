@@ -307,69 +307,116 @@ function LearnMode({ cards, onUpdateProgress }) {
   )
 }
 
-/* ─── Test mode: one timed self-practice pass — never submitted/graded for points or the
-   leaderboard, but does report its final score via onComplete so a caller (e.g. a Quiz
-   row in My Courses) can show a "you've done this" marker — cosmetic only. ─── */
+// Builds one real Quizlet-style mixed test: written, matching, multiple-choice and
+// true/false sections in a single pass, rotating cards round-robin across formats so
+// each section gets a fair share instead of repeating the same cards per section.
+function buildMixedTest(cards) {
+  const shuffled = shuffleArray(cards)
+  const order = ['fill_in', 'mcq', 'true_false', 'matching']
+  const buckets = { fill_in: [], mcq: [], true_false: [], matching: [] }
+  shuffled.forEach((card, i) => buckets[order[i % order.length]].push(card))
+
+  // Matching needs at least 2 pairs to be its own section; fold a lone leftover into Written.
+  if (buckets.matching.length < 2) {
+    buckets.fill_in.push(...buckets.matching)
+    buckets.matching = []
+  }
+  // True/false needs another card's answer to use as the "false" claim.
+  if (buckets.true_false.length && cards.length < 2) {
+    buckets.fill_in.push(...buckets.true_false)
+    buckets.true_false = []
+  }
+
+  const fillIn = buckets.fill_in.map(c => ({ id: c.id, type: 'fill_in', text: c.front, answer: c.back, points: 1 }))
+  const mcq = buckets.mcq.map(c => {
+    const distractors = shuffleArray(cards.filter(x => x.id !== c.id).map(x => x.back)).slice(0, 3)
+    const options = shuffleArray([c.back, ...distractors])
+    return { id: c.id, type: 'mcq', text: c.front, options, answer: options.indexOf(c.back), points: 1 }
+  })
+  const trueFalse = buckets.true_false.map(c => {
+    const isTrueClaim = Math.random() < 0.5
+    const claim = isTrueClaim ? c.back : shuffleArray(cards.filter(x => x.id !== c.id).map(x => x.back))[0]
+    return { id: c.id, type: 'true_false', text: `${c.front} — ${claim}`, options: ['True', 'False'], answer: isTrueClaim, points: 1 }
+  })
+  const matching = buckets.matching.length
+    ? [{ id: 'matching-section', type: 'match', text: 'Match each term to its definition',
+        options: { pairs: buckets.matching.map(c => ({ left: c.front, right: c.back })) }, answer: null, points: buckets.matching.length }]
+    : []
+
+  return { fillIn, mcq, trueFalse, matching, all: [...fillIn, ...mcq, ...trueFalse, ...matching] }
+}
+
+/* ─── Test mode: real Quizlet's Test is one page mixing Written/Matching/Multiple-Choice/
+   True-False, answered all at once and submitted together — not one question per screen.
+   Never persisted/graded for points or the leaderboard, but reports its final score via
+   onComplete so a caller (e.g. a Quiz row in My Courses) can show a "you've done this"
+   marker — cosmetic only. ─── */
 function TestMode({ cards, onComplete }) {
-  const [questions] = useState(() => shuffleArray(cards.map(c => generateQuestion(c, cards))))
-  const [current, setCurrent] = useState(0)
-  const [value, setValue] = useState(null)
-  const [answered, setAnswered] = useState(false)
-  const [score, setScore] = useState(0)
-  const [done, setDone] = useState(false)
+  const [test] = useState(() => buildMixedTest(cards))
+  const [answers, setAnswers] = useState({})
+  const [submitted, setSubmitted] = useState(false)
   const [seconds, setSeconds] = useState(0)
 
   useEffect(() => {
-    if (done) return
+    if (submitted) return
     const t = setInterval(() => setSeconds(s => s + 1), 1000)
     return () => clearInterval(t)
-  }, [done])
+  }, [submitted])
+
+  function setAnswer(qid, value) {
+    if (submitted) return
+    setAnswers(prev => ({ ...prev, [qid]: value }))
+  }
+
+  const allAnswered = test.all.every(q => hasAnswer(q, answers[q.id]))
+  const score = test.all.reduce((s, q) => s + (isCorrectAnswer(q, answers[q.id]) ? (q.points || 1) : 0), 0)
+  const total = test.all.reduce((s, q) => s + (q.points || 1), 0)
 
   function submit() {
-    if (isCorrectAnswer(questions[current], value)) setScore(s => s + 1)
-    setAnswered(true)
-  }
-  function next() {
-    setAnswered(false); setValue(null)
-    if (current + 1 < questions.length) {
-      setCurrent(c => c + 1)
-      return
-    }
-    setDone(true)
-    onComplete?.(score, questions.length)
+    setSubmitted(true)
+    onComplete?.(score, total)
   }
 
-  if (done) return (
-    <div className="bg-white rounded-3xl border-2 border-nb-olive/20 p-8 text-center space-y-3">
-      <p className="text-5xl">{score === questions.length ? '🏆' : score >= questions.length / 2 ? '👍' : '📖'}</p>
-      <h3 className="text-2xl font-black text-nb-dark">Test Complete!</h3>
-      <p className="text-xl text-gray-600">Score: <span className="font-black text-nb-green">{score}/{questions.length}</span></p>
-      <p className="text-sm text-gray-400">Time: {formatSeconds(seconds)}</p>
-      <p className="text-xs text-gray-300">Self-practice only — this test isn't submitted or graded.</p>
-    </div>
-  )
+  const sections = [
+    { label: '✍️ Written',         items: test.fillIn },
+    { label: '🔀 Matching',        items: test.matching },
+    { label: '⚪ Multiple Choice', items: test.mcq },
+    { label: '✓✗ True / False',    items: test.trueFalse },
+  ].filter(s => s.items.length > 0)
 
-  const q = questions[current]
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between text-sm font-semibold text-gray-500">
-        <span>Question {current + 1} of {questions.length}</span>
-        <span>⏱ {formatSeconds(seconds)}</span>
-      </div>
-      <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
-        <div className="h-full rounded-full transition-all" style={{ width: `${(current / questions.length) * 100}%`, background: 'linear-gradient(90deg,#FFEB3C,#6FC911)' }} />
-      </div>
-      <QuestionCard q={q} value={value} onChange={setValue} answered={answered} />
-      {!answered
-        ? <button onClick={submit} disabled={!hasAnswer(q, value)}
-            className="w-full py-4 text-nb-dark text-lg font-black rounded-2xl shadow-md disabled:opacity-40 transition hover:shadow-lg"
-            style={{ background: '#FFEB3C' }}>Submit Answer ✅</button>
-        : <button onClick={next}
-            className="w-full py-4 text-white text-lg font-black rounded-2xl shadow-md transition hover:opacity-90"
-            style={{ background: '#36913F' }}>
-            {current + 1 < questions.length ? 'Next Question →' : 'See Results 🎉'}
-          </button>
-      }
+    <div className="space-y-5">
+      {submitted ? (
+        <div className="bg-white rounded-3xl border-2 border-nb-olive/20 p-8 text-center space-y-3">
+          <p className="text-5xl">{score === total ? '🏆' : score >= total / 2 ? '👍' : '📖'}</p>
+          <h3 className="text-2xl font-black text-nb-dark">Test Complete!</h3>
+          <p className="text-xl text-gray-600">Score: <span className="font-black text-nb-green">{score}/{total}</span></p>
+          <p className="text-sm text-gray-400">Time: {formatSeconds(seconds)}</p>
+          <p className="text-xs text-gray-300">Self-practice only — this test isn't submitted or graded.</p>
+        </div>
+      ) : (
+        <div className="flex justify-between text-sm font-semibold text-gray-500">
+          <span>{test.all.length} question{test.all.length === 1 ? '' : 's'} — answer everything, then submit</span>
+          <span>⏱ {formatSeconds(seconds)}</span>
+        </div>
+      )}
+
+      {sections.map(s => (
+        <div key={s.label} className="space-y-3">
+          <h4 className="font-black text-nb-dark text-xs uppercase tracking-widest">{s.label}</h4>
+          {s.items.map(q => (
+            <QuestionCard key={q.id} q={q} value={answers[q.id]} onChange={v => setAnswer(q.id, v)} answered={submitted} />
+          ))}
+        </div>
+      ))}
+
+      {!submitted && (
+        <button onClick={submit} disabled={!allAnswered}
+          className="w-full py-4 text-nb-dark text-lg font-black rounded-2xl shadow-md disabled:opacity-40 transition hover:shadow-lg"
+          style={{ background: '#FFEB3C' }}>
+          Check Answers ✅
+        </button>
+      )}
     </div>
   )
 }

@@ -115,12 +115,25 @@ let quizzes = [
     cards: [
       { id: 1, quizId: 1, front: 'Which planet is closest to the Sun?', back: 'Mercury', hint: "It's also the smallest planet!" },
       { id: 2, quizId: 1, front: 'What galaxy is our Solar System in?', back: 'The Milky Way', hint: '' },
+      { id: 3, quizId: 1, front: 'Which planet is known as the Red Planet?', back: 'Mars', hint: 'Named after the Roman god of war.' },
+      { id: 4, quizId: 1, front: 'What force keeps the planets in orbit around the Sun?', back: 'Gravity', hint: '' },
+      { id: 5, quizId: 1, front: 'Which planet has the most famous rings?', back: 'Saturn', hint: '' },
+      { id: 6, quizId: 1, front: 'What do we call a large rock orbiting a planet, like our Moon?', back: 'A moon (natural satellite)', hint: '' },
+      { id: 7, quizId: 1, front: 'Which planet is the largest in the Solar System?', back: 'Jupiter', hint: '' },
+      { id: 8, quizId: 1, front: 'What do we call the path a planet takes around the Sun?', back: 'An orbit', hint: '' },
     ],
   },
   {
     id: 2, classId: 2, title: 'Ecosystems Quick Quiz', status: 'published', afterLessonId: 21,
     cards: [
-      { id: 3, quizId: 2, front: 'What do we call a chain of who-eats-who in nature?', back: 'A food chain', hint: '' },
+      { id: 9,  quizId: 2, front: 'What do we call a chain of who-eats-who in nature?', back: 'A food chain', hint: '' },
+      { id: 10, quizId: 2, front: 'What do we call an animal that only eats plants?', back: 'A herbivore', hint: '' },
+      { id: 11, quizId: 2, front: 'What do we call an animal that eats both plants and meat?', back: 'An omnivore', hint: '' },
+      { id: 12, quizId: 2, front: 'What is the main source of energy for almost every food chain?', back: 'The Sun', hint: '' },
+      { id: 13, quizId: 2, front: 'What do we call an animal that only eats other animals?', back: 'A carnivore', hint: '' },
+      { id: 14, quizId: 2, front: 'What do we call all the living and non-living things in an area, working together?', back: 'An ecosystem', hint: '' },
+      { id: 15, quizId: 2, front: 'What do we call living things that make their own food, like plants?', back: 'Producers', hint: '' },
+      { id: 16, quizId: 2, front: 'What do we call several overlapping food chains in one habitat?', back: 'A food web', hint: '' },
     ],
   },
 ]
