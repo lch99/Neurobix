@@ -52,6 +52,19 @@ let flashcards = [
   { id: 9, lessonId: 109, front: 'What happens to a ball when you push it?', back: 'It moves in the direction of the push', hint: 'Newton\'s first law!' },
 ]
 
+// Simple inline SVG (no external asset/network dependency) for the one "image-based"
+// assessment question below — a grid of tightly-packed particles representing a solid.
+const SOLID_PARTICLES_SVG = 'data:image/svg+xml,' + encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" width="220" height="160" viewBox="0 0 220 160">
+    <rect width="220" height="160" rx="12" fill="#F0FDF4"/>
+    ${Array.from({ length: 4 }).flatMap((_, r) =>
+      Array.from({ length: 5 }).map((_, c) =>
+        `<circle cx="${30 + c * 40}" cy="${30 + r * 32}" r="9" fill="#36913F"/>`
+      )
+    ).join('')}
+  </svg>`
+)
+
 // Each assessment belongs to exactly one lesson (of type 'assessment') — there is no
 // assessment-taking flow outside of opening that lesson. Title/class/subject/status are
 // derived by joining lessonId, mirroring the real backend's Assessment→Lesson relation.
@@ -68,11 +81,18 @@ let assessments = [
   {
     id: 2, lessonId: 20, passMark: 70, rewardPoints: 50, leaderboardEnabled: true, isPastYearPaper: false,
     questions: [
-      { id: 5, assessmentId: 2, type: 'mcq',       text: 'Which of these is a liquid at room temperature?', options: ['Ice','Water','Steam','Rock'], answer: 1, points: 1 },
-      { id: 6, assessmentId: 2, type: 'true_false', text: 'Gas has a fixed shape.', options: ['True','False'], answer: false, points: 1 },
-      { id: 9, assessmentId: 2, type: 'match',     text: 'Match each process to its description', options: { pairs: [
-          { left: 'Melting', right: 'Solid to liquid' }, { left: 'Evaporation', right: 'Liquid to gas' },
-        ] }, answer: null, points: 2 },
+      { id: 5,  assessmentId: 2, type: 'mcq',        text: 'Which of these is a liquid at room temperature?', options: ['Ice','Water','Steam','Rock'], answer: 1, points: 1 },
+      { id: 10, assessmentId: 2, type: 'mcq',        text: 'What is it called when a gas turns into a liquid?', options: ['Melting','Condensation','Freezing','Evaporation'], answer: 1, points: 1 },
+      { id: 11, assessmentId: 2, type: 'mcq',        text: 'Which state of matter has both a fixed shape and a fixed volume?', options: ['Solid','Liquid','Gas','None of these'], answer: 0, points: 1 },
+      { id: 6,  assessmentId: 2, type: 'true_false', text: 'Gas has a fixed shape.', options: ['True','False'], answer: false, points: 1 },
+      { id: 12, assessmentId: 2, type: 'true_false', text: 'Ice is an example of a solid.', options: ['True','False'], answer: true, points: 1 },
+      { id: 13, assessmentId: 2, type: 'true_false', text: 'Freezing changes a liquid into a gas.', options: ['True','False'], answer: false, points: 1 },
+      { id: 14, assessmentId: 2, type: 'fill_in',    text: 'Liquid → Gas is called ___.',  options: [], answer: 'evaporation', points: 2 },
+      { id: 15, assessmentId: 2, type: 'fill_in',    text: 'Gas → Liquid is called ___.',   options: [], answer: 'condensation', points: 2 },
+      { id: 16, assessmentId: 2, type: 'image',      text: 'Look at the picture — the particles are packed tightly in a fixed pattern. What state of matter is this?', imageUrl: SOLID_PARTICLES_SVG, options: [], answer: 'solid', points: 2 },
+      { id: 9,  assessmentId: 2, type: 'match',      text: 'Match each process to its description', options: { pairs: [
+          { left: 'Melting', right: 'Solid to liquid' }, { left: 'Evaporation', right: 'Liquid to gas' }, { left: 'Condensation', right: 'Gas to liquid' },
+        ] }, answer: null, points: 3 },
     ],
   },
 ]
