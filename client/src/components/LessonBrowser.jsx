@@ -227,7 +227,8 @@ function TermsView({ course, meta, expandedTerm, setExpandedTerm, onBack, naviga
     return (
       <StudySet title={takingQuiz.title} subject={course} cards={takingQuiz.cards}
         deckKey={`quiz-${takingQuiz.id}`} onExit={() => setTakingQuiz(null)}
-        onTestComplete={(score, total) => recordQuizCompletion(takingQuiz.id, score, total)} />
+        onTestComplete={(score, total) => recordQuizCompletion(takingQuiz.id, score, total)}
+        modes={['learn', 'test']} />
     )
   }
 
