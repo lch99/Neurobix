@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Fragment } from 'react'
 import Navbar from '../components/Navbar'
 import MemoryFundamentals from '../components/MemoryFundamentals'
 import { useAuth } from '../context/AuthContext'
@@ -27,7 +27,6 @@ export default function TeacherDashboard() {
             { id: 'memportal',   label: '🧠 Mem Portal'  },
             { id: 'flashcards',  label: '🃏 Flash Cards'  },
             { id: 'assessments', label: '📝 Assessments' },
-            { id: 'quizzes',     label: '🎯 Quizzes'     },
             { id: 'memory',      label: '🧠 Memory Fundamentals' },
             { id: 'schedule',    label: '📅 Schedule'    },
             { id: 'students',    label: '👩‍🎓 Students'   },
@@ -59,9 +58,6 @@ export default function TeacherDashboard() {
 
         {/* ASSESSMENTS — quick-jump list; opens the same lesson-scoped editor as "Questions →" */}
         {tab === 'assessments' && <div className="tab-panel"><AssessmentsTab /></div>}
-
-        {/* QUIZZES — ungraded, class-scoped, Quizlet-style (Flashcards/Learn/Test/Match) */}
-        {tab === 'quizzes' && <div className="tab-panel"><QuizzesTab /></div>}
 
         {/* MEMORY FUNDAMENTALS */}
         {tab === 'memory' && (
@@ -397,11 +393,15 @@ function LessonsTab() {
   const { token } = useAuth()
   const [lessons, setLessons] = useState([])
   const [classes, setClasses] = useState([])
+  const [quizzes, setQuizzes] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [editingLesson, setEditingLesson] = useState(null)
   const [editingAssessmentLesson, setEditingAssessmentLesson] = useState(null)
+  const [showQuizModal, setShowQuizModal] = useState(false)
+  const [editingQuiz, setEditingQuiz] = useState(null)
+  const [openQuizId, setOpenQuizId] = useState(null)
 
   useEffect(() => {
     load()
@@ -411,12 +411,14 @@ function LessonsTab() {
     setLoading(true)
     setError('')
     try {
-      const [lessonsData, classesData] = await Promise.all([
+      const [lessonsData, classesData, quizzesData] = await Promise.all([
         apiRequest('/api/lessons', { token }),
         apiRequest('/api/classes', { token }),
+        apiRequest('/api/quizzes', { token }),
       ])
       setLessons(lessonsData)
       setClasses(classesData)
+      setQuizzes(quizzesData)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -442,12 +444,41 @@ function LessonsTab() {
     setLessons(ls => ls.filter(l => l.id !== lesson.id))
   }
 
+  async function handleQuizSave(form) {
+    if (editingQuiz) {
+      const updated = await apiRequest(`/api/quizzes/${editingQuiz.id}`, { method: 'PUT', body: form, token })
+      setQuizzes(qs => qs.map(q => q.id === updated.id ? updated : q))
+    } else {
+      const created = await apiRequest('/api/quizzes', { method: 'POST', body: form, token })
+      setQuizzes(qs => [created, ...qs])
+    }
+    setShowQuizModal(false)
+    setEditingQuiz(null)
+  }
+
+  async function handleQuizDelete(quiz) {
+    if (!window.confirm(`Delete "${quiz.title}"? This cannot be undone.`)) return
+    await apiRequest(`/api/quizzes/${quiz.id}`, { method: 'DELETE', token })
+    setQuizzes(qs => qs.filter(q => q.id !== quiz.id))
+  }
+
   if (editingAssessmentLesson) {
     return (
       <AssessmentEditor
         lesson={editingAssessmentLesson}
         onClose={() => setEditingAssessmentLesson(null)}
         onLessonUpdate={updated => setLessons(ls => ls.map(l => l.id === updated.id ? updated : l))}
+      />
+    )
+  }
+
+  const openQuiz = quizzes.find(q => q.id === openQuizId) || null
+  if (openQuiz) {
+    return (
+      <QuizEditor
+        quiz={openQuiz}
+        onClose={() => setOpenQuizId(null)}
+        onQuizUpdate={updated => setQuizzes(qs => qs.map(q => q.id === updated.id ? { ...q, ...updated } : q))}
       />
     )
   }
@@ -462,13 +493,32 @@ function LessonsTab() {
           onSave={handleSave}
         />
       )}
+      {showQuizModal && (
+        <QuizModal
+          initial={editingQuiz}
+          classes={classes}
+          lessons={lessons}
+          onClose={() => { setShowQuizModal(false); setEditingQuiz(null) }}
+          onSave={handleQuizSave}
+        />
+      )}
 
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg sm:text-xl font-black text-nb-dark">Lessons</h2>
-        <button onClick={() => { setEditingLesson(null); setShowModal(true) }}
-          disabled={classes.length === 0}
-          className="px-3 sm:px-4 py-2 text-nb-dark text-xs sm:text-sm font-black rounded-xl shadow hover:shadow-md transition disabled:opacity-40"
-          style={{ background: '#FFEB3C' }}>+ Add Lesson</button>
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <h2 className="text-lg sm:text-xl font-black text-nb-dark">Lessons</h2>
+          <p className="text-xs text-gray-400 mt-0.5">🎯 rows below a lesson are quizzes pinned to appear right after it — ungraded, just a quick check between classes.</p>
+        </div>
+        <div className="flex gap-2 flex-shrink-0">
+          <button onClick={() => { setEditingQuiz(null); setShowQuizModal(true) }}
+            disabled={classes.length === 0}
+            className="px-3 sm:px-4 py-2 text-nb-green border-2 border-nb-green text-xs sm:text-sm font-black rounded-xl hover:bg-nb-green hover:text-white transition disabled:opacity-40">
+            + Add Quiz
+          </button>
+          <button onClick={() => { setEditingLesson(null); setShowModal(true) }}
+            disabled={classes.length === 0}
+            className="px-3 sm:px-4 py-2 text-nb-dark text-xs sm:text-sm font-black rounded-xl shadow hover:shadow-md transition disabled:opacity-40"
+            style={{ background: '#FFEB3C' }}>+ Add Lesson</button>
+        </div>
       </div>
 
       {error && (
@@ -495,21 +545,37 @@ function LessonsTab() {
               </div>
             )}
             {lessons.map(l => (
-              <div key={l.id} className="bg-white rounded-2xl border border-nb-olive/20 p-4">
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <p className="font-bold text-nb-dark text-sm">{TYPE_ICON[l.type]} {l.title}</p>
-                  <button onClick={() => { setEditingLesson(l); setShowModal(true) }}
-                    className="text-xs font-bold flex-shrink-0" style={{ color: '#36913F' }}>Edit</button>
+              <div key={l.id} className="space-y-1.5">
+                <div className="bg-white rounded-2xl border border-nb-olive/20 p-4">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <p className="font-bold text-nb-dark text-sm">{TYPE_ICON[l.type]} {l.title}</p>
+                    <button onClick={() => { setEditingLesson(l); setShowModal(true) }}
+                      className="text-xs font-bold flex-shrink-0" style={{ color: '#36913F' }}>Edit</button>
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs text-gray-400">{l.className}</span>
+                    <span className="text-xs text-gray-400 capitalize">{l.type}</span>
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${STATUS_STYLE[l.status]}`}>{l.status}</span>
+                    {l.type === 'assessment' && (
+                      <button onClick={() => setEditingAssessmentLesson(l)} className="text-xs font-bold" style={{ color: '#396336' }}>Questions →</button>
+                    )}
+                    <button onClick={() => handleDelete(l)} className="text-xs font-bold text-red-400 ml-auto">Delete</button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs text-gray-400">{l.className}</span>
-                  <span className="text-xs text-gray-400 capitalize">{l.type}</span>
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${STATUS_STYLE[l.status]}`}>{l.status}</span>
-                  {l.type === 'assessment' && (
-                    <button onClick={() => setEditingAssessmentLesson(l)} className="text-xs font-bold" style={{ color: '#396336' }}>Questions →</button>
-                  )}
-                  <button onClick={() => handleDelete(l)} className="text-xs font-bold text-red-400 ml-auto">Delete</button>
-                </div>
+                {quizzes.filter(q => q.afterLessonId === l.id).map(qz => (
+                  <div key={qz.id} className="ml-4 bg-nb-cream/60 rounded-2xl border-2 border-dashed border-nb-yellow/60 p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="font-bold text-nb-dark text-xs">🎯 {qz.title}</p>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold flex-shrink-0 ${STATUS_STYLE[qz.status]}`}>{qz.status}</span>
+                    </div>
+                    <p className="text-[10px] text-gray-400 mt-0.5">{qz.cardCount} card{qz.cardCount === 1 ? '' : 's'} · ungraded</p>
+                    <div className="flex items-center gap-3 mt-1.5">
+                      <button onClick={() => setOpenQuizId(qz.id)} className="text-[10px] font-black" style={{ color: '#396336' }}>Cards →</button>
+                      <button onClick={() => { setEditingQuiz(qz); setShowQuizModal(true) }} className="text-[10px] font-bold" style={{ color: '#36913F' }}>Edit</button>
+                      <button onClick={() => handleQuizDelete(qz)} className="text-[10px] font-bold text-red-400 ml-auto">Delete</button>
+                    </div>
+                  </div>
+                ))}
               </div>
             ))}
           </div>
@@ -533,23 +599,42 @@ function LessonsTab() {
                   </tr>
                 )}
                 {lessons.map(l => (
-                  <tr key={l.id} className="hover:bg-nb-cream/50 transition">
-                    <td className="px-5 py-3 font-bold text-nb-dark">{TYPE_ICON[l.type]} {l.title}</td>
-                    <td className="px-5 py-3 text-gray-500">{l.className}</td>
-                    <td className="px-5 py-3 capitalize text-gray-500">{l.type}</td>
-                    <td className="px-5 py-3">
-                      <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${STATUS_STYLE[l.status]}`}>{l.status}</span>
-                    </td>
-                    <td className="px-5 py-3 text-right space-x-3">
-                      {l.type === 'assessment' && (
-                        <button onClick={() => setEditingAssessmentLesson(l)}
-                          className="text-xs font-bold hover:opacity-80 transition" style={{ color: '#396336' }}>Questions →</button>
-                      )}
-                      <button onClick={() => { setEditingLesson(l); setShowModal(true) }}
-                        className="text-xs font-bold hover:text-nb-dark transition" style={{ color: '#36913F' }}>Edit</button>
-                      <button onClick={() => handleDelete(l)} className="text-xs font-bold text-red-400 hover:text-red-600 transition">Delete</button>
-                    </td>
-                  </tr>
+                  <Fragment key={l.id}>
+                    <tr className="hover:bg-nb-cream/50 transition">
+                      <td className="px-5 py-3 font-bold text-nb-dark">{TYPE_ICON[l.type]} {l.title}</td>
+                      <td className="px-5 py-3 text-gray-500">{l.className}</td>
+                      <td className="px-5 py-3 capitalize text-gray-500">{l.type}</td>
+                      <td className="px-5 py-3">
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${STATUS_STYLE[l.status]}`}>{l.status}</span>
+                      </td>
+                      <td className="px-5 py-3 text-right space-x-3">
+                        {l.type === 'assessment' && (
+                          <button onClick={() => setEditingAssessmentLesson(l)}
+                            className="text-xs font-bold hover:opacity-80 transition" style={{ color: '#396336' }}>Questions →</button>
+                        )}
+                        <button onClick={() => { setEditingLesson(l); setShowModal(true) }}
+                          className="text-xs font-bold hover:text-nb-dark transition" style={{ color: '#36913F' }}>Edit</button>
+                        <button onClick={() => handleDelete(l)} className="text-xs font-bold text-red-400 hover:text-red-600 transition">Delete</button>
+                      </td>
+                    </tr>
+                    {quizzes.filter(q => q.afterLessonId === l.id).map(qz => (
+                      <tr key={qz.id} className="bg-nb-cream/40">
+                        <td className="px-5 py-2 pl-9 font-bold text-nb-dark text-xs">🎯 {qz.title}</td>
+                        <td className="px-5 py-2 text-gray-400 text-xs">{qz.cardCount} card{qz.cardCount === 1 ? '' : 's'}</td>
+                        <td className="px-5 py-2 text-gray-400 text-xs">quiz · ungraded</td>
+                        <td className="px-5 py-2">
+                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${STATUS_STYLE[qz.status]}`}>{qz.status}</span>
+                        </td>
+                        <td className="px-5 py-2 text-right space-x-3">
+                          <button onClick={() => setOpenQuizId(qz.id)}
+                            className="text-xs font-bold hover:opacity-80 transition" style={{ color: '#396336' }}>Cards →</button>
+                          <button onClick={() => { setEditingQuiz(qz); setShowQuizModal(true) }}
+                            className="text-xs font-bold hover:text-nb-dark transition" style={{ color: '#36913F' }}>Edit</button>
+                          <button onClick={() => handleQuizDelete(qz)} className="text-xs font-bold text-red-400 hover:text-red-600 transition">Delete</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </Fragment>
                 ))}
               </tbody>
             </table>
@@ -623,128 +708,8 @@ function AssessmentsTab() {
   )
 }
 
-/* ── Quizzes — ungraded, class-scoped checks that sit "between" two lessons. Cards are
-   front/back (same shape as flashcards) so taking one is the exact same Quizlet-style
-   Flashcards/Learn/Test/Match experience as a flashcard deck — see mockDb.js comment. ── */
-function QuizzesTab() {
-  const { token } = useAuth()
-  const [quizzes, setQuizzes] = useState([])
-  const [classesList, setClassesList] = useState([])
-  const [lessonsList, setLessonsList] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [showModal, setShowModal] = useState(false)
-  const [editingQuiz, setEditingQuiz] = useState(null)
-  const [openQuizId, setOpenQuizId] = useState(null)
-
-  useEffect(() => { load() }, [])
-
-  async function load() {
-    setLoading(true)
-    setError('')
-    try {
-      const [quizzesData, classesData, lessonsData] = await Promise.all([
-        apiRequest('/api/quizzes', { token }),
-        apiRequest('/api/classes', { token }),
-        apiRequest('/api/lessons', { token }),
-      ])
-      setQuizzes(quizzesData)
-      setClassesList(classesData)
-      setLessonsList(lessonsData)
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function handleSave(form) {
-    if (editingQuiz) {
-      const updated = await apiRequest(`/api/quizzes/${editingQuiz.id}`, { method: 'PUT', body: form, token })
-      setQuizzes(qs => qs.map(q => q.id === updated.id ? updated : q))
-    } else {
-      const created = await apiRequest('/api/quizzes', { method: 'POST', body: form, token })
-      setQuizzes(qs => [created, ...qs])
-    }
-    setShowModal(false)
-    setEditingQuiz(null)
-  }
-
-  async function handleDelete(quiz) {
-    if (!window.confirm(`Delete "${quiz.title}"? This cannot be undone.`)) return
-    await apiRequest(`/api/quizzes/${quiz.id}`, { method: 'DELETE', token })
-    setQuizzes(qs => qs.filter(q => q.id !== quiz.id))
-  }
-
-  const openQuiz = quizzes.find(q => q.id === openQuizId) || null
-
-  if (openQuiz) {
-    return (
-      <QuizEditor
-        quiz={openQuiz}
-        onClose={() => setOpenQuizId(null)}
-        onQuizUpdate={updated => setQuizzes(qs => qs.map(q => q.id === updated.id ? { ...q, ...updated } : q))}
-      />
-    )
-  }
-
-  return (
-    <div className="space-y-4">
-      {showModal && (
-        <QuizModal
-          initial={editingQuiz}
-          classes={classesList}
-          lessons={lessonsList}
-          onClose={() => { setShowModal(false); setEditingQuiz(null) }}
-          onSave={handleSave}
-        />
-      )}
-
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg sm:text-xl font-black text-nb-dark">Quizzes</h2>
-          <p className="text-xs text-gray-400 mt-0.5">Quick, ungraded checks between two lessons — same Flashcards/Learn/Test/Match modes as a flashcard deck.</p>
-        </div>
-        <button onClick={() => { setEditingQuiz(null); setShowModal(true) }}
-          disabled={classesList.length === 0}
-          className="px-3 sm:px-4 py-2 text-nb-dark text-xs sm:text-sm font-black rounded-xl shadow hover:shadow-md transition disabled:opacity-40"
-          style={{ background: '#FFEB3C' }}>+ Add Quiz</button>
-      </div>
-
-      {error && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-2">{error}</p>}
-
-      {loading ? (
-        <p className="text-sm text-gray-400 py-8 text-center">Loading quizzes…</p>
-      ) : quizzes.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-nb-olive/20 py-10 flex flex-col items-center gap-2 text-center">
-          <span className="text-3xl">🎯</span>
-          <p className="font-black text-nb-dark">No quizzes yet</p>
-          <p className="text-sm text-gray-400">Click "+ Add Quiz" to get started</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {quizzes.map(qz => (
-            <div key={qz.id} className="bg-white rounded-2xl border-2 border-nb-olive/20 p-4">
-              <div className="flex items-start justify-between gap-2 mb-1.5">
-                <p className="font-black text-nb-dark text-sm">🎯 {qz.title}</p>
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold flex-shrink-0 ${STATUS_STYLE[qz.status]}`}>{qz.status}</span>
-              </div>
-              <p className="text-xs text-gray-400">{qz.className} · {qz.subject} · {qz.cardCount} card{qz.cardCount === 1 ? '' : 's'}</p>
-              {qz.afterLessonTitle && <p className="text-xs text-gray-400 mt-0.5">📍 Appears after: {qz.afterLessonTitle}</p>}
-              <div className="flex items-center gap-3 mt-3">
-                <button onClick={() => setOpenQuizId(qz.id)} className="text-xs font-black" style={{ color: '#396336' }}>Cards →</button>
-                <button onClick={() => { setEditingQuiz(qz); setShowModal(true) }} className="text-xs font-bold" style={{ color: '#36913F' }}>Edit</button>
-                <button onClick={() => handleDelete(qz)} className="text-xs font-bold text-red-400 ml-auto">Delete</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
-
-/* ── Quiz meta modal (title / class / "appears after" lesson) ── */
+/* ── Quiz meta modal (title / class / "appears after" lesson) — invoked inline from
+   LessonsTab now, not from a standalone top-nav tab. ── */
 function QuizModal({ initial, classes, lessons, onClose, onSave }) {
   const [form, setForm] = useState({
     title: initial?.title || '',

@@ -1,5 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import { apiRequest } from '../lib/api'
+import StudySet from './StudySet'
 import logoWhite from '../assets/Asset 1@3x 1_White.png'
 import { starYellow, lockIcon, durationIcon } from '../assets/icons'
 import {
@@ -34,9 +37,22 @@ function termStatus(lessons) {
 
 export default function LessonBrowser() {
   const navigate = useNavigate()
+  const { token } = useAuth()
   const [view, setView]                 = useState('courses')
   const [selectedCourse, setSelectedCourse] = useState(null)
   const [expandedTerm, setExpandedTerm] = useState(null)
+  const [quizzes, setQuizzes]           = useState([])
+
+  // Quizzes aren't their own nav tab — they're pinned to a specific lesson (afterLessonId)
+  // and rendered right below it in the term list below, so they visually sit "between
+  // classes" instead of living in a separate place a student has to think to check.
+  useEffect(() => {
+    let cancelled = false
+    apiRequest('/api/quizzes', { token }).then(data => {
+      if (!cancelled) setQuizzes((data || []).filter(q => q.status === 'published'))
+    })
+    return () => { cancelled = true }
+  }, [token])
 
   const done      = ALL_LESSONS.filter(l => l.status === 'completed').length
   const inProg    = ALL_LESSONS.filter(l => l.status === 'in_progress').length
@@ -192,16 +208,25 @@ export default function LessonBrowser() {
         setExpandedTerm={setExpandedTerm}
         onBack={backToCourses}
         navigate={navigate}
+        quizzes={quizzes}
       />}
     </div>
   )
 }
 
-function TermsView({ course, meta, expandedTerm, setExpandedTerm, onBack, navigate }) {
+function TermsView({ course, meta, expandedTerm, setExpandedTerm, onBack, navigate, quizzes }) {
   const forceOpenIds = useForceOpenIds()
   const courseLessons = ALL_LESSONS.filter(l => l.subject === course)
   const doneCount = courseLessons.filter(l => l.status === 'completed').length
   const subjPct   = Math.round((doneCount / courseLessons.length) * 100)
+  const [takingQuiz, setTakingQuiz] = useState(null)
+
+  if (takingQuiz) {
+    return (
+      <StudySet title={takingQuiz.title} subject={course} cards={takingQuiz.cards}
+        deckKey={`quiz-${takingQuiz.id}`} onExit={() => setTakingQuiz(null)} />
+    )
+  }
 
   return (
     <>
@@ -302,9 +327,15 @@ function TermsView({ course, meta, expandedTerm, setExpandedTerm, onBack, naviga
                     const baseLocked = LOCKED_IDS.has(lesson.id)
                     const forced = forceOpenIds.has(lesson.id)
                     const locked = baseLocked && !forced
+                    const afterQuizzes = quizzes.filter(q => q.afterLessonId === lesson.id)
                     return (
-                      <LessonRow key={lesson.id} lesson={lesson} locked={locked} forceOpened={baseLocked && forced}
-                        onClick={() => !locked && navigate(`/lessons/${lesson.id}`)} />
+                      <div key={lesson.id} className="space-y-2.5">
+                        <LessonRow lesson={lesson} locked={locked} forceOpened={baseLocked && forced}
+                          onClick={() => !locked && navigate(`/lessons/${lesson.id}`)} />
+                        {afterQuizzes.map(q => (
+                          <QuizRow key={q.id} quiz={q} onClick={() => setTakingQuiz(q)} />
+                        ))}
+                      </div>
                     )
                   })}
                 </div>
@@ -314,6 +345,27 @@ function TermsView({ course, meta, expandedTerm, setExpandedTerm, onBack, naviga
         })}
       </div>
     </>
+  )
+}
+
+// Sits directly below the lesson it's pinned to (via afterLessonId) — this dashed/amber
+// styling is deliberately distinct from LessonRow so it reads as "a quick check between
+// classes" rather than another lesson in the sequence. No lock logic: quizzes are ungraded
+// practice, never part of the sequential-unlock chain.
+function QuizRow({ quiz, onClick }) {
+  return (
+    <div onClick={onClick}
+      className="ml-4 sm:ml-6 bg-nb-cream/50 rounded-2xl border-2 border-dashed border-nb-yellow/70 p-3.5 flex items-center gap-3.5 hover:shadow-md hover:border-nb-yellow cursor-pointer group transition">
+      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-lg" style={{ background: '#FFEB3C33' }}>🎯</div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <p className="font-black text-sm text-nb-dark group-hover:text-nb-green">{quiz.title}</p>
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">Ungraded</span>
+        </div>
+        <p className="text-xs text-gray-400 mt-0.5">{quiz.cardCount} card{quiz.cardCount === 1 ? '' : 's'} · quick practice between classes</p>
+      </div>
+      <span className="text-gray-300 text-lg group-hover:text-nb-green transition-colors">›</span>
+    </div>
   )
 }
 

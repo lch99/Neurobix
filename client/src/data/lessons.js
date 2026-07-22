@@ -89,7 +89,6 @@ export const STUDENT_TABS = [
   { id: 'memportal',  icon: '🧠', label: 'Mem Portal' },
   { id: 'flashcards', icon: '🃏', label: 'Flash Cards' },
   { id: 'assessments', icon: '📝', label: 'Assessments' },
-  { id: 'quizzes',     icon: '🎯', label: 'Quizzes' },
   { id: 'shop',       icon: '🛍️', label: 'Shop'       },
   { id: 'rewards',    icon: '🏆', label: 'Rewards'    },
 ]
