@@ -3,12 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import logoSquare from '../assets/NM_Square.png'
 import logoWhite from '../assets/Asset 1@3x 1_White.png'
 import { useAuth } from '../context/AuthContext'
-import { findAuthRecord, resetCredential, setMustChangeCredential } from '../data/mockDb'
+import { requestPasswordReset } from '../lib/accounts'
 import ServerStatusBadge from '../components/ServerStatusBadge'
-
-function genTempPassword() {
-  return Math.random().toString(36).slice(-4) + Math.floor(10 + Math.random() * 90)
-}
 
 const DEMO_ACCOUNTS = [
   { role: 'parent',  label: '👨‍👩‍👧 Parent',  email: 'parent1@neurobix.com',  password: 'password123', path: '/parent',  style: 'bg-nb-olive text-white border-nb-olive' },
@@ -47,17 +43,15 @@ export default function LoginStaff() {
     }
   }
 
-  function handleResetRequest(e) {
+  async function handleResetRequest(e) {
     e.preventDefault()
-    if (findAuthRecord(resetEmail)) {
-      const temp = genTempPassword()
-      resetCredential(resetEmail, temp)
-      setMustChangeCredential(resetEmail, true)
+    try {
+      const { tempPassword: temp } = await requestPasswordReset(resetEmail)
       setTempPassword(temp)
-    } else {
-      setTempPassword('')
+      setMode('sent')
+    } catch (err) {
+      setError(err.message || 'Could not send the reset — please try again.')
     }
-    setMode('sent')
   }
 
   return (
@@ -181,6 +175,9 @@ export default function LoginStaff() {
             <>
               <h2 className="text-2xl font-black text-nb-dark">Reset Password</h2>
               <p className="text-gray-400 text-sm mt-1 mb-6">Enter your account email and we'll send you a reset link.</p>
+              {error && (
+                <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">{error}</div>
+              )}
               <form onSubmit={handleResetRequest} className="space-y-4">
                 <div>
                   <label className="block text-xs font-black text-gray-500 uppercase tracking-wider mb-1.5">Email Address</label>

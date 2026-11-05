@@ -50,19 +50,22 @@ export default function StudySet({ title, subject, cards, deckKey, onExit, onCom
 
   useEffect(() => {
     let cancelled = false
-    apiRequest(`/api/flashcard-progress?studentId=${user.id}`, { token }).then(rows => {
+    // Card ids are only unique within a deck type (flash cards vs quiz cards vs library),
+    // so progress is stored and fetched per deckKey.
+    const deckParam = deckKey ? `&deckKey=${encodeURIComponent(deckKey)}` : ''
+    apiRequest(`/api/flashcard-progress?studentId=${user.id}${deckParam}`, { token }).then(rows => {
       if (cancelled) return
       const map = {}
       ;(rows || []).forEach(r => { map[r.cardId] = r })
       setProgress(map)
     })
     return () => { cancelled = true }
-  }, [user.id])
+  }, [user.id, deckKey])
 
   async function updateProgress(cardId, patch) {
     const updated = await apiRequest('/api/flashcard-progress', {
       method: 'POST',
-      body: { studentId: user.id, cardId, ...patch },
+      body: { studentId: user.id, deckKey, cardId, ...patch },
       token,
     })
     setProgress(p => ({ ...p, [cardId]: updated }))

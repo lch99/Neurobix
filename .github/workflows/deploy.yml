@@ -37,6 +37,10 @@ jobs:
 
       - name: Build
         working-directory: client
+        # The Pages site is the public demo: always build it on the in-browser sample data,
+        # never against a real API (see client/src/lib/api.js).
+        env:
+          VITE_USE_MOCK: 'true'
         run: npm run build
 
       - name: Copy 404.html for SPA routing

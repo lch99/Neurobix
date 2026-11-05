@@ -1,7 +1,12 @@
 import { createContext, useContext, useEffect, useState } from 'react'
-import { findAuthRecord, resetCredential, setMustChangeCredential } from '../data/mockDb'
+import { signIn, signOut, changeOwnCredential } from '../lib/accounts'
 
 const AuthContext = createContext(null)
+
+function clearStoredSession() {
+  localStorage.removeItem('nb_token')
+  localStorage.removeItem('nb_user')
+}
 
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem('nb_token'))
@@ -11,40 +16,33 @@ export function AuthProvider({ children }) {
   })
 
   async function login(identifier, password) {
-    await new Promise(r => setTimeout(r, 300))
-    const match = findAuthRecord(identifier)
-    if (!match || match.password !== password) throw new Error('Invalid username/email or password.')
-    const fakeToken = 'demo_' + match.user.role + '_token'
-    localStorage.setItem('nb_token', fakeToken)
-    localStorage.setItem('nb_user', JSON.stringify(match.user))
-    setToken(fakeToken)
-    setUser(match.user)
-    return match.user
+    const { token: newToken, user: signedIn } = await signIn(identifier, password)
+    localStorage.setItem('nb_token', newToken)
+    localStorage.setItem('nb_user', JSON.stringify(signedIn))
+    setToken(newToken)
+    setUser(signedIn)
+    return signedIn
   }
 
   // Called from the forced first-login screen once the user picks a new password/PIN.
-  function completeCredentialChange(newCredential) {
-    const identifier = user?.username || user?.email
-    if (!identifier) return
-    resetCredential(identifier, newCredential)
-    setMustChangeCredential(identifier, false)
-    const updated = { ...user, mustChangeCredential: false }
+  async function completeCredentialChange(newCredential) {
+    const updated = { ...user, ...(await changeOwnCredential(user, newCredential)), mustChangeCredential: false }
     localStorage.setItem('nb_user', JSON.stringify(updated))
     setUser(updated)
   }
 
   async function logout() {
-    localStorage.removeItem('nb_token')
-    localStorage.removeItem('nb_user')
+    await signOut()
+    clearStoredSession()
     setToken(null)
     setUser(null)
   }
 
-  // Keep session-expired listener so SessionToast still works if ever triggered
+  // The API client fires this when the server rejects our token (signed in elsewhere,
+  // idle timeout, expired) — drop the local session so ProtectedRoute sends us to login.
   useEffect(() => {
     function handleExpired() {
-      localStorage.removeItem('nb_token')
-      localStorage.removeItem('nb_user')
+      clearStoredSession()
       setToken(null)
       setUser(null)
     }

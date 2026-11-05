@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import Navbar from '../components/Navbar'
 import MemoryFundamentals from '../components/MemoryFundamentals'
 import PinInput from '../components/PinInput'
-import { resetCredential, setMustChangeCredential, registerUser } from '../data/mockDb'
+import { listUsers, createUserAccount, resetUserCredential } from '../lib/accounts'
 import { apiRequest } from '../lib/api'
 import { TERMS } from '../data/lessons'
 import { teacherIcon, parentIcon, bookIcon, medalIcon, overdueIcon, brainIcon } from '../assets/icons'
@@ -11,11 +11,12 @@ function AddUserModal({ onClose, onAdd, parents = [] }) {
   const [form, setForm] = useState({ name: '', email: '', username: '', pin: '', role: 'student', password: '', parentId: '' })
   const [error, setError] = useState('')
   const [justCreatedParent, setJustCreatedParent] = useState(null)
+  const [saving, setSaving] = useState(false)
   const isStudent = form.role === 'student'
 
   function set(k, v) { setForm(f => ({ ...f, [k]: v })); setError('') }
 
-  function submit(e) {
+  async function submit(e) {
     e.preventDefault()
     if (!form.name.trim()) { setError('Please enter a full name.'); return }
     if (isStudent) {
@@ -25,21 +26,19 @@ function AddUserModal({ onClose, onAdd, parents = [] }) {
       if (!form.email.trim() || !form.password.trim()) { setError('Please fill in all fields.'); return }
     }
 
-    const identifier = isStudent ? form.username : form.email
-    const registered = registerUser(identifier, isStudent ? form.pin : form.password, {
-      name: form.name, role: form.role,
-      ...(isStudent ? { username: form.username } : { email: form.email }),
-    })
+    let created
+    setSaving(true)
+    try {
+      created = await createUserAccount(form)
+    } catch (err) {
+      setError(err.message)
+      return
+    } finally {
+      setSaving(false)
+    }
+    onAdd(created)
 
-    const id = Date.now()
-    onAdd({
-      id, name: form.name, role: form.role, status: 'active',
-      email: isStudent ? null : form.email, username: isStudent ? form.username : null,
-      joined: new Date().toISOString().slice(0, 10), mustChangeCredential: registered.mustChangeCredential,
-      parentId: isStudent ? (form.parentId ? Number(form.parentId) : null) : null,
-    })
-
-    if (form.role === 'parent') setJustCreatedParent({ id, name: form.name })
+    if (form.role === 'parent') setJustCreatedParent({ id: created.id, name: created.name })
     else onClose()
   }
 
@@ -146,10 +145,10 @@ function AddUserModal({ onClose, onAdd, parents = [] }) {
               className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-500 font-bold text-sm hover:border-gray-300 transition">
               Cancel
             </button>
-            <button type="submit"
-              className="flex-1 py-3 rounded-xl font-black text-nb-dark text-sm shadow-md transition hover:shadow-lg"
+            <button type="submit" disabled={saving}
+              className="flex-1 py-3 rounded-xl font-black text-nb-dark text-sm shadow-md transition hover:shadow-lg disabled:opacity-60"
               style={{ background: '#FFEB3C' }}>
-              Create User →
+              {saving ? 'Creating…' : 'Create User →'}
             </button>
           </div>
         </form>
@@ -270,8 +269,9 @@ const USERS = [
   { id: 6, name: 'Hassan bin Idris',   email: 'parent1@neurobix.com',  role: 'parent',  status: 'active',    joined: '2024-08-15' },
 ]
 
+// Always 6 characters — the backend requires at least 6 for staff/parent passwords.
 function genTempPassword() {
-  return Math.random().toString(36).slice(-4) + Math.floor(10 + Math.random() * 90)
+  return Math.random().toString(36).slice(2, 6).padEnd(4, 'x') + Math.floor(10 + Math.random() * 90)
 }
 
 /* ── Force-open a specific term on an archived class ── */
@@ -399,11 +399,16 @@ function AdminClassesTab() {
 function ResetPasswordModal({ user, onClose }) {
   const [tempPassword] = useState(genTempPassword)
   const [done, setDone] = useState(false)
+  const [error, setError] = useState('')
 
-  function confirmReset() {
-    resetCredential(user.email, tempPassword)
-    setMustChangeCredential(user.email, true)
-    setDone(true)
+  async function confirmReset() {
+    setError('')
+    try {
+      await resetUserCredential(user, tempPassword)
+      setDone(true)
+    } catch (err) {
+      setError(err.message)
+    }
   }
 
   return (
@@ -418,6 +423,7 @@ function ResetPasswordModal({ user, onClose }) {
             <p className="text-sm text-gray-400 mt-2">
               A new temporary password will be generated. {user.name} will be required to set a new password on next login.
             </p>
+            {error && <p className="mt-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-2">{error}</p>}
             <div className="flex gap-3 pt-5">
               <button onClick={onClose}
                 className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-500 font-bold text-sm hover:border-gray-300 transition">Cancel</button>
@@ -455,6 +461,15 @@ export default function AdminDashboard() {
   const [users, setUsers]   = useState(USERS)
   const [showModal, setShowModal] = useState(false)
   const [resetTarget, setResetTarget] = useState(null)
+
+  // With the real backend, replace the sample list with the actual accounts.
+  useEffect(() => {
+    let cancelled = false
+    listUsers()
+      .then(real => { if (!cancelled && real) setUsers(real) })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [])
 
   function handleAddUser(newUser) {
     setUsers(u => [newUser, ...u])

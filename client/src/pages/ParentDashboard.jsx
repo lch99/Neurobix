@@ -4,7 +4,7 @@ import MemoryFundamentals from '../components/MemoryFundamentals'
 import PinInput from '../components/PinInput'
 import { useAuth } from '../context/AuthContext'
 import { apiRequest } from '../lib/api'
-import { registerUser, resetCredential, setMustChangeCredential, findAuthRecord } from '../data/mockDb'
+import { addChildAccount, resetChildPin } from '../lib/accounts'
 import {
   subjectMicroscope,
   starYellow, streakIcon, badgeIcon, medalIcon, bookIcon, passIcon, retryIcon,
@@ -87,15 +87,15 @@ function ResetChildPinModal({ child, onClose }) {
   const [error, setError]     = useState('')
   const [done, setDone]       = useState(false)
 
-  function submit(e) {
+  async function submit(e) {
     e.preventDefault()
     if (pin.length !== 4) { setError('PIN needs to be 4 digits.'); return }
     if (pin !== confirm) { setError("PINs don't match — try again."); return }
-    if (findAuthRecord(child.username)) {
-      resetCredential(child.username, pin)
-      setMustChangeCredential(child.username, false)
-    } else {
-      registerUser(child.username, pin, { name: child.name, role: 'student', username: child.username, mustChangeCredential: false })
+    try {
+      await resetChildPin(child, pin)
+    } catch (err) {
+      setError(err.message)
+      return
     }
     setDone(true)
   }
@@ -150,18 +150,23 @@ function AddChildModal({ onClose, onAdd }) {
 
   function set(k, v) { setForm(f => ({ ...f, [k]: v })); setError('') }
 
-  function submit(e) {
+  async function submit(e) {
     e.preventDefault()
     if (!form.name.trim()) { setError('Please enter your child\'s full name.'); return }
     if (!form.username.trim()) { setError('Please set a username.'); return }
     if (form.pin.length !== 4) { setError('PIN needs to be 4 digits.'); return }
-    if (findAuthRecord(form.username)) { setError('That username is already taken — try another.'); return }
 
-    registerUser(form.username, form.pin, { name: form.name, role: 'student', username: form.username })
+    let created
+    try {
+      created = await addChildAccount({ name: form.name, username: form.username, pin: form.pin })
+    } catch (err) {
+      setError(err.message)
+      return
+    }
 
     const initials = form.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
     onAdd({
-      id: Date.now(),
+      id: created.id,
       name: form.name,
       username: form.username,
       class: form.className.trim() || 'Not yet assigned',

@@ -10,14 +10,21 @@ export default function ForceCredentialChange() {
   const [a, setA] = useState('')
   const [b, setB] = useState('')
   const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
 
-  function submit(e) {
+  async function submit(e) {
     e.preventDefault()
     const label = isStudent ? 'PIN' : 'password'
     if (isStudent && a.length !== 4) { setError('Your PIN needs to be 4 digits.'); return }
     if (!isStudent && a.length < 6) { setError('Please use at least 6 characters.'); return }
     if (a !== b) { setError(`Those ${label}s don't match — try again.`); return }
-    completeCredentialChange(a)
+    setSaving(true)
+    try {
+      await completeCredentialChange(a)
+    } catch (err) {
+      setError(err.message || 'Could not save — please try again.')
+      setSaving(false)
+    }
   }
 
   return (
@@ -65,9 +72,9 @@ export default function ForceCredentialChange() {
           {error && <p className="text-center text-sm font-semibold text-red-600">{error}</p>}
 
           <div className="flex justify-center pt-2">
-            <button type="submit"
-              className="px-12 py-3 rounded-full bg-nb-green text-white font-bold text-lg shadow-[0_5px_0_rgba(42,77,40,0.4)] hover:bg-nb-dark active:translate-y-0.5 active:shadow-[0_2px_0_rgba(42,77,40,0.4)] transition-all">
-              Continue →
+            <button type="submit" disabled={saving}
+              className="px-12 py-3 rounded-full bg-nb-green text-white font-bold text-lg shadow-[0_5px_0_rgba(42,77,40,0.4)] hover:bg-nb-dark active:translate-y-0.5 active:shadow-[0_2px_0_rgba(42,77,40,0.4)] transition-all disabled:opacity-60">
+              {saving ? 'Saving…' : 'Continue →'}
             </button>
           </div>
         </form>
