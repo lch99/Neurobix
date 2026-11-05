@@ -19,7 +19,7 @@ export async function signIn(identifier, password) {
   try {
     return await apiRequest('/api/auth/login', { method: 'POST', body: { identifier, password } })
   } catch (err) {
-    if (err.status === 401) throw new Error('Invalid username/email or password.')
+    if (err.status === 401) throw new Error('Invalid username/email or password.', { cause: err })
     throw err
   }
 }

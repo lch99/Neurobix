@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import Navbar from '../components/Navbar'
+import ComingSoon from '../components/ComingSoon'
 import MemoryFundamentals from '../components/MemoryFundamentals'
 import PinInput from '../components/PinInput'
 import { useAuth } from '../context/AuthContext'
