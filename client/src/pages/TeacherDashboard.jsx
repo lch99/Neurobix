@@ -1,5 +1,6 @@
 import { useState, useEffect, Fragment } from 'react'
 import Navbar from '../components/Navbar'
+import ComingSoon from '../components/ComingSoon'
 import MemoryFundamentals from '../components/MemoryFundamentals'
 import { useAuth } from '../context/AuthContext'
 import { apiRequest } from '../lib/api'
