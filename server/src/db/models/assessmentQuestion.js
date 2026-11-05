@@ -9,7 +9,7 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
       type: {
-        type: DataTypes.ENUM('mcq', 'true_false', 'fill_in', 'image'),
+        type: DataTypes.ENUM('mcq', 'true_false', 'fill_in', 'image', 'match'),
         allowNull: false,
       },
       question_text: {
@@ -17,7 +17,7 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true,
       },
       question_image_url: {
-        type: DataTypes.STRING(500),
+        type: DataTypes.TEXT,
         allowNull: true,
       },
       options: {
@@ -26,7 +26,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       correct_answer: {
         type: DataTypes.JSON,
-        allowNull: false,
+        allowNull: true,
       },
       points: {
         type: DataTypes.INTEGER,

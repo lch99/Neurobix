@@ -43,12 +43,44 @@ Neurobix LMS is a memory-method-based Learning Management System (LMS) designed 
 | Database | MySQL |
 | Auth | JSON Web Tokens (jsonwebtoken), bcrypt for passwords |
 
-**API routes:** `/api/auth`, `/api/classes`, `/api/lessons`, `/api/flashcards`, `/api/quizzes`, `/api/quiz-questions`, `/api/schedules`, `/api/students`, `/api/health`
+**API routes:**
+
+| Route | Who | Purpose |
+|---|---|---|
+| `/api/auth` | all | `login`, `logout`, `me`, `change-credential`, `forgot-password` |
+| `/api/users` | admin | List/create accounts, reset a password, (de)activate |
+| `/api/parent/children` | parent | List own children, add a child account, reset a child's PIN |
+| `/api/terms` | all read, admin write | School terms |
+| `/api/classes` | all read (scoped), staff write | Classes incl. terms, slots, co-teachers, admin force-open |
+| `/api/lessons` (`/:id` for detail) | all read (scoped), staff write | Lessons incl. objectives, memory tip, reading sections |
+| `/api/schedules` | staff | Publish time / deadline per lesson |
+| `/api/flashcards` | all read (scoped), staff write | Lesson flash card decks |
+| `/api/flashcard-library` | student | Personal saved-cards library (private) |
+| `/api/flashcard-progress` | student | Study Set progress per deck/card |
+| `/api/assessments`, `/api/assessment-questions` | all read (scoped), staff write | Graded assessments (one per assessment lesson) |
+| `/api/assessments/:id/attempts` | student submit; scoped read | Server-side scoring, results, leaderboard |
+| `/api/quizzes`, `/api/quiz-cards` | all read (scoped), staff write | Ungraded class quizzes placed after a lesson |
+| `/api/students` | scoped | Class enrollments (roster); staff can enrol/remove |
+| `/api/health` | public | Health check |
+
+**Access rules** (`server/src/lib/access.js`): admin sees everything; a teacher only their own classes; a student only classes they're enrolled in (plus open/extra classes to browse) and only published content; a parent gets a read-only view of their linked children. Past-year papers are never shown to students or parents.
 
 **Session handling:**
 - Each login issues a JWT with a `session_token` stored on the user record — logging in on another device invalidates the previous session (`SESSION_REPLACED`)
 - Staff roles (Admin/Teacher/Parent) are auto-logged-out after 10 minutes of inactivity (`SESSION_IDLE_TIMEOUT`); students are exempt
 - The client (`AuthContext` + `lib/api.js`) listens for these codes and clears the local session, showing a toast (`SessionToast`)
+- Accounts created by an admin or parent start with a temporary password/PIN (`must_change_credential`) and must set their own on first login
+- "Forgot password" emails a 1-hour temporary password (dev: printed in the server log until SendGrid is wired up); the old password keeps working until the temporary one is used, so nobody can be locked out by someone else's reset request
+
+### Data source: sample data vs. live API
+The client can run on either source, chosen at build time in `client/src/lib/api.js`:
+
+| Mode | When | Data |
+|---|---|---|
+| **Sample data (mock)** | `VITE_USE_MOCK=true`, or no `VITE_API_URL` | In-browser sample data in `client/src/data/mockDb.js` — what the GitHub Pages demo uses (the deploy workflow forces this mode) |
+| **Live API** | `VITE_API_URL` set and `VITE_USE_MOCK` not `true` | The Express/MySQL backend in `server/` |
+
+Components only call `apiRequest()` (`lib/api.js`) and the account helpers in `lib/accounts.js`, so both modes share the same UI code. The status pill in the corner shows **Demo Mode**, **Live API** or **API offline**.
 
 ### Infrastructure & Services
 | | |
@@ -609,9 +641,11 @@ lms-system/
 │   │   │   ├── AuthContext.jsx         ← Login/logout, JWT + user in localStorage
 │   │   │   └── ToastContext.jsx        ← Global toast notifications
 │   │   ├── lib/
-│   │   │   └── api.js                  ← apiRequest() wrapper for the Express API
+│   │   │   ├── api.js                  ← apiRequest(): sample data (mock) or live API
+│   │   │   └── accounts.js             ← Sign-in, credential changes, user/child creation (both modes)
 │   │   ├── data/
-│   │   │   └── lessons.js              ← Shared lesson/subject mock data
+│   │   │   ├── lessons.js              ← Shared lesson/subject mock data
+│   │   │   └── mockDb.js               ← In-browser sample data + mock API (GitHub Pages demo)
 │   │   ├── components/
 │   │   │   ├── Navbar.jsx              ← Shared navigation bar (all roles)
 │   │   │   ├── ProtectedRoute.jsx      ← Route guard (auth + role check)
@@ -632,16 +666,19 @@ lms-system/
 │   └── vite.config.js                  ← Vite configuration
 ├── server/                             ← Express + Sequelize + MySQL backend (port 4000)
 │   ├── src/
-│   │   ├── index.js                    ← App entry point, route mounting
+│   │   ├── index.js                    ← Server entry point (env checks, listen)
+│   │   ├── app.js                      ← Express app, route mounting, JSON error handler
 │   │   ├── config/config.js            ← Sequelize DB config (.env-driven)
-│   │   ├── controllers/                ← Route handlers (auth, classes, lessons, etc.)
-│   │   ├── middleware/auth.middleware.js ← JWT auth + session/idle-timeout checks
+│   │   ├── controllers/                ← Route handlers (auth, users, classes, lessons, etc.)
+│   │   ├── lib/                        ← Access rules, answer scoring, credentials, mailer
+│   │   ├── middleware/auth.middleware.js ← JWT auth, session/idle-timeout checks, requireRole()
 │   │   ├── routes/                     ← Express routers per resource
 │   │   └── db/
 │   │       ├── models/                 ← Sequelize models (User, Class, Lesson, etc.)
 │   │       ├── migrations/             ← Sequelize migrations
-│   │       └── seeders/                ← Demo data seeders
-│   ├── .env.example                    ← DB_HOST/PORT/USER/PASSWORD/NAME, JWT_SECRET, PORT
+│   │       └── seeders/                ← Demo data (same sample data as the GitHub Pages demo)
+│   ├── test/api.test.js                ← End-to-end API tests (needs a seeded DB)
+│   ├── .env.example                    ← DB_*, JWT_SECRET, PORT, CORS_ORIGIN
 │   └── package.json                    ← Backend dependencies + migrate/seed scripts
 ├── package.json                        ← Root scripts (delegates dev/build to client)
 └── README.md                           ← This file
@@ -667,7 +704,9 @@ lms-system/
 - [x] Backend API (Express + MySQL) — auth, classes, lessons, flashcards, quizzes, schedules, students
 - [x] Authentication (JWT) — login/logout, single-session enforcement, idle timeout for staff
 - [x] Database integration — Sequelize models + migrations + seeders
-- [ ] Wire remaining dashboard tabs to live API (some still use mock data)
+- [x] API parity with the demo's mock data layer — quizzes, lesson detail, flash card library/progress, assessment attempts + scoring, account management (`pre-release` branch)
+- [x] Client switches between sample data (GitHub Pages) and the live API
+- [ ] Wire remaining dashboard tabs to live API (some still use mock data — see note in section 12)
 
 ### Phase 2 — Monetisation & Live Classes *(Not yet started)*
 - [ ] Stripe payment integration (Singapore)
@@ -734,23 +773,37 @@ The following features are **explicitly NOT included** in any phase:
 cd server
 npm install
 cp .env.example .env        # set DB_USER/DB_PASSWORD/DB_NAME/JWT_SECRET
+# create the database once, e.g.  mysql -u root -e "CREATE DATABASE neurobix_lms"
 npm run migrate             # create tables
-npm run seed                # load demo users/data
-npm run dev                  # start API on http://localhost:4000
+npm run seed                # load the demo data
+npm run dev                 # start API on http://localhost:4000
+
+npm run db:reset            # wipe + migrate + re-seed (when the demo data has drifted)
+npm test                    # API tests — run against a freshly reset demo DB
 
 # --- Frontend (new terminal) ---
 cd client
 npm install
-npm run dev                  # start Vite dev server
+cp .env.example .env.local  # VITE_API_URL=http://localhost:4000 → live API
+npm run dev                 # start Vite dev server
 
 # Build frontend for production
 npm run build
 ```
 
-The app runs on: **http://localhost:5173** (Vite default port), API on **http://localhost:4000**.
-The client reads `VITE_API_URL` (see `client/.env`, defaults to `http://localhost:4000`).
+The app runs on **http://localhost:5173/Neurobix/** (Vite), the API on **http://localhost:4000**.
+Without `client/.env.local` (or with `VITE_USE_MOCK=true`) the client runs on the built-in sample data, exactly like the GitHub Pages demo.
 
-> **Note:** Some dashboard tabs still use local mock/static data (e.g. `client/src/data/lessons.js`) pending full API wiring — see Phase 1 checklist below.
+**Demo logins** (same in both modes):
+
+| Role | Login | Password / PIN |
+|---|---|---|
+| Student | `ahmad2026` | `1234` |
+| Parent | `parent1@neurobix.com` | `password123` |
+| Teacher | `sarah.tan@neurobix.com` | `password123` |
+| Admin | `admin@neurobix.com` | `password123` |
+
+> **Note:** Some screens still show static sample content even in Live API mode — the curriculum/term layout and sequential locks (`client/src/data/lessons.js`), the Parent dashboard's child profiles, progress and badges, the Admin overview stats/reports, and points/rewards. These need new endpoints (lesson progress, points ledger, badges, certificates) before they can be wired up.
 
 ---
 

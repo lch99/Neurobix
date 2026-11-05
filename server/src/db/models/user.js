@@ -51,6 +51,19 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DATE,
         allowNull: true,
       },
+      must_change_credential: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
+      reset_password_hash: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+      },
+      reset_expires_at: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
     },
     {
       tableName: 'users',
@@ -63,6 +76,9 @@ module.exports = (sequelize, DataTypes) => {
 
   User.associate = (models) => {
     User.hasMany(models.Class, { foreignKey: 'teacher_id', as: 'classes' });
+    User.belongsToMany(models.User, { through: models.ParentStudent, foreignKey: 'parent_id', otherKey: 'student_id', as: 'children' });
+    User.belongsToMany(models.User, { through: models.ParentStudent, foreignKey: 'student_id', otherKey: 'parent_id', as: 'parents' });
+    User.hasMany(models.ClassEnrollment, { foreignKey: 'student_id', as: 'enrollments' });
   };
 
   return User;

@@ -1,6 +1,7 @@
 'use strict';
 
 const { Lesson, Class, Schedule } = require('../db/models');
+const { readableClassIds, canEditClass, effectiveLessonStatus } = require('../lib/access');
 
 const LESSON_INCLUDE = [
   { model: Class, as: 'class', attributes: ['id', 'name', 'subject', 'teacher_id'] },
@@ -12,63 +13,57 @@ function serializeLesson(lesson) {
   const publishAt = schedule?.publish_at || null;
   const deadlineAt = schedule?.deadline_at || null;
 
-  let status = 'draft';
-  if (lesson.status === 'published') {
-    status = 'published';
-  } else if (publishAt && new Date(publishAt) > new Date()) {
-    status = 'scheduled';
-  }
-
   return {
     id: lesson.id,
     title: lesson.title,
+    type: lesson.type,
+    weekNumber: lesson.week_number,
     classId: lesson.class_id,
     className: lesson.class?.name || null,
     subject: lesson.class?.subject || null,
-    status,
+    status: effectiveLessonStatus(lesson),
     releaseDate: publishAt,
     deadline: deadlineAt,
+    // Same values under the names the lessons API uses.
+    publishAt,
+    deadlineAt,
     notifyEmail: schedule ? schedule.notify_email : true,
     completionRate: 0,
   };
 }
 
-async function getOwnedClassIds(teacherId) {
-  const classes = await Class.findAll({ where: { teacher_id: teacherId }, attributes: ['id'] });
-  return classes.map((c) => c.id);
-}
-
 async function listSchedules(req, res) {
-  let where = {};
-  if (req.user.role === 'teacher') {
-    const classIds = await getOwnedClassIds(req.user.id);
-    where.class_id = classIds;
-  }
+  const where = {};
+  const classIds = await readableClassIds(req.user);
+  if (classIds) where.class_id = classIds;
   if (req.query.classId) {
-    where.class_id = req.query.classId;
+    const requested = Number(req.query.classId);
+    where.class_id = classIds ? classIds.filter((id) => id === requested) : requested;
   }
 
   const lessons = await Lesson.findAll({
     where,
     include: LESSON_INCLUDE,
-    order: [['class_id', 'ASC'], ['sequence_order', 'ASC']],
+    order: [['class_id', 'ASC'], ['sequence_order', 'ASC'], ['id', 'ASC']],
   });
 
   return res.json(lessons.map(serializeLesson));
 }
 
-async function getLessonForUser(lessonId, user) {
+async function getEditableLesson(lessonId, user) {
   const lesson = await Lesson.findByPk(lessonId, { include: LESSON_INCLUDE });
   if (!lesson) return { error: 404 };
-  if (user.role === 'teacher' && lesson.class.teacher_id !== user.id) return { error: 403 };
+  if (!canEditClass(user, lesson.class)) return { error: 403 };
   return { lesson };
 }
 
 async function updateSchedule(req, res) {
-  const { lesson, error } = await getLessonForUser(req.params.lessonId, req.user);
+  const { lesson, error } = await getEditableLesson(req.params.lessonId, req.user);
   if (error) return res.status(error).json({ message: error === 404 ? 'Lesson not found' : 'Forbidden' });
 
-  const { publishAt, deadlineAt, notifyEmail } = req.body;
+  const { publishAt, deadlineAt, notifyEmail } = req.body || {};
+  if (publishAt && Number.isNaN(new Date(publishAt).getTime())) return res.status(400).json({ message: 'Invalid publishAt' });
+  if (deadlineAt && Number.isNaN(new Date(deadlineAt).getTime())) return res.status(400).json({ message: 'Invalid deadlineAt' });
 
   let schedule = lesson.schedule;
   if (!schedule) {
@@ -87,6 +82,8 @@ async function updateSchedule(req, res) {
     });
   }
 
+  // No publish time (or one in the past) publishes now; a future one keeps it a draft
+  // that shows as "scheduled" until the time passes.
   const isImmediate = !publishAt || new Date(publishAt) <= new Date();
   await lesson.update({ status: isImmediate ? 'published' : 'draft' });
 
@@ -95,7 +92,7 @@ async function updateSchedule(req, res) {
 }
 
 async function deleteSchedule(req, res) {
-  const { lesson, error } = await getLessonForUser(req.params.lessonId, req.user);
+  const { lesson, error } = await getEditableLesson(req.params.lessonId, req.user);
   if (error) return res.status(error).json({ message: error === 404 ? 'Lesson not found' : 'Forbidden' });
 
   if (lesson.schedule) {

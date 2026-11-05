@@ -49,6 +49,18 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.TEXT,
         allowNull: true,
       },
+      reading_sections: {
+        type: DataTypes.JSON,
+        allowNull: true,
+      },
+      objectives: {
+        type: DataTypes.JSON,
+        allowNull: true,
+      },
+      memory_tip: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
       status: {
         type: DataTypes.ENUM('draft', 'published'),
         allowNull: false,

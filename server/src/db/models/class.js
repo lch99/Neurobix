@@ -43,6 +43,22 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: 'active',
       },
+      slots: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      co_teachers: {
+        type: DataTypes.JSON,
+        allowNull: true,
+      },
+      term_ids: {
+        type: DataTypes.JSON,
+        allowNull: true,
+      },
+      forced_open_term_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
     },
     {
       tableName: 'classes',
@@ -58,6 +74,7 @@ module.exports = (sequelize, DataTypes) => {
     Class.belongsTo(models.Term, { foreignKey: 'term_id', as: 'term' });
     Class.hasMany(models.Lesson, { foreignKey: 'class_id', as: 'lessons' });
     Class.hasMany(models.ClassEnrollment, { foreignKey: 'class_id', as: 'enrollments' });
+    Class.hasMany(models.Quiz, { foreignKey: 'class_id', as: 'quizzes' });
   };
 
   return Class;

@@ -43,4 +43,14 @@ async function authenticate(req, res, next) {
   next();
 }
 
-module.exports = { authenticate, IDLE_TIMEOUT_MS };
+// Use after `authenticate`: rejects the request unless the user has one of the given roles.
+function requireRole(...roles) {
+  return (req, res, next) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+    next();
+  };
+}
+
+module.exports = { authenticate, requireRole, IDLE_TIMEOUT_MS };

@@ -1,6 +1,7 @@
 'use strict';
 
-const { Flashcard, Lesson, Class } = require('../db/models');
+const { Flashcard, Lesson, Class, Schedule } = require('../db/models');
+const { readableClassIds, canEditClass, isLearnerView, effectiveLessonStatus } = require('../lib/access');
 
 function serializeCard(card) {
   return {
@@ -13,10 +14,21 @@ function serializeCard(card) {
   };
 }
 
-async function getLessonForUser(lessonId, user) {
-  const lesson = await Lesson.findByPk(lessonId, { include: [{ model: Class, as: 'class' }] });
+const LESSON_INCLUDE = [{ model: Class, as: 'class' }, { model: Schedule, as: 'schedule' }];
+
+async function getReadableLesson(lessonId, user) {
+  const lesson = await Lesson.findByPk(lessonId, { include: LESSON_INCLUDE });
   if (!lesson) return { error: 404 };
-  if (user.role === 'teacher' && lesson.class.teacher_id !== user.id) return { error: 403 };
+  const classIds = await readableClassIds(user);
+  if (classIds && !classIds.includes(lesson.class_id)) return { error: 403 };
+  if (isLearnerView(user) && effectiveLessonStatus(lesson) !== 'published') return { error: 404 };
+  return { lesson };
+}
+
+async function getEditableLesson(lessonId, user) {
+  const lesson = await Lesson.findByPk(lessonId, { include: LESSON_INCLUDE });
+  if (!lesson) return { error: 404 };
+  if (!canEditClass(user, lesson.class)) return { error: 403 };
   return { lesson };
 }
 
@@ -24,22 +36,22 @@ async function listFlashcards(req, res) {
   const { lessonId } = req.query;
   if (!lessonId) return res.status(400).json({ message: 'lessonId is required' });
 
-  const { lesson, error } = await getLessonForUser(lessonId, req.user);
+  const { lesson, error } = await getReadableLesson(lessonId, req.user);
   if (error) return res.status(error).json({ message: error === 404 ? 'Lesson not found' : 'Forbidden' });
 
   const cards = await Flashcard.findAll({
     where: { lesson_id: lesson.id },
-    order: [['sequence_order', 'ASC']],
+    order: [['sequence_order', 'ASC'], ['id', 'ASC']],
   });
 
   return res.json(cards.map(serializeCard));
 }
 
 async function createFlashcard(req, res) {
-  const { lessonId, front, back, hint } = req.body;
+  const { lessonId, front, back, hint } = req.body || {};
   if (!lessonId) return res.status(400).json({ message: 'lessonId is required' });
 
-  const { lesson, error } = await getLessonForUser(lessonId, req.user);
+  const { lesson, error } = await getEditableLesson(lessonId, req.user);
   if (error) return res.status(error).json({ message: error === 404 ? 'Lesson not found' : 'Forbidden' });
 
   const count = await Flashcard.count({ where: { lesson_id: lesson.id } });
@@ -55,18 +67,18 @@ async function createFlashcard(req, res) {
   return res.status(201).json(serializeCard(card));
 }
 
-async function getCardForUser(cardId, user) {
+async function getCardForEdit(cardId, user) {
   const card = await Flashcard.findByPk(cardId, { include: [{ model: Lesson, as: 'lesson', include: [{ model: Class, as: 'class' }] }] });
-  if (!card) return { error: 404 };
-  if (user.role === 'teacher' && card.lesson.class.teacher_id !== user.id) return { error: 403 };
+  if (!card || !card.lesson) return { error: 404 };
+  if (!canEditClass(user, card.lesson.class)) return { error: 403 };
   return { card };
 }
 
 async function updateFlashcard(req, res) {
-  const { card, error } = await getCardForUser(req.params.id, req.user);
+  const { card, error } = await getCardForEdit(req.params.id, req.user);
   if (error) return res.status(error).json({ message: error === 404 ? 'Flashcard not found' : 'Forbidden' });
 
-  const { front, back, hint, sequenceOrder } = req.body;
+  const { front, back, hint, sequenceOrder } = req.body || {};
 
   await card.update({
     front_text: front ?? card.front_text,
@@ -79,7 +91,7 @@ async function updateFlashcard(req, res) {
 }
 
 async function deleteFlashcard(req, res) {
-  const { card, error } = await getCardForUser(req.params.id, req.user);
+  const { card, error } = await getCardForEdit(req.params.id, req.user);
   if (error) return res.status(error).json({ message: error === 404 ? 'Flashcard not found' : 'Forbidden' });
 
   await card.destroy();

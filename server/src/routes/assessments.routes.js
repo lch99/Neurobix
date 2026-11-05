@@ -1,7 +1,7 @@
 'use strict';
 
 const express = require('express');
-const { authenticate } = require('../middleware/auth.middleware');
+const { authenticate, requireRole } = require('../middleware/auth.middleware');
 const {
   listAssessments,
   getAssessment,
@@ -10,21 +10,25 @@ const {
   updateAssessment,
   deleteAssessment,
   createQuestion,
-  updateQuestion,
-  deleteQuestion,
+  listAttempts,
+  submitAttempt,
 } = require('../controllers/assessments.controller');
 
 const router = express.Router();
+const staff = requireRole('admin', 'teacher');
 
 router.use(authenticate);
 
 router.get('/', listAssessments);
-router.post('/', createAssessment);
+router.post('/', staff, createAssessment);
 router.get('/by-lesson/:lessonId', getAssessmentByLesson);
 router.get('/:id', getAssessment);
-router.put('/:id', updateAssessment);
-router.delete('/:id', deleteAssessment);
+router.put('/:id', staff, updateAssessment);
+router.delete('/:id', staff, deleteAssessment);
 
-router.post('/:id/questions', createQuestion);
+router.post('/:id/questions', staff, createQuestion);
+
+router.get('/:id/attempts', listAttempts);
+router.post('/:id/attempts', submitAttempt);
 
 module.exports = router;
